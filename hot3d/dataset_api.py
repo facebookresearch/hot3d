@@ -17,6 +17,8 @@ from typing import Dict, List
 
 import numpy as np
 
+from loader_object_poses import loadDynamicObjects
+
 
 class DeviceType(Enum):
     QUEST3 = 1
@@ -46,12 +48,17 @@ class Hot3DDataProvider:
         # Hands
         # Objects
         # Device type, ...
+        self._dynamic_objects = loadDynamicObjects(
+            sequence_folder + "/dynamic_objects.csv"
+        )
+        self._timestamp_list = self._dynamic_objects.keys()
 
     def get_timestamps(self) -> List[int]:
         """
         Returns the list of device timestamp for the specified sequence
         """
         # Maybe consider a TIME DOMAIN (DEVICE or TIME_CODE)
+        return self._timestamp_list
 
     def get_image(self, timestamp_ns: str) -> np.ndarray:
         """
@@ -80,6 +87,10 @@ class Hot3DDataProvider:
         # Exclusion list (is_valid)
 
         # If something not supported -> return Exception
+        if timestamp_ns in self._dynamic_objects:
+            return self._dynamic_objects[timestamp_ns]
+        else:
+            return None
 
     def get_hand_poses(self, timestamp_ns: str):
         """
