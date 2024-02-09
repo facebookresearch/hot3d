@@ -16,6 +16,7 @@ from enum import Enum
 from typing import Dict, List
 
 import numpy as np
+from loader_device_poses import loadDevicePoses
 
 from loader_object_poses import loadDynamicObjects
 
@@ -50,6 +51,9 @@ class Hot3DDataProvider:
         # Device type, ...
         self._dynamic_objects = loadDynamicObjects(
             sequence_folder + "/dynamic_objects.csv"
+        )
+        self._device_poses = loadDevicePoses(
+            sequence_folder + "/headset_trajectory.csv"
         )
         self._timestamp_list = self._dynamic_objects.keys()
 
@@ -104,6 +108,10 @@ class Hot3DDataProvider:
         # BBox 2D, 3D
         # OptiTrack
         # MPS (would come from the MPSDataProvider)
+        if timestamp_ns in self._device_poses:
+            return self._device_poses[timestamp_ns]
+        else:
+            return None
 
     def get_device_type(self) -> DeviceType:
         """

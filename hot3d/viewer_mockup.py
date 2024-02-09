@@ -83,15 +83,16 @@ def main():
         for object_data_key, object_data_value in objects_data.items():
 
             rr.log(
-                f"/world/{object_data_key}", ToTransform3D(object_data_value[0], False)
+                f"/world/objects/{object_data_key}",
+                ToTransform3D(object_data_value[0], False),
             )
 
             # If desired (display the corresponding 3D object)
 
         # Plot device pose
-        # device_pose_data = data_provider.get_device_pose(timestamp_us)
-        # T_world_device = device_pose_data.T_world_device
-        # rr.log("world/device", ToTransform3D(T_world_device, False))
+        device_pose_data = data_provider.get_device_pose(timestamp_us)
+        if device_pose_data:
+            rr.log("world/device", ToTransform3D(device_pose_data, False))
 
         # Deal with device specifics
         # if data_provider.get_device_type() == DeviceType.ARIA:
