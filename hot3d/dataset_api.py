@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from enum import Enum
+
 from typing import Dict, List
 
 import numpy as np
-from loader_device_poses import loadDevicePoses
 
-from loader_object_poses import loadDynamicObjects
+from data_loaders.loader_device_poses import load_device_poses
+from data_loaders.loader_object_poses import load_dynamic_objects
+from data_loaders.PathProvider import Hot3DDataPathProvider
 
 
 class DeviceType(Enum):
@@ -49,12 +51,16 @@ class Hot3DDataProvider:
         # Hands
         # Objects
         # Device type, ...
-        self._dynamic_objects = loadDynamicObjects(
-            sequence_folder + "/dynamic_objects.csv"
+        self.path_provider = Hot3DDataPathProvider(sequence_folder)
+        if not self.path_provider.is_valid():
+            raise RuntimeError(
+                "Invalid hot3d path.. Not all expected data are present."
+            )
+
+        self._dynamic_objects = load_dynamic_objects(
+            self.path_provider.dynamic_objects_file
         )
-        self._device_poses = loadDevicePoses(
-            sequence_folder + "/headset_trajectory.csv"
-        )
+        self._device_poses = load_device_poses(self.path_provider.device_poses_file)
         self._timestamp_list = self._dynamic_objects.keys()
 
     def get_timestamps(self) -> List[int]:
