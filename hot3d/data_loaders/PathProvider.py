@@ -16,6 +16,7 @@ import os
 
 DYNAMIC_OBJECT_POSES_FILE = "dynamic_objects.csv"
 DEVICE_POSES_FILE = "headset_trajectory.csv"
+VRS_FILE = "recording.vrs"
 
 
 class Hot3DDataPathProvider:
@@ -35,6 +36,9 @@ class Hot3DDataPathProvider:
         self.dynamic_objects_file = (
             possible_path if os.path.exists(possible_path) else None
         )
+
+        possible_path = os.path.join(sequence_folder, VRS_FILE)
+        self.vrs_file = possible_path if os.path.exists(possible_path) else None
 
         possible_path = os.path.join(sequence_folder, DEVICE_POSES_FILE)
         self.device_poses_file = (

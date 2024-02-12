@@ -17,6 +17,7 @@ import argparse
 import rerun as rr
 
 from dataset_api import DeviceType, Hot3DDataProvider
+from projectaria_tools.core.stream_id import StreamId
 from projectaria_tools.utils.rerun_helpers import ToTransform3D
 
 from tqdm import tqdm
@@ -29,6 +30,8 @@ def parse_args():
         type=str,
         help="path to hot3d data sequence",
     )
+
+    parser.add_argument("--jpeg_quality", type=int, default=75, help=argparse.SUPPRESS)
 
     return parser.parse_args()
 
@@ -52,34 +55,50 @@ def main():
     # TODO:
     # For convenience LOG the camera trajectory as a 3D line to help user understand the type of motion in the sequence
 
+    rgb_stream_id = StreamId("214-1")
+    # Plot the camera configuration
+    [extrinsics, intrinsics] = data_provider.get_camera_calibration(rgb_stream_id)
+    rr.log(
+        f"world/device/{rgb_stream_id}", ToTransform3D(extrinsics, False), timeless=True
+    )
+    rr.log(
+        f"world/device/{rgb_stream_id}",
+        rr.Pinhole(
+            resolution=[
+                intrinsics.get_image_size()[0],
+                intrinsics.get_image_size()[1],
+            ],
+            focal_length=float(intrinsics.get_focal_lengths()[0]),
+        ),
+        timeless=True,
+    )
+
     #
     # Visualize the dataset sequence
     #
     # Loop over the timestamps of the sequence and visualize corresponding data
     timestamps = data_provider.get_timestamps()
-    for timestamp_us in tqdm(timestamps):
+    # Crop timestamp to the valid timing of the Image recording
+    [min_timestamp, max_timestamp] = data_provider.get_valid_recording_range()
+    timestamps = [
+        x for x in timestamps if int(x) >= min_timestamp and int(x) <= max_timestamp
+    ]
 
-        rr.set_time_nanos("synchronization_time", int(timestamp_us))
-        # rr.set_time_sequence("timestamp", timestamp_us)
+    for timestamp in tqdm(timestamps):
+
+        rr.set_time_nanos("synchronization_time", int(timestamp))
+        rr.set_time_sequence("timestamp", timestamp)
 
         # Retrieve METADATA object and visualize them
 
-        # Plot image
-        image_data = data_provider.get_image(timestamp_us)
-        if image_data:
-            rr.log(
-                f"world/device/{image_data.label}",
-                rr.Image(image_data.img).compress(jpeg_quality=args.jpeg_quality),
-            )
-
         # Plot Hand poses
-        hands_data = data_provider.get_hand_poses(timestamp_us)
+        hands_data = data_provider.get_hand_poses(timestamp)
         if hands_data:
             for hand_data in hands_data:
                 print(f"Hand pose: {hand_data}")
 
         # Plot Object poses
-        objects_data = data_provider.get_object_poses(timestamp_us)
+        objects_data = data_provider.get_object_poses(timestamp)
         for object_data_key, object_data_value in objects_data.items():
 
             rr.log(
@@ -90,9 +109,18 @@ def main():
             # If desired (display the corresponding 3D object)
 
         # Plot device pose
-        device_pose_data = data_provider.get_device_pose(timestamp_us)
+        device_pose_data = data_provider.get_device_pose(timestamp)
         if device_pose_data:
             rr.log("world/device", ToTransform3D(device_pose_data, False))
+
+            # Plot image (corresponding to this pose)
+            image_data = data_provider.get_image(timestamp, rgb_stream_id)
+            if image_data is not None:
+                rr.log(
+                    f"world/device/{rgb_stream_id}",
+                    # f"{rgb_stream_id}",
+                    rr.Image(image_data).compress(jpeg_quality=args.jpeg_quality),
+                )
 
         # Deal with device specifics
         # if data_provider.get_device_type() == DeviceType.ARIA:
