@@ -23,7 +23,7 @@ from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
 
 
-def load_device_poses(filename: str) -> Dict[str, SE3]:
+def load_device_poses(filename: str) -> Dict[int, SE3]:
     """Load Device Poses meta data from a CSV file.
 
     Keyword arguments:
@@ -54,7 +54,7 @@ def load_device_poses(filename: str) -> Dict[str, SE3]:
                 row[header.index("q_wo_z")],
             ]
             quaternion_w = row[header.index("q_wo_w")]
-            timestamp = row[header.index("timestamp[ns]")]
+            timestamp = int(row[header.index("timestamp[ns]")])
             object_uid = row[header.index("object_uid")]
 
             object_pose = SE3.from_quat_and_translation(

@@ -70,7 +70,7 @@ class Hot3DDataProvider:
         # Maybe consider a TIME DOMAIN (DEVICE or TIME_CODE)
         return self._timestamp_list
 
-    def get_image(self, timestamp_ns: str) -> np.ndarray:
+    def get_image(self, timestamp_ns: int) -> np.ndarray:
         """
         Return the RGB image at the given timestamp
         """
@@ -83,7 +83,7 @@ class Hot3DDataProvider:
         """
         # Ideally we have the same calibration for both devices
 
-    def get_object_poses(self, timestamp_ns: str):
+    def get_object_poses(self, timestamp_ns: int):
         """
         Return the list of object poses at the given timestamp
         """
@@ -102,12 +102,12 @@ class Hot3DDataProvider:
         else:
             return None
 
-    def get_hand_poses(self, timestamp_ns: str):
+    def get_hand_poses(self, timestamp_ns: int):
         """
         Return the list of hand poses at the given timestamp
         """
 
-    def get_device_pose(self, timestamp_ns: str):
+    def get_device_pose(self, timestamp_ns: int):
         """
         Return the device pose at the given timestamp
         """
