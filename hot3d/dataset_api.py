@@ -22,6 +22,8 @@ from data_loaders.loader_device_poses import load_device_poses
 from data_loaders.loader_object_poses import load_dynamic_objects
 from data_loaders.PathProvider import Hot3DDataPathProvider
 
+from projectaria_tools.core.sensor_data import TimeDomain
+
 
 class DeviceType(Enum):
     QUEST3 = 1
@@ -63,12 +65,16 @@ class Hot3DDataProvider:
         self._device_poses = load_device_poses(self.path_provider.device_poses_file)
         self._timestamp_list = self._dynamic_objects.keys()
 
-    def get_timestamps(self) -> List[int]:
+    def get_timestamps(
+        self, time_domain: TimeDomain = TimeDomain.TIME_CODE
+    ) -> List[int]:
         """
         Returns the list of device timestamp for the specified sequence
         """
-        # Maybe consider a TIME DOMAIN (DEVICE or TIME_CODE)
-        return self._timestamp_list
+        if time_domain != TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+
+        return self._timestamp_list  # default is timecode time domain
 
     def get_image(self, timestamp_ns: int) -> np.ndarray:
         """
@@ -83,10 +89,15 @@ class Hot3DDataProvider:
         """
         # Ideally we have the same calibration for both devices
 
-    def get_object_poses(self, timestamp_ns: int):
+    def get_object_poses(
+        self, timestamp_ns: int, time_domain: TimeDomain = TimeDomain.TIME_CODE
+    ):
         """
         Return the list of object poses at the given timestamp
         """
+        if time_domain != TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+
         # Interpolated
         # Closed GT
         # Before
@@ -107,10 +118,15 @@ class Hot3DDataProvider:
         Return the list of hand poses at the given timestamp
         """
 
-    def get_device_pose(self, timestamp_ns: int):
+    def get_device_pose(
+        self, timestamp_ns: int, time_domain: TimeDomain = TimeDomain.TIME_CODE
+    ):
         """
         Return the device pose at the given timestamp
         """
+        if time_domain != TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+
         # BBox 2D, 3D
         # OptiTrack
         # MPS (would come from the MPSDataProvider)
