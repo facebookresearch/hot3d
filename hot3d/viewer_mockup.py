@@ -99,7 +99,10 @@ def main():
         hands_data = data_provider.get_hand_poses(timestamp)
         if hands_data:
             for hand_data in hands_data:
-                print(f"Hand pose: {hand_data}")
+                rr.log(
+                    f"/world/hands/{hand_data}",
+                    ToTransform3D(hands_data[hand_data][0], False),
+                )
 
         # Plot Object poses
         objects_data = data_provider.get_object_poses(timestamp)

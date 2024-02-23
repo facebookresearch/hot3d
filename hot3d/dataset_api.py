@@ -19,6 +19,7 @@ from typing import Dict, List
 import numpy as np
 
 from data_loaders.loader_device_poses import load_device_poses
+from data_loaders.loader_hand_poses import load_hand_poses
 from data_loaders.loader_object_library import load_object_instance
 from data_loaders.loader_object_poses import load_dynamic_objects
 from data_loaders.PathProvider import Hot3DDataPathProvider
@@ -78,6 +79,8 @@ class Hot3DDataProvider:
         self._vrs_data_provider = data_provider.create_vrs_data_provider(
             self.path_provider.vrs_file
         )
+
+        self._hand_poses = load_hand_poses(self.path_provider.hand_poses_file)
 
         # rgb_stream_id = StreamId("214-1")
         # timecode_vec = self._vrs_data_provider.get_timestamps_ns(
@@ -209,6 +212,16 @@ class Hot3DDataProvider:
         """
         Return the list of hand poses at the given timestamp
         """
+        if timestamp_ns in self._hand_poses:
+            return self._hand_poses[timestamp_ns]
+        else:
+            # We use bisection to find the closest timestamp
+            lower, upper, alpha = query_left_right(
+                list(self._hand_poses.keys()), timestamp_ns
+            )
+            return self._hand_poses[lower]
+
+        return None
 
     def get_device_pose(
         self, timestamp_ns: int, time_domain: TimeDomain = TimeDomain.TIME_CODE

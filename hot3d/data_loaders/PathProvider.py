@@ -16,6 +16,7 @@ import os
 
 DYNAMIC_OBJECT_POSES_FILE = "dynamic_objects_v2.csv"
 DEVICE_POSES_FILE = "headset_trajectory.csv"
+HAND_POSES_FILE = "hand_pose_trajectory.jsonl"
 VRS_FILE = "recording.vrs"
 OBJECT_LIBRARY_FOLDER = "assets"
 OBJECT_LIBRARY_INSTANCES = "instance.json"  # map UID to object name
@@ -41,6 +42,9 @@ class Hot3DDataPathProvider:
 
         possible_path = os.path.join(sequence_folder, VRS_FILE)
         self.vrs_file = possible_path if os.path.exists(possible_path) else None
+
+        possible_path = os.path.join(sequence_folder, HAND_POSES_FILE)
+        self.hand_poses_file = possible_path if os.path.exists(possible_path) else None
 
         possible_path = os.path.join(sequence_folder, DEVICE_POSES_FILE)
         self.device_poses_file = (
