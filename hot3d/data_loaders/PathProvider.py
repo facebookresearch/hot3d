@@ -14,9 +14,11 @@
 
 import os
 
-DYNAMIC_OBJECT_POSES_FILE = "dynamic_objects.csv"
+DYNAMIC_OBJECT_POSES_FILE = "dynamic_objects_v2.csv"
 DEVICE_POSES_FILE = "headset_trajectory.csv"
 VRS_FILE = "recording.vrs"
+OBJECT_LIBRARY_FOLDER = "assets"
+OBJECT_LIBRARY_INSTANCES = "instance.json"  # map UID to object name
 
 
 class Hot3DDataPathProvider:
@@ -45,8 +47,20 @@ class Hot3DDataPathProvider:
             possible_path if os.path.exists(possible_path) else None
         )
 
+        # Looking one level up for the object library
+        possible_path = os.path.join(
+            os.path.dirname(sequence_folder), OBJECT_LIBRARY_INSTANCES
+        )
+        self.object_library_instances_file = (
+            possible_path if os.path.exists(possible_path) else None
+        )
+
     def is_valid(self) -> str:
         """
         FUNC_DOC_STRING
         """
-        return self.dynamic_objects_file and self.device_poses_file
+        return (
+            self.dynamic_objects_file
+            and self.device_poses_file
+            and self.object_library_instances_file
+        )

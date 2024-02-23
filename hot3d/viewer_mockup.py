@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import os
 
 import rerun as rr
 
@@ -84,6 +85,9 @@ def main():
         x for x in timestamps if int(x) >= min_timestamp and int(x) <= max_timestamp
     ]
 
+    object_table = (
+        {}
+    )  # We want to log 3D assets once, we keep track of their addition here
     for timestamp in tqdm(timestamps):
 
         rr.set_time_nanos("synchronization_time", int(timestamp))
@@ -101,12 +105,29 @@ def main():
         objects_data = data_provider.get_object_poses(timestamp)
         for object_data_key, object_data_value in objects_data.items():
 
+            object_name = data_provider.get_object_instance_name(object_data_key)
+            object_name = object_name + "_" + str(object_data_key)
             rr.log(
-                f"/world/objects/{object_data_key}",
+                f"/world/objects/{object_name}",
                 ToTransform3D(object_data_value[0], False),
             )
 
             # If desired (display the corresponding 3D object)
+            scale = rr.datatypes.Scale3D(10e-4)
+            if object_data_key not in object_table.keys():
+                object_table[object_data_key] = True
+                rr.log(
+                    f"/world/objects/{object_name}",
+                    rr.Asset3D(
+                        path=os.path.join(
+                            os.path.dirname(args.folder),
+                            "assets",
+                            object_data_key + ".glb",
+                        ),
+                        transform=rr.TranslationRotationScale3D(scale=scale),
+                    ),
+                    timeless=True,
+                )
 
         # Plot device pose
         device_pose_data = data_provider.get_device_pose(timestamp)

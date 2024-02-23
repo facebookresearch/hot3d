@@ -30,7 +30,7 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
     filename -- the csv file i.e. sequence_folder + "/headset_trajectory.csv"
     """
     device_pose_per_timestamp = {}
-    device_count = set()
+    device_pose_count = set()
     # Open the CSV file for reading
     with open(filename, "r") as f:
         reader = csv.reader(f)
@@ -43,6 +43,7 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
 
         # Read the rest of the rows in the CSV file
         for row in reader:
+            print(row)
             translation = [
                 row[header.index("t_wo_x[m]")],
                 row[header.index("t_wo_y[m]")],
@@ -66,12 +67,13 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
             if timestamp not in device_pose_per_timestamp:
                 device_pose_per_timestamp[timestamp] = {}
             device_pose_per_timestamp[timestamp] = object_pose
-            device_count.add(object_uid)
+            device_pose_count.add(object_uid)
 
-    assert len(device_count) == 1  # Only one device should be tracked
+    # Print statistics
     print(
-        f"Objects data loading stats: \n\
+        f"Device trajectory data loading stats: \n\
         \tNumber of timestamps: {len(device_pose_per_timestamp.keys())}\n\
-        \tNumber of objects: {len(device_count)}"
+        \tNumber of Device: {len(device_pose_count)}"
     )
+    assert len(device_pose_count) == 1  # Only one device should be tracked
     return device_pose_per_timestamp

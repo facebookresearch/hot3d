@@ -19,8 +19,10 @@ from typing import Dict, List
 import numpy as np
 
 from data_loaders.loader_device_poses import load_device_poses
+from data_loaders.loader_object_library import load_object_instance
 from data_loaders.loader_object_poses import load_dynamic_objects
 from data_loaders.PathProvider import Hot3DDataPathProvider
+from data_loaders.pose_utils import query_left_right
 
 from projectaria_tools.core import data_provider
 from projectaria_tools.core.calibration import DeviceCalibration
@@ -67,6 +69,9 @@ class Hot3DDataProvider:
             self.path_provider.dynamic_objects_file
         )
         self._device_poses = load_device_poses(self.path_provider.device_poses_file)
+        self._object_instance_mapping = load_object_instance(
+            self.path_provider.object_library_instances_file
+        )
         self._timestamp_list = self._dynamic_objects.keys()
 
         self._vrs_data_provider = None
@@ -184,7 +189,21 @@ class Hot3DDataProvider:
         if timestamp_ns in self._dynamic_objects:
             return self._dynamic_objects[timestamp_ns]
         else:
-            return None
+            # We use bisection to find the closest timestamp
+            lower, upper, alpha = query_left_right(
+                list(self._dynamic_objects.keys()), timestamp_ns
+            )
+            return self._dynamic_objects[lower]
+
+        return None
+
+    def get_object_instance_name(self, instance_id: str) -> str:
+        """
+        Return the "name" of the object instance from its unique instance id
+        """
+        if instance_id not in self._object_instance_mapping.keys():
+            raise ValueError("Instance id {} not found".format(instance_id))
+        return self._object_instance_mapping[instance_id]["instance_name"]
 
     def get_hand_poses(self, timestamp_ns: int):
         """
@@ -206,7 +225,13 @@ class Hot3DDataProvider:
         if timestamp_ns in self._device_poses:
             return self._device_poses[timestamp_ns]
         else:
-            return None
+            # We use bisection to find the closest timestamp
+            lower, upper, alpha = query_left_right(
+                list(self._device_poses.keys()), timestamp_ns
+            )
+            return self._device_poses[lower]
+
+        return None
 
     def get_device_type(self) -> DeviceType:
         """
