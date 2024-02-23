@@ -138,7 +138,8 @@ def main():
             rr.log("world/device", ToTransform3D(device_pose_data, False))
 
             # Plot image (corresponding to this pose)
-            image_data = data_provider.get_image(timestamp, rgb_stream_id)
+            # image_data = data_provider.get_image(timestamp, rgb_stream_id)
+            image_data = data_provider.get_undistorted_image(timestamp, rgb_stream_id)
             if image_data is not None:
                 rr.log(
                     f"world/device/{rgb_stream_id}",

@@ -25,8 +25,8 @@ from data_loaders.loader_object_poses import load_dynamic_objects
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
 
-from projectaria_tools.core import data_provider
-from projectaria_tools.core.calibration import DeviceCalibration
+from projectaria_tools.core import calibration, data_provider
+from projectaria_tools.core.calibration import DeviceCalibration, distort_by_calibration
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
 from projectaria_tools.core.sophus import SE3
 from projectaria_tools.core.stream_id import StreamId
@@ -148,6 +148,43 @@ class Hot3DDataProvider:
             )
             return image[0].to_numpy_array()
 
+        return None
+
+    def get_undistorted_image(
+        self, timestamp_ns: int, stream_id: StreamId
+    ) -> np.ndarray:
+        """
+        Return the undistorted image corresponding to the requested timestamp and streamId
+        """
+        if self._vrs_data_provider:
+            # Map to corresponding timestamp
+            device_timestamp_ns = (
+                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
+                    timestamp_ns
+                )
+            )
+            image = self._vrs_data_provider.get_image_data_by_time_ns(
+                stream_id,
+                device_timestamp_ns,
+                TimeDomain.DEVICE_TIME,
+                TimeQueryOptions.CLOSEST,
+            )
+
+            [T_device_camera, camera_calibration] = self.get_camera_calibration(
+                stream_id
+            )
+            focal_lengths = camera_calibration.get_focal_lengths()
+            image_size = camera_calibration.get_image_size()
+            pinhole_calib = calibration.get_linear_camera_calibration(
+                image_size[0], image_size[1], focal_lengths[0]
+            )
+
+            # Perform the actual undistortion
+            undistorted_image = distort_by_calibration(
+                image[0].to_numpy_array(), pinhole_calib, camera_calibration
+            )
+
+            return undistorted_image
         return None
 
     def get_camera_calibration(
