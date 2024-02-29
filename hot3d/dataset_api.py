@@ -128,25 +128,45 @@ class Hot3DDataProvider:
 
         return self._timestamp_list  # default is TimeDomain.TIME_CODE
 
+    def _timestamp_convert(
+        self, timestamp: int, time_domain_in: TimeDomain, time_domain_out: TimeDomain
+    ) -> int:
+        """
+        Returns the converted timestamp between two domains (TimeCode <-> Aria DeviceTime)
+        """
+        if (
+            self._vrs_data_provider
+            and time_domain_in == TimeDomain.TIME_CODE
+            and time_domain_out == TimeDomain.DEVICE_TIME
+        ):
+            # Map to corresponding timestamp
+            device_timestamp_ns = (
+                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
+                    timestamp
+                )
+            )
+            return device_timestamp_ns
+        return None
+
     def get_image(self, timestamp_ns: int, stream_id: StreamId) -> np.ndarray:
         """
         Return the image corresponding to the requested timestamp and streamId
         """
         if self._vrs_data_provider:
             # Map to corresponding timestamp
-            device_timestamp_ns = (
-                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
-                    timestamp_ns
+            device_timestamp_ns = self._timestamp_convert(
+                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
+            )
+
+            if device_timestamp_ns:
+                # Get corresponding image
+                image = self._vrs_data_provider.get_image_data_by_time_ns(
+                    stream_id,
+                    device_timestamp_ns,
+                    TimeDomain.DEVICE_TIME,
+                    TimeQueryOptions.CLOSEST,
                 )
-            )
-            # Get corresponding image
-            image = self._vrs_data_provider.get_image_data_by_time_ns(
-                stream_id,
-                device_timestamp_ns,
-                TimeDomain.DEVICE_TIME,
-                TimeQueryOptions.CLOSEST,
-            )
-            return image[0].to_numpy_array()
+                return image[0].to_numpy_array()
 
         return None
 
@@ -158,33 +178,33 @@ class Hot3DDataProvider:
         """
         if self._vrs_data_provider:
             # Map to corresponding timestamp
-            device_timestamp_ns = (
-                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
-                    timestamp_ns
+            device_timestamp_ns = self._timestamp_convert(
+                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
+            )
+
+            if device_timestamp_ns:
+                image = self._vrs_data_provider.get_image_data_by_time_ns(
+                    stream_id,
+                    device_timestamp_ns,
+                    TimeDomain.DEVICE_TIME,
+                    TimeQueryOptions.CLOSEST,
                 )
-            )
-            image = self._vrs_data_provider.get_image_data_by_time_ns(
-                stream_id,
-                device_timestamp_ns,
-                TimeDomain.DEVICE_TIME,
-                TimeQueryOptions.CLOSEST,
-            )
 
-            [T_device_camera, camera_calibration] = self.get_camera_calibration(
-                stream_id
-            )
-            focal_lengths = camera_calibration.get_focal_lengths()
-            image_size = camera_calibration.get_image_size()
-            pinhole_calib = calibration.get_linear_camera_calibration(
-                image_size[0], image_size[1], focal_lengths[0]
-            )
+                [T_device_camera, camera_calibration] = self.get_camera_calibration(
+                    stream_id
+                )
+                focal_lengths = camera_calibration.get_focal_lengths()
+                image_size = camera_calibration.get_image_size()
+                pinhole_calib = calibration.get_linear_camera_calibration(
+                    image_size[0], image_size[1], focal_lengths[0]
+                )
 
-            # Perform the actual undistortion
-            undistorted_image = distort_by_calibration(
-                image[0].to_numpy_array(), pinhole_calib, camera_calibration
-            )
+                # Perform the actual undistortion
+                undistorted_image = distort_by_calibration(
+                    image[0].to_numpy_array(), pinhole_calib, camera_calibration
+                )
 
-            return undistorted_image
+                return undistorted_image
         return None
 
     def get_camera_calibration(
