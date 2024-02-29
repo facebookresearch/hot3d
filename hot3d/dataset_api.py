@@ -397,6 +397,22 @@ class Hot3DDataProvider:
                 return gaze_projection
         return None
 
+    def get_point_cloud(self) -> np.ndarray:
+        """
+        Return the point cloud of the scene
+        """
+        if self.get_device_type() != DeviceType.ARIA:
+            raise ValueError("Point cloud data is not available for this device.")
+
+        if self.mps_data_provider.has_semidense_point_cloud():
+            point_cloud_data = self.mps_data_provider.get_semidense_point_cloud()
+            # Todo: Should we clean it?
+            return point_cloud_data
+
+        return None
+
+        pass
+
     # Todo
     # Need a mechanism to add filtering (visible in camera frustum , etc.)
     # Interface to retrieve MPS data if available (see the getDeviceType())

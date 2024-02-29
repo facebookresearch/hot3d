@@ -18,6 +18,10 @@ import os
 import rerun as rr
 
 from dataset_api import DeviceType, Hot3DDataProvider
+from projectaria_tools.core.mps.utils import (
+    filter_points_from_confidence,
+    filter_points_from_count,
+)
 from projectaria_tools.core.stream_id import StreamId
 from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
 
@@ -100,6 +104,21 @@ def main():
             ),
             timeless=True,
         )
+
+        # Point cloud
+        point_cloud = data_provider.get_point_cloud()
+        if point_cloud:
+            # Filter out low confidence points
+            point_cloud = filter_points_from_confidence(point_cloud)
+            # Down sample points
+            points_data_down_sampled = filter_points_from_count(point_cloud, 500_000)
+            # Retrieve point position
+            point_positions = [it.position_world for it in points_data_down_sampled]
+            rr.log(
+                "world/points",
+                rr.Points3D(point_positions, radii=0.006),
+                timeless=True,
+            )
 
     #
     # Visualize the dataset sequence
