@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from enum import Enum
+from pathlib import Path
 
 from typing import Dict, List
 
@@ -27,6 +29,12 @@ from data_loaders.pose_utils import query_left_right
 
 from projectaria_tools.core import calibration, data_provider
 from projectaria_tools.core.calibration import DeviceCalibration, distort_by_calibration
+
+from projectaria_tools.core.mps import (
+    get_eyegaze_point_at_depth,
+    MpsDataPathsProvider,
+    MpsDataProvider,
+)
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
 from projectaria_tools.core.sophus import SE3
 from projectaria_tools.core.stream_id import StreamId
@@ -87,6 +95,14 @@ class Hot3DDataProvider:
         #     rgb_stream_id, TimeDomain.TIME_CODE
         # )
         # print(timecode_vec)
+
+        # Aria specifics
+        mps_possible_path = str(Path(sequence_folder + "/mps"))
+        if os.path.exists(mps_possible_path):
+            mps_data_paths_provider = MpsDataPathsProvider(mps_possible_path)
+            mps_data_paths = mps_data_paths_provider.get_data_paths()
+            self.mps_data_provider = MpsDataProvider(mps_data_paths)
+            print(mps_data_paths)
 
     def get_valid_recording_range(
         self, time_domain: TimeDomain = TimeDomain.TIME_CODE
@@ -199,7 +215,7 @@ class Hot3DDataProvider:
                     image_size[0], image_size[1], focal_lengths[0]
                 )
 
-                # Perform the actual undistortion
+                # Compute the actual undistorted image
                 undistorted_image = distort_by_calibration(
                     image[0].to_numpy_array(), pinhole_calib, camera_calibration
                 )
@@ -207,20 +223,28 @@ class Hot3DDataProvider:
                 return undistorted_image
         return None
 
+    def device_calibration(self):
+        """
+        Return the device calibration (factory calibration of all sensors)
+        """
+        if self.get_device_type() == DeviceType.ARIA:
+            return self._vrs_data_provider.get_device_calibration()
+        else:
+            raise ValueError("TODO Implement for Quest device.")
+            return None
+
     def get_camera_calibration(
         self, stream_id: StreamId
     ) -> tuple[SE3, DeviceCalibration]:
         """
-        Return the camera calibration of the device of the sequence
+        Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
         """
-        # Ideally we have the same calibration for both devices
-
         if self.get_device_type() == DeviceType.ARIA:
-            # Should we return [EXTRINSICS, INTRINSICS]
+
+            device_calibration = self.device_calibration()
             rgb_stream_label = self._vrs_data_provider.get_label_from_stream_id(
                 stream_id
             )
-            device_calibration = self._vrs_data_provider.get_device_calibration()
             camera_calibration = device_calibration.get_camera_calib(rgb_stream_label)
             T_device_camera = camera_calibration.get_transform_device_camera()
             return [T_device_camera, camera_calibration]
@@ -322,6 +346,56 @@ class Hot3DDataProvider:
         # Number of objects
         # Participant Ids
         # Length of the sequence
+
+    def get_eye_gaze_in_camera(
+        self,
+        stream_id: StreamId,
+        timestamp_ns: int,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+        depth_m: float = 1.0,
+    ):
+        """
+        Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
+        """
+        if self.get_device_type() != DeviceType.ARIA:
+            raise ValueError("Eye Gaze not available for this device.")
+
+        # We have an Aria Device
+        #
+        # Map to corresponding timestamp
+        if time_domain == TimeDomain.TIME_CODE:
+            device_timestamp_ns = self._timestamp_convert(
+                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
+            )
+        elif time_domain == TimeDomain.DEVICE_TIME:
+            device_timestamp_ns = timestamp_ns
+        else:
+            raise ValueError("Unsupported time domain")
+
+        if device_timestamp_ns:
+            eye_gaze = self.mps_data_provider.get_general_eyegaze(device_timestamp_ns)
+            if eye_gaze:
+                # Compute eye_gaze vector at depth_m and project it in the image
+                depth_m = 1.0
+                gaze_vector_in_cpf = get_eyegaze_point_at_depth(
+                    eye_gaze.yaw, eye_gaze.pitch, depth_m
+                )
+                [T_device_camera, camera_calibration] = self.get_camera_calibration(
+                    stream_id
+                )
+                focal_lengths = camera_calibration.get_focal_lengths()
+                image_size = camera_calibration.get_image_size()
+                pinhole_calib = calibration.get_linear_camera_calibration(
+                    image_size[0], image_size[1], focal_lengths[0]
+                )
+                device_calibration = self.device_calibration()
+                T_device_CPF = device_calibration.get_transform_device_cpf()
+                gaze_center_in_camera = (
+                    T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
+                )
+                gaze_projection = pinhole_calib.project(gaze_center_in_camera)
+                return gaze_projection
+        return None
 
     # Todo
     # Need a mechanism to add filtering (visible in camera frustum , etc.)

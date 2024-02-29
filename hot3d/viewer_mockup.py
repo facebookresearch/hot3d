@@ -19,7 +19,7 @@ import rerun as rr
 
 from dataset_api import DeviceType, Hot3DDataProvider
 from projectaria_tools.core.stream_id import StreamId
-from projectaria_tools.utils.rerun_helpers import ToTransform3D
+from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
 
 from tqdm import tqdm
 
@@ -51,28 +51,55 @@ def main():
     data_provider = Hot3DDataProvider(args.folder)
 
     # Initializing Rerun viewer
-    rr.init("MPS Data Viewer", spawn=True)
+    rr.init("hot3d Data Viewer", spawn=True)
+    rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Y_UP, timeless=True)
 
     # TODO:
     # For convenience LOG the camera trajectory as a 3D line to help user understand the type of motion in the sequence
 
     rgb_stream_id = StreamId("214-1")
-    # Plot the camera configuration
-    [extrinsics, intrinsics] = data_provider.get_camera_calibration(rgb_stream_id)
-    rr.log(
-        f"world/device/{rgb_stream_id}", ToTransform3D(extrinsics, False), timeless=True
-    )
-    rr.log(
-        f"world/device/{rgb_stream_id}",
-        rr.Pinhole(
-            resolution=[
-                intrinsics.get_image_size()[0],
-                intrinsics.get_image_size()[1],
-            ],
-            focal_length=float(intrinsics.get_focal_lengths()[0]),
-        ),
-        timeless=True,
-    )
+
+    # Deal with Aria specifics
+    if data_provider.get_device_type() == DeviceType.ARIA:
+        # Log STATIC assets
+        #
+        # Plot the camera configuration
+        [extrinsics, intrinsics] = data_provider.get_camera_calibration(rgb_stream_id)
+        rr.log(
+            f"world/device/{rgb_stream_id}",
+            ToTransform3D(extrinsics, False),
+            timeless=True,
+        )
+        rr.log(
+            f"world/device/{rgb_stream_id}",
+            rr.Pinhole(
+                resolution=[
+                    intrinsics.get_image_size()[0],
+                    intrinsics.get_image_size()[1],
+                ],
+                focal_length=float(intrinsics.get_focal_lengths()[0]),
+            ),
+            timeless=True,
+        )
+
+        device_calibration = data_provider.device_calibration()
+        aria_glasses_point_outline = AriaGlassesOutline(device_calibration)
+        rr.log(
+            "world/device/glasses_outline",
+            rr.LineStrips3D([aria_glasses_point_outline]),
+            timeless=True,
+        )
+        rr.log(
+            f"world/device/{rgb_stream_id}",
+            rr.Pinhole(
+                resolution=[
+                    intrinsics.get_image_size()[0],
+                    intrinsics.get_image_size()[1],
+                ],
+                focal_length=float(intrinsics.get_focal_lengths()[0]),
+            ),
+            timeless=True,
+        )
 
     #
     # Visualize the dataset sequence
@@ -143,14 +170,19 @@ def main():
             if image_data is not None:
                 rr.log(
                     f"world/device/{rgb_stream_id}",
-                    # f"{rgb_stream_id}",
                     rr.Image(image_data).compress(jpeg_quality=args.jpeg_quality),
                 )
 
         # Deal with device specifics
-        # if data_provider.get_device_type() == DeviceType.ARIA:
-        # print("MPS specifics")
-        # Display MPS artefact if desired
+        # I.e. Eye Gaze is only available for the Aria device
+        eye_gaze_reprojection_data = data_provider.get_eye_gaze_in_camera(
+            rgb_stream_id, timestamp
+        )
+        if eye_gaze_reprojection_data is not None and eye_gaze_reprojection_data.any():
+            rr.log(
+                f"world/device/{rgb_stream_id}/eye-gaze_projection",
+                rr.Points2D(eye_gaze_reprojection_data, radii=20),
+            )
 
 
 if __name__ == "__main__":
