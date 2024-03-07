@@ -17,7 +17,7 @@ import csv
 from typing import Dict
 
 import numpy as np
-from projectaria_tools.core.sophus import SE3
+from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
@@ -43,7 +43,7 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
 
         # Read the rest of the rows in the CSV file
         for row in reader:
-            print(row)
+            # print(row)
             translation = [
                 row[header.index("t_wo_x[m]")],
                 row[header.index("t_wo_y[m]")],

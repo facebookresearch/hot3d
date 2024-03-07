@@ -17,7 +17,7 @@ import csv
 from typing import Dict, List
 
 import numpy as np
-from projectaria_tools.core.sophus import SE3
+from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns

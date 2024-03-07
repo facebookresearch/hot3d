@@ -20,24 +20,27 @@ from typing import Dict, List
 
 import numpy as np
 
-from data_loaders.loader_device_poses import load_device_poses
-from data_loaders.loader_hand_poses import load_hand_poses
-from data_loaders.loader_object_library import load_object_instance
-from data_loaders.loader_object_poses import load_dynamic_objects
-from data_loaders.PathProvider import Hot3DDataPathProvider
-from data_loaders.pose_utils import query_left_right
+from projectaria_tools.core import calibration, data_provider  # @manual
+from projectaria_tools.core.calibration import (  # @manual
+    DeviceCalibration,
+    distort_by_calibration,
+)
 
-from projectaria_tools.core import calibration, data_provider
-from projectaria_tools.core.calibration import DeviceCalibration, distort_by_calibration
-
-from projectaria_tools.core.mps import (
+from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
     MpsDataProvider,
 )
-from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
-from projectaria_tools.core.sophus import SE3
-from projectaria_tools.core.stream_id import StreamId
+from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
+from projectaria_tools.core.sophus import SE3  # @manual
+from projectaria_tools.core.stream_id import StreamId  # @manual
+
+from .data_loaders.loader_device_poses import load_device_poses
+from .data_loaders.loader_hand_poses import load_hand_poses
+from .data_loaders.loader_object_library import load_object_instance
+from .data_loaders.loader_object_poses import load_dynamic_objects
+from .data_loaders.PathProvider import Hot3DDataPathProvider
+from .data_loaders.pose_utils import query_left_right
 
 
 class DeviceType(Enum):
@@ -81,7 +84,7 @@ class Hot3DDataProvider:
         self._object_instance_mapping = load_object_instance(
             self.path_provider.object_library_instances_file
         )
-        self._timestamp_list = self._dynamic_objects.keys()
+        self._timestamp_list = sorted(self._dynamic_objects.keys())
 
         self._vrs_data_provider = None
         self._vrs_data_provider = data_provider.create_vrs_data_provider(

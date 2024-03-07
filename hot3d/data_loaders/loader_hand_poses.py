@@ -16,7 +16,7 @@ import json
 from typing import Dict, Optional
 
 import numpy as np
-from projectaria_tools.core.sophus import SE3
+from projectaria_tools.core.sophus import SE3  # @manual
 
 
 def getHandPose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
@@ -48,7 +48,7 @@ def load_hand_poses(filename: str) -> Dict[int, Dict[str, SE3]]:
     f = open(filename, "r")
 
     for line in f:
-        print(line)
+        # print(line)
         # Parse the JSON file
         hand_pose_instance = json.loads(line)
         timestamp_ns = hand_pose_instance["timestamp_ns"]
