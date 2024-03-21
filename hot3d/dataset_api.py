@@ -16,9 +16,17 @@ import os
 from enum import Enum
 from pathlib import Path
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
+import torch
+
+from data_loaders.loader_device_poses import load_device_poses
+from data_loaders.loader_hand_poses import HandPose, load_hand_poses
+from data_loaders.loader_object_library import load_object_instance
+from data_loaders.loader_object_poses import load_dynamic_objects
+from data_loaders.PathProvider import Hot3DDataPathProvider
+from data_loaders.pose_utils import query_left_right
 
 from projectaria_tools.core import calibration, data_provider  # @manual
 from projectaria_tools.core.calibration import (  # @manual
@@ -34,13 +42,9 @@ from projectaria_tools.core.mps import (  # @manual
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
+from UmeTrack.common.hand_skinning import skin_landmarks
 
-from .data_loaders.loader_device_poses import load_device_poses
-from .data_loaders.loader_hand_poses import load_hand_poses
-from .data_loaders.loader_object_library import load_object_instance
-from .data_loaders.loader_object_poses import load_dynamic_objects
-from .data_loaders.PathProvider import Hot3DDataPathProvider
-from .data_loaders.pose_utils import query_left_right
+from UmeTrack.common.loader_handmodel import load_hand_model_from_file
 
 
 class DeviceType(Enum):
@@ -92,6 +96,10 @@ class Hot3DDataProvider:
         )
 
         self._hand_poses = load_hand_poses(self.path_provider.hand_poses_file)
+        # Hand profile
+        self._hand_model = load_hand_model_from_file(
+            self.path_provider.hand_profile_file
+        )
 
         # rgb_stream_id = StreamId("214-1")
         # timecode_vec = self._vrs_data_provider.get_timestamps_ns(
@@ -292,7 +300,7 @@ class Hot3DDataProvider:
             raise ValueError("Instance id {} not found".format(instance_id))
         return self._object_instance_mapping[instance_id]["instance_name"]
 
-    def get_hand_poses(self, timestamp_ns: int):
+    def get_hand_poses(self, timestamp_ns: int) -> Optional[List[HandPose]]:
         """
         Return the list of hand poses at the given timestamp
         """
@@ -304,6 +312,36 @@ class Hot3DDataProvider:
                 list(self._hand_poses.keys()), timestamp_ns
             )
             return self._hand_poses[lower]
+
+        return None
+
+    def get_hand_landmarks(self, hand_wrist_data: HandPose):
+        """
+        Return the hand joint landmarks corresponding to given HandPose
+        See how to map the vertices together to represent a Hand as linked lines using LANDMARK_CONNECTIVITY
+        """
+        # Skin the hand mesh
+        if hand_wrist_data.hand_pose is not None:
+            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
+            hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
+
+            # Set translation to 0. Fix scaling and translation as a post processing step
+            hand_wrist_pose_tensor[:, 3] = torch.zeros(1, 4)
+
+            # self._hand_model is defined for the Left hand,
+            #  flipping here the pose X axis is moving the Left Hand to a Right Hand
+            if hand_wrist_data.handedness == "1":
+                hand_wrist_pose_tensor[:, 0] *= -1
+            hand_landmarks = skin_landmarks(
+                self._hand_model,
+                torch.Tensor(hand_wrist_data.joint_angles),
+                hand_wrist_pose_tensor,
+            )
+            # Rescale and translate the vertices
+            scale = 1e-3
+            hand_landmarks = hand_landmarks.mul(scale)
+            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
+            return hand_landmarks + translation.expand_as(hand_landmarks)
 
         return None
 

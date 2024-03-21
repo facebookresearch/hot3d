@@ -20,6 +20,7 @@ HAND_POSES_FILE = "hand_pose_trajectory.jsonl"
 VRS_FILE = "recording.vrs"
 OBJECT_LIBRARY_FOLDER = "assets"
 OBJECT_LIBRARY_INSTANCES = "instance.json"  # map UID to object name
+HAND_PROFILE_FILE = "hand_user_profile.json"
 
 
 class Hot3DDataPathProvider:
@@ -35,17 +36,26 @@ class Hot3DDataPathProvider:
         self.device_poses_file = None
 
         # Check if expected file are present
+
+        # Object poses data
         possible_path = os.path.join(sequence_folder, DYNAMIC_OBJECT_POSES_FILE)
         self.dynamic_objects_file = (
             possible_path if os.path.exists(possible_path) else None
         )
 
+        # VRS file
         possible_path = os.path.join(sequence_folder, VRS_FILE)
         self.vrs_file = possible_path if os.path.exists(possible_path) else None
 
+        # Hand data
         possible_path = os.path.join(sequence_folder, HAND_POSES_FILE)
         self.hand_poses_file = possible_path if os.path.exists(possible_path) else None
+        possible_path = os.path.join(sequence_folder, HAND_PROFILE_FILE)
+        self.hand_profile_file = (
+            possible_path if os.path.exists(possible_path) else None
+        )
 
+        # Device pose data
         possible_path = os.path.join(sequence_folder, DEVICE_POSES_FILE)
         self.device_poses_file = (
             possible_path if os.path.exists(possible_path) else None

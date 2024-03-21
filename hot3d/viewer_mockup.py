@@ -16,6 +16,7 @@ import argparse
 import os
 
 import rerun as rr
+import torch
 
 from dataset_api import DeviceType, Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
@@ -26,6 +27,8 @@ from projectaria_tools.core.stream_id import StreamId
 from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
 
 from tqdm import tqdm
+
+from UmeTrack.common.hand import LANDMARK_CONNECTIVITY
 
 
 def parse_args():
@@ -114,9 +117,10 @@ def main():
             points_data_down_sampled = filter_points_from_count(point_cloud, 500_000)
             # Retrieve point position
             point_positions = [it.position_world for it in points_data_down_sampled]
+            POINT_COLOR = [200, 200, 200]
             rr.log(
                 "world/points",
-                rr.Points3D(point_positions, radii=0.006),
+                rr.Points3D(point_positions, colors=POINT_COLOR, radii=0.002),
                 timeless=True,
             )
 
@@ -143,11 +147,22 @@ def main():
 
         # Plot Hand poses
         hands_data = data_provider.get_hand_poses(timestamp)
-        if hands_data:
-            for hand_data in hands_data:
+        for hand_data in hands_data:
+            if hand_data.hand_pose is not None:
                 rr.log(
-                    f"/world/hands/{hand_data}",
-                    ToTransform3D(hands_data[hand_data][0], False),
+                    f"/world/hands/pose/{hand_data.handedness}",
+                    ToTransform3D(hand_data.hand_pose, False),
+                )
+                hand_hand_landmarks = data_provider.get_hand_landmarks(hand_data)
+                points = []
+                for connectivity in LANDMARK_CONNECTIVITY:
+                    connections = []
+                    for it in connectivity:
+                        connections.append(hand_hand_landmarks[it].numpy().tolist())
+                    points.append(connections)
+                rr.log(
+                    f"/world/hands/joints/{hand_data.handedness}",
+                    rr.LineStrips3D(points),
                 )
 
         # Plot Object poses
@@ -162,7 +177,7 @@ def main():
             )
 
             # If desired (display the corresponding 3D object)
-            scale = rr.datatypes.Scale3D(10e-4)
+            scale = rr.datatypes.Scale3D(1e-3)
             if object_data_key not in object_table.keys():
                 object_table[object_data_key] = True
                 rr.log(

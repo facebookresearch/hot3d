@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import json
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 from projectaria_tools.core.sophus import SE3  # @manual
 
 
-def getHandPose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
+def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
     if handedness in hand_poses_json.keys():
         wrist = hand_poses_json[handedness]["wrist_xform"]
         quaternion_w = wrist["q_wxyz"][0]
@@ -34,7 +34,41 @@ def getHandPose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
     return None
 
 
-def load_hand_poses(filename: str) -> Dict[int, Dict[str, SE3]]:
+def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[float]]:
+    if handedness in hand_poses_json.keys():
+        joint_angles = hand_poses_json[handedness]["joint_angles"]
+        return joint_angles
+    return None
+
+
+class HandPose:
+    """Define a Hand as hand_pose, handedness (0: left, 1: right) and joint_angles.
+    - Note that joint_angles and Hand_pose can be set to None if the hand was not seen.
+    """
+
+    def __init__(self, handedness: str, hand_pose: SE3, joint_angles: List[float]):
+        self._handedness = handedness
+        self._hand_pose = hand_pose
+        self._joint_angles = joint_angles
+
+    @property
+    def handedness(self) -> str:
+        return self._handedness
+
+    @handedness.setter
+    def handedness(self, value: str):
+        self._handedness = value
+
+    @property
+    def hand_pose(self) -> SE3:
+        return self._hand_pose
+
+    @property
+    def joint_angles(self) -> List[float]:
+        return self._joint_angles
+
+
+def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
     """Load Hand Poses meta data from a JSONL file.
 
     Keyword arguments:
@@ -48,32 +82,32 @@ def load_hand_poses(filename: str) -> Dict[int, Dict[str, SE3]]:
     f = open(filename, "r")
 
     for line in f:
-        # print(line)
-        # Parse the JSON file
+        # Parse the JSON file line
         hand_pose_instance = json.loads(line)
         timestamp_ns = hand_pose_instance["timestamp_ns"]
         hand_poses_json = hand_pose_instance["hand_poses"]
 
         # Read hand pose data
-        left_hand_pose = getHandPose("0", hand_poses_json)
-        right_hand_pose = getHandPose("1", hand_poses_json)
+        left_hand_pose = _get_hand_pose("0", hand_poses_json)
+        right_hand_pose = _get_hand_pose("1", hand_poses_json)
+
+        left_joint_angles = _get_joint_angles("0", hand_poses_json)
+        right_joint_angles = _get_joint_angles("1", hand_poses_json)
 
         if timestamp_ns not in hand_poses_per_timestamp:
-            hand_poses_per_timestamp[timestamp_ns] = {}
-        hand_poses_per_timestamp[timestamp_ns]["0"] = left_hand_pose
-        hand_poses_per_timestamp[timestamp_ns]["1"] = right_hand_pose
+            hand_poses_per_timestamp[timestamp_ns] = []
+
+        hand_poses_per_timestamp[timestamp_ns].append(
+            HandPose("0", left_hand_pose, left_joint_angles)
+        )
+        hand_poses_per_timestamp[timestamp_ns].append(
+            HandPose("1", right_hand_pose, right_joint_angles)
+        )
         if left_hand_pose is not None:
             hand_poses_count["0"] += 1
         if right_hand_pose is not None:
             hand_poses_count["1"] += 1
 
-        # if '0' not in hand_poses_json.keys() or '1' not in hand_poses_json.keys():
-        #     print('ERROR')
-        #     print(hand_poses_json.keys())
-
-        # print(hand_poses_json["0"])
-
-        # print(hand_pose_instance)
     # Print statistics
     print(
         f"Hand pose data loading stats: \n\
@@ -82,16 +116,3 @@ def load_hand_poses(filename: str) -> Dict[int, Dict[str, SE3]]:
         \tNumber of Right Hand pose: {hand_poses_count['1']}"
     )
     return hand_poses_per_timestamp
-
-    #             device_pose_per_timestamp[timestamp] = {}
-    #         device_pose_per_timestamp[timestamp] = object_pose
-    #         device_pose_count.add(object_uid)
-
-    # # Print statistics
-    # print(
-    #     f"Device trajectory data loading stats: \n\
-    #     \tNumber of timestamps: {len(device_pose_per_timestamp.keys())}\n\
-    #     \tNumber of Device: {len(device_pose_count)}"
-    # )
-    # assert len(device_pose_count) == 1  # Only one device should be tracked
-    # return device_pose_per_timestamp
