@@ -42,7 +42,7 @@ from projectaria_tools.core.mps import (  # @manual
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
-from UmeTrack.common.hand_skinning import skin_landmarks
+from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
 
 from UmeTrack.common.loader_handmodel import load_hand_model_from_file
 
@@ -315,12 +315,39 @@ class Hot3DDataProvider:
 
         return None
 
-    def get_hand_landmarks(self, hand_wrist_data: HandPose):
+    def get_hand_mesh_vertices(self, hand_wrist_data: HandPose):
+        """
+        Return the hand mesh corresponding to given HandPose
+        """
+        if hand_wrist_data.hand_pose is not None:
+            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
+            hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
+
+            # Set translation to 0. Fix scaling and translation as a post processing step
+            hand_wrist_pose_tensor[:, 3] = torch.zeros(1, 4)
+
+            # self._hand_model is defined for the Left hand,
+            #  flipping here the pose X axis is moving the Left Hand to a Right Hand
+            if hand_wrist_data.handedness == "1":
+                hand_wrist_pose_tensor[:, 0] *= -1
+
+            mesh_vertices = skin_vertices(
+                self._hand_model,
+                torch.Tensor(hand_wrist_data.joint_angles),
+                hand_wrist_pose_tensor,
+            )
+            # Rescale and translate the vertices
+            scale = 1e-3
+            mesh_vertices = mesh_vertices.mul(scale)
+            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
+            return mesh_vertices + translation.expand_as(mesh_vertices)
+        return None
+
+    def get_hand_landmarks(self, hand_wrist_data: HandPose) -> Optional[torch.Tensor]:
         """
         Return the hand joint landmarks corresponding to given HandPose
         See how to map the vertices together to represent a Hand as linked lines using LANDMARK_CONNECTIVITY
         """
-        # Skin the hand mesh
         if hand_wrist_data.hand_pose is not None:
             hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
             hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)

@@ -14,7 +14,6 @@
 
 from typing import List, Optional
 
-import numpy as np
 import torch
 
 from pytorch3d.transforms import so3_exp_map
@@ -217,3 +216,26 @@ def skin_landmarks(
         hand_model.landmark_rest_positions.double(),
         wrist_transforms.double(),
     )
+
+
+def skin_vertices(
+    hand_model: HandModel,
+    joint_angles: torch.Tensor,
+    wrist_transforms: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    assert hand_model.mesh_vertices is not None, "mesh vertices should not be none"
+    assert (
+        hand_model.dense_bone_weights is not None
+    ), "dense bone weights should not be none"
+    vertices = _skin_points(
+        hand_model.joint_rest_positions.double(),
+        hand_model.joint_rotation_axes.double(),
+        hand_model.dense_bone_weights.double(),
+        joint_angles.double(),
+        hand_model.mesh_vertices.double(),
+        wrist_transforms.double(),
+    )
+
+    leading_dims = joint_angles.shape[:-1]
+    vertices = vertices.reshape(list(leading_dims) + list(vertices.shape[-2:]))
+    return vertices

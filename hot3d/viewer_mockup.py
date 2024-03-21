@@ -153,16 +153,23 @@ def main():
                     f"/world/hands/pose/{hand_data.handedness}",
                     ToTransform3D(hand_data.hand_pose, False),
                 )
-                hand_hand_landmarks = data_provider.get_hand_landmarks(hand_data)
+                hand_landmarks = data_provider.get_hand_landmarks(hand_data)
                 points = []
                 for connectivity in LANDMARK_CONNECTIVITY:
                     connections = []
                     for it in connectivity:
-                        connections.append(hand_hand_landmarks[it].numpy().tolist())
+                        connections.append(hand_landmarks[it].numpy().tolist())
                     points.append(connections)
                 rr.log(
                     f"/world/hands/joints/{hand_data.handedness}",
                     rr.LineStrips3D(points),
+                )
+
+                hand_mesh_vertices = data_provider.get_hand_mesh_vertices(hand_data)
+
+                rr.log(
+                    f"/world/hands/mesh/{hand_data.handedness}",
+                    rr.Points3D(hand_mesh_vertices),
                 )
 
         # Plot Object poses
