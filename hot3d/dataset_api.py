@@ -42,8 +42,8 @@ from projectaria_tools.core.mps import (  # @manual
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
-from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
 
+from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
 from UmeTrack.common.loader_handmodel import load_hand_model_from_file
 
 
