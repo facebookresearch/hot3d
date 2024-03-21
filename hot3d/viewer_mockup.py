@@ -149,11 +149,16 @@ def main():
         hands_data = data_provider.get_hand_poses(timestamp)
         for hand_data in hands_data:
             if hand_data.hand_pose is not None:
+
+                # Wrist pose representation
                 rr.log(
                     f"/world/hands/pose/{hand_data.handedness}",
                     ToTransform3D(hand_data.hand_pose, False),
                 )
+
+                # Skeleton/Joints landmark representation
                 hand_landmarks = data_provider.get_hand_landmarks(hand_data)
+                # convert landmarks to connected lines for display
                 points = []
                 for connectivity in LANDMARK_CONNECTIVITY:
                     connections = []
@@ -165,11 +170,24 @@ def main():
                     rr.LineStrips3D(points),
                 )
 
+                # Vertices representation
                 hand_mesh_vertices = data_provider.get_hand_mesh_vertices(hand_data)
-
                 rr.log(
                     f"/world/hands/mesh/{hand_data.handedness}",
                     rr.Points3D(hand_mesh_vertices),
+                )
+
+                # Triangular Mesh representation
+                [hand_triangles, hand_vertex_normals] = (
+                    data_provider.get_hand_mesh_faces_and_normals(hand_data)
+                )
+                rr.log(
+                    f"/world/hands/mesh_faces/{hand_data.handedness}",
+                    rr.Mesh3D(
+                        vertex_positions=hand_mesh_vertices,
+                        vertex_normals=hand_vertex_normals,
+                        indices=hand_triangles,
+                    ),
                 )
 
         # Plot Object poses

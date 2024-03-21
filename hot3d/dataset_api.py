@@ -47,6 +47,28 @@ from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
 from UmeTrack.common.loader_handmodel import load_hand_model_from_file
 
 
+def normalized(
+    vecs: np.ndarray, axis: int = -1, add_const_to_denom: bool = True
+) -> np.ndarray:
+    denom = np.linalg.norm(vecs, axis=axis, keepdims=True)
+    if add_const_to_denom:
+        denom += 1e-5
+    return vecs / denom
+
+
+def get_triangular_mesh_normals(
+    vertices: np.ndarray, triangles: np.ndarray
+) -> np.ndarray:
+    norm = np.zeros_like(vertices)
+    tris = vertices[triangles]
+    n = np.cross(tris[::, 1] - tris[::, 0], tris[::, 2] - tris[::, 0])
+    n = normalized(n)
+    norm[triangles[:, 0]] += n
+    norm[triangles[:, 1]] += n
+    norm[triangles[:, 2]] += n
+    return normalized(norm)
+
+
 class DeviceType(Enum):
     QUEST3 = 1
     ARIA = 2
@@ -315,7 +337,7 @@ class Hot3DDataProvider:
 
         return None
 
-    def get_hand_mesh_vertices(self, hand_wrist_data: HandPose):
+    def get_hand_mesh_vertices(self, hand_wrist_data: HandPose) -> torch.Tensor:
         """
         Return the hand mesh corresponding to given HandPose
         """
@@ -342,6 +364,22 @@ class Hot3DDataProvider:
             translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
             return mesh_vertices + translation.expand_as(mesh_vertices)
         return None
+
+    def get_hand_mesh_faces_and_normals(
+        self, hand_wrist_data: HandPose
+    ) -> Optional[tuple[np.array, np.array]]:
+        """
+        Return the hand mesh faces and normals
+        """
+        if self._hand_model is not None:
+            hand_triangles = self._hand_model.mesh_triangles.int().numpy()
+            vertices = self.get_hand_mesh_vertices(hand_wrist_data)
+            normals = get_triangular_mesh_normals(
+                vertices.float().numpy(), hand_triangles
+            )
+            return [hand_triangles, normals]
+        else:
+            return None
 
     def get_hand_landmarks(self, hand_wrist_data: HandPose) -> Optional[torch.Tensor]:
         """
