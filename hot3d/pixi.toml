@@ -1,0 +1,18 @@
+[project]
+name = "hot3d"
+version = "0.1.0"
+description = "Add a short description here"
+authors = ["Pierre Moulon <pierrem@meta.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[tasks]
+
+setup = """
+    python3 -m ensurepip;
+    python3 -m pip install projectaria_tools torch;
+    python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git@stable'
+    """
+
+[dependencies]
+python = "==3.10"
