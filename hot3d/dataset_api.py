@@ -30,7 +30,7 @@ from data_loaders.pose_utils import query_left_right
 
 from projectaria_tools.core import calibration, data_provider  # @manual
 from projectaria_tools.core.calibration import (  # @manual
-    DeviceCalibration,
+    CameraCalibration,
     distort_by_calibration,
 )
 
@@ -268,7 +268,7 @@ class Hot3DDataProvider:
 
     def get_camera_calibration(
         self, stream_id: StreamId
-    ) -> tuple[SE3, DeviceCalibration]:
+    ) -> tuple[SE3, CameraCalibration]:
         """
         Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
         """
