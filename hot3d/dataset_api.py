@@ -98,33 +98,40 @@ class Hot3DDataProvider:
         # Hands
         # Objects
         # Device type, ...
-        self.path_provider = Hot3DDataPathProvider(sequence_folder)
+        self.path_provider = Hot3DDataPathProvider.fromRecordingFolder(
+            recording_instance_folderpath=sequence_folder
+        )
+
         if not self.path_provider.is_valid():
             raise RuntimeError(
                 "Invalid hot3d path.. Not all expected data are present."
             )
 
         self._dynamic_objects = load_dynamic_objects(
-            self.path_provider.dynamic_objects_file
+            self.path_provider.dynamic_objects_filepath
         )
-        self._device_poses = load_device_poses(self.path_provider.device_poses_file)
+        self._device_poses = load_device_poses(
+            self.path_provider.headset_trajectory_filepath
+        )
 
         self._object_library: ObjectLibrary = object_library
         self._timestamp_list = sorted(self._dynamic_objects.keys())
 
         self._vrs_data_provider = None
         self._vrs_data_provider = data_provider.create_vrs_data_provider(
-            self.path_provider.vrs_file
+            self.path_provider.vrs_filepath
         )
 
-        self._hand_poses = load_hand_poses(self.path_provider.hand_poses_file)
+        self._hand_poses = load_hand_poses(
+            self.path_provider.hand_pose_trajectory_filepath
+        )
         # Hand profile
         self._hand_model = load_hand_model_from_file(
-            self.path_provider.hand_profile_file
+            self.path_provider.hand_user_profile_filepath
         )
 
         # Aria specifics
-        mps_possible_path = str(Path(sequence_folder + "/mps"))
+        mps_possible_path = self.path_provider.mps_folderpath
         if os.path.exists(mps_possible_path):
             mps_data_paths_provider = MpsDataPathsProvider(mps_possible_path)
             mps_data_paths = mps_data_paths_provider.get_data_paths()

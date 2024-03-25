@@ -14,53 +14,123 @@
 
 import os
 
-DYNAMIC_OBJECT_POSES_FILE = "dynamic_objects_v2.csv"
-DEVICE_POSES_FILE = "headset_trajectory.csv"
-HAND_POSES_FILE = "hand_pose_trajectory.jsonl"
-VRS_FILE = "recording.vrs"
-HAND_PROFILE_FILE = "hand_user_profile.json"
+from .headsets import Headset
+from .io_utils import load_json
 
 
-class Hot3DDataPathProvider:
-    """
-    High Level interface to retrieve the metadata PATH used by the dataset
-    """
+class Hot3DDataPathProvider(object):
+    @staticmethod
+    def fromRecordingFolder(recording_instance_folderpath):
 
-    def __init__(self, sequence_folder: str) -> None:
-        """
-        INIT_DOC_STRING
-        """
-        self.dynamic_objects_file = None
-        self.device_poses_file = None
+        metadata_filepath = os.path.join(recording_instance_folderpath, "metadata.json")
+        metadata_json = load_json(metadata_filepath)
+        headset = Headset[metadata_json["headset"]]
 
-        # Check if expected file are present
+        if headset is Headset.Aria:
+            return AriaDatasetPaths(
+                recording_instance_folderpath=recording_instance_folderpath
+            )
+        elif headset is Headset.Quest3:
+            return Quest3DatasetPaths(
+                recording_instance_folderpath=recording_instance_folderpath
+            )
+        else:
+            raise NotImplementedError(f"{headset} not supported at the moment.")
 
-        # Object poses data
-        possible_path = os.path.join(sequence_folder, DYNAMIC_OBJECT_POSES_FILE)
-        self.dynamic_objects_file = (
-            possible_path if os.path.exists(possible_path) else None
-        )
 
-        # VRS file
-        possible_path = os.path.join(sequence_folder, VRS_FILE)
-        self.vrs_file = possible_path if os.path.exists(possible_path) else None
+class Quest3DatasetPaths(object):
+    def __init__(self, recording_instance_folderpath):
+        self._recording_instance_folderpath = recording_instance_folderpath
 
-        # Hand data
-        possible_path = os.path.join(sequence_folder, HAND_POSES_FILE)
-        self.hand_poses_file = possible_path if os.path.exists(possible_path) else None
-        possible_path = os.path.join(sequence_folder, HAND_PROFILE_FILE)
-        self.hand_profile_file = (
-            possible_path if os.path.exists(possible_path) else None
-        )
+    @property
+    def recording_instance_folderpath(self):
+        return self._recording_instance_folderpath
 
-        # Device pose data
-        possible_path = os.path.join(sequence_folder, DEVICE_POSES_FILE)
-        self.device_poses_file = (
-            possible_path if os.path.exists(possible_path) else None
-        )
+    @property
+    def dynamic_objects_filepath(self):
+        return f"{self._recording_instance_folderpath}/dynamic_objects.csv"
 
-    def is_valid(self) -> str:
-        """
-        FUNC_DOC_STRING
-        """
-        return self.dynamic_objects_file and self.device_poses_file
+    @property
+    def headset_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/headset_trajectory.csv"
+
+    @property
+    def headset_metadata_filepath(self):
+        return f"{self._recording_instance_folderpath}/headset_metadata.json"
+
+    @property
+    def hand_pose_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/hand_pose_trajectory.jsonl"
+
+    @property
+    def hand_user_profile_filepath(self):
+        return f"{self._recording_instance_folderpath}/hand_user_profile.json"
+
+    @property
+    def vrs_filepath(self):
+        return f"{self._recording_instance_folderpath}/recording.vrs"
+
+    @property
+    def required_filepaths(self):
+        return [
+            self.vrs_filepath,
+            self.dynamic_objects_filepath,
+            self.headset_trajectory_filepath,
+            self.headset_metadata_filepath,
+            self.hand_pose_trajectory_filepath,
+            self.hand_user_profile_filepath,
+            self.markers_frames_filepath,
+        ]
+
+    def is_valid(self) -> bool:
+        return all(os.path.exists(filepath) for filepath in self.required_filepaths)
+
+
+class AriaDatasetPaths(object):
+    def __init__(self, recording_instance_folderpath):
+        self._recording_instance_folderpath = recording_instance_folderpath
+
+    @property
+    def recording_instance_folderpath(self):
+        return self._recording_instance_folderpath
+
+    @property
+    def dynamic_objects_filepath(self):
+        return f"{self._recording_instance_folderpath}/dynamic_objects.csv"
+
+    @property
+    def headset_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/headset_trajectory.csv"
+
+    @property
+    def headset_metadata_filepath(self):
+        return f"{self._recording_instance_folderpath}/headset_metadata.json"
+
+    @property
+    def hand_pose_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/hand_pose_trajectory.jsonl"
+
+    @property
+    def hand_user_profile_filepath(self):
+        return f"{self._recording_instance_folderpath}/hand_user_profile.json"
+
+    @property
+    def vrs_filepath(self):
+        return f"{self._recording_instance_folderpath}/recording.vrs"
+
+    @property
+    def mps_folderpath(self):
+        return f"{self._recording_instance_folderpath}/mps"
+
+    @property
+    def required_filepaths(self):
+        return [
+            self.vrs_filepath,
+            self.dynamic_objects_filepath,
+            self.headset_trajectory_filepath,
+            self.headset_metadata_filepath,
+            self.hand_pose_trajectory_filepath,
+        ]
+
+    def is_valid(self) -> bool:
+        return all(os.path.exists(filepath) for filepath in self.required_filepaths)
