@@ -191,6 +191,30 @@ class Hot3DDataProvider:
             return device_timestamp_ns
         return None
 
+    def get_image_stream_ids(self) -> List[StreamId]:
+        """
+        Return the list of image stream ids
+        """
+        if self._vrs_data_provider:
+            stream_ids = self._vrs_data_provider.get_all_streams()
+            image_stream_ids = [
+                p
+                for p in stream_ids
+                if self._vrs_data_provider.get_label_from_stream_id(p).startswith(
+                    "camera-"
+                )
+            ]
+            return image_stream_ids
+        return None
+
+    def get_image_stream_label(self, stream_id: StreamId) -> str:
+        """
+        Return the label of the image stream
+        """
+        if self._vrs_data_provider:
+            return self._vrs_data_provider.get_label_from_stream_id(stream_id)
+        return None
+
     def get_image(self, timestamp_ns: int, stream_id: StreamId) -> np.ndarray:
         """
         Return the image corresponding to the requested timestamp and streamId

@@ -16,7 +16,6 @@ import argparse
 import os
 
 import rerun as rr
-import torch
 
 from dataset_api import DeviceType, Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
@@ -73,47 +72,49 @@ def main():
     # TODO:
     # For convenience LOG the camera trajectory as a 3D line to help user understand the type of motion in the sequence
 
-    rgb_stream_id = StreamId("214-1")
+    image_stream_ids = data_provider.get_image_stream_ids()
 
     # Deal with Aria specifics
     if data_provider.get_device_type() == DeviceType.ARIA:
-        # Log STATIC assets
-        #
-        # Plot the camera configuration
-        [extrinsics, intrinsics] = data_provider.get_camera_calibration(rgb_stream_id)
-        rr.log(
-            f"world/device/{rgb_stream_id}",
-            ToTransform3D(extrinsics, False),
-            timeless=True,
-        )
-        rr.log(
-            f"world/device/{rgb_stream_id}",
-            rr.Pinhole(
-                resolution=[
-                    intrinsics.get_image_size()[0],
-                    intrinsics.get_image_size()[1],
-                ],
-                focal_length=float(intrinsics.get_focal_lengths()[0]),
-            ),
-            timeless=True,
-        )
+
+        for stream_id in image_stream_ids:
+            # Log STATIC assets (aka Timeless assets)
+            #
+            # Plot the camera configuration
+            [extrinsics, intrinsics] = data_provider.get_camera_calibration(stream_id)
+            rr.log(
+                f"world/device/{stream_id}",
+                ToTransform3D(extrinsics, False),
+                timeless=True,
+            )
+            rr.log(
+                f"world/device/{stream_id}",
+                rr.Pinhole(
+                    resolution=[
+                        intrinsics.get_image_size()[0],
+                        intrinsics.get_image_size()[1],
+                    ],
+                    focal_length=float(intrinsics.get_focal_lengths()[0]),
+                ),
+                timeless=True,
+            )
+            rr.log(
+                f"world/device/{stream_id}",
+                rr.Pinhole(
+                    resolution=[
+                        intrinsics.get_image_size()[0],
+                        intrinsics.get_image_size()[1],
+                    ],
+                    focal_length=float(intrinsics.get_focal_lengths()[0]),
+                ),
+                timeless=True,
+            )
 
         device_calibration = data_provider.device_calibration()
         aria_glasses_point_outline = AriaGlassesOutline(device_calibration)
         rr.log(
             "world/device/glasses_outline",
             rr.LineStrips3D([aria_glasses_point_outline]),
-            timeless=True,
-        )
-        rr.log(
-            f"world/device/{rgb_stream_id}",
-            rr.Pinhole(
-                resolution=[
-                    intrinsics.get_image_size()[0],
-                    intrinsics.get_image_size()[1],
-                ],
-                focal_length=float(intrinsics.get_focal_lengths()[0]),
-            ),
             timeless=True,
         )
 
@@ -137,6 +138,12 @@ def main():
     # Visualize the dataset sequence
     #
     # Loop over the timestamps of the sequence and visualize corresponding data
+    rgb_stream_id = StreamId("214-1")  # default stream used for timestamp reference
+    if rgb_stream_id not in image_stream_ids:
+        raise ValueError(
+            "StreamId used to defined the timestamp should be available in the VRS data"
+        )
+
     timestamps = data_provider.get_sequence_timestamps(rgb_stream_id)
     # Crop timestamp to the valid timing of the Image recording
     [min_timestamp, max_timestamp] = data_provider.get_valid_recording_range()
@@ -153,8 +160,19 @@ def main():
         rr.set_time_sequence("timestamp", timestamp)
 
         # Retrieve METADATA object and visualize them
+        # 1. Plot 3D assets
+        #    - 1.a Device pose
+        #    - 1.b hands
+        #    - 1.c Object poses
+        # 2. Plot image specifics assets
 
-        # Plot Hand poses
+        # 1. Plot 3D assets
+        # 1.a Device pose
+        device_pose_data = data_provider.get_device_pose(timestamp)
+        if device_pose_data:
+            rr.log("world/device", ToTransform3D(device_pose_data, False))
+
+        #  1.b hands
         hands_data = data_provider.get_hand_poses(timestamp)
         for hand_data in hands_data:
             if hand_data.hand_pose is not None:
@@ -199,7 +217,7 @@ def main():
                     ),
                 )
 
-        # Plot Object poses
+        # 1.c Object poses
         objects_data = data_provider.get_object_poses(timestamp)
         for object_data_key, object_data_value in objects_data.items():
 
@@ -210,7 +228,7 @@ def main():
                 ToTransform3D(object_data_value[0], False),
             )
 
-            # If desired (display the corresponding 3D object)
+            # Link the corresponding 3D object
             scale = rr.datatypes.Scale3D(1e-3)
             if object_data_key not in object_table.keys():
                 object_table[object_data_key] = True
@@ -227,30 +245,33 @@ def main():
                     timeless=True,
                 )
 
-        # Plot device pose
-        device_pose_data = data_provider.get_device_pose(timestamp)
-        if device_pose_data:
-            rr.log("world/device", ToTransform3D(device_pose_data, False))
+        # 2. Plot image specifics assets
+        #    - 2.a Image
+        #    - 2.b Eye Gaze image reprojection
+        for stream_id in image_stream_ids:
 
-            # Plot image (corresponding to this pose)
-            # image_data = data_provider.get_image(timestamp, rgb_stream_id)
-            image_data = data_provider.get_undistorted_image(timestamp, rgb_stream_id)
+            # 2.a Image
+            image_data = data_provider.get_undistorted_image(timestamp, stream_id)
             if image_data is not None:
                 rr.log(
-                    f"world/device/{rgb_stream_id}",
+                    f"world/device/{stream_id}",
                     rr.Image(image_data).compress(jpeg_quality=args.jpeg_quality),
                 )
 
-        # Deal with device specifics
-        # I.e. Eye Gaze is only available for the Aria device
-        eye_gaze_reprojection_data = data_provider.get_eye_gaze_in_camera(
-            rgb_stream_id, timestamp
-        )
-        if eye_gaze_reprojection_data is not None and eye_gaze_reprojection_data.any():
-            rr.log(
-                f"world/device/{rgb_stream_id}/eye-gaze_projection",
-                rr.Points2D(eye_gaze_reprojection_data, radii=20),
+            # Deal with device specifics
+            # 2.b Eye Gaze image reprojection
+            # Note: Eye Gaze is only available for the Aria device
+            eye_gaze_reprojection_data = data_provider.get_eye_gaze_in_camera(
+                stream_id, timestamp
             )
+            if (
+                eye_gaze_reprojection_data is not None
+                and eye_gaze_reprojection_data.any()
+            ):
+                rr.log(
+                    f"world/device/{stream_id}/eye-gaze_projection",
+                    rr.Points2D(eye_gaze_reprojection_data, radii=20),
+                )
 
 
 if __name__ == "__main__":
