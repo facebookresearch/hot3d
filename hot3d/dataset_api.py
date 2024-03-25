@@ -23,7 +23,8 @@ import torch
 
 from data_loaders.loader_device_poses import load_device_poses
 from data_loaders.loader_hand_poses import HandPose, load_hand_poses
-from data_loaders.loader_object_library import load_object_instance
+from data_loaders.loader_object_library import ObjectLibrary
+
 from data_loaders.loader_object_poses import load_dynamic_objects
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
@@ -89,7 +90,7 @@ class Hot3DDataProvider:
     High Level interface to retrieve and use data from the hot3d dataset
     """
 
-    def __init__(self, sequence_folder: str) -> None:
+    def __init__(self, sequence_folder: str, object_library: ObjectLibrary) -> None:
         """
         INIT_DOC_STRING
         """
@@ -107,9 +108,8 @@ class Hot3DDataProvider:
             self.path_provider.dynamic_objects_file
         )
         self._device_poses = load_device_poses(self.path_provider.device_poses_file)
-        self._object_instance_mapping = load_object_instance(
-            self.path_provider.object_library_instances_file
-        )
+
+        self._object_library: ObjectLibrary = object_library
         self._timestamp_list = sorted(self._dynamic_objects.keys())
 
         self._vrs_data_provider = None
@@ -130,6 +130,13 @@ class Hot3DDataProvider:
             mps_data_paths = mps_data_paths_provider.get_data_paths()
             self.mps_data_provider = MpsDataProvider(mps_data_paths)
             print(mps_data_paths)
+
+    @property
+    def object_library(self):
+        """
+        Return the object library used for initializing the Hot3DDataProvider
+        """
+        return self._object_library
 
     def get_valid_recording_range(
         self, time_domain: TimeDomain = TimeDomain.TIME_CODE
@@ -331,14 +338,6 @@ class Hot3DDataProvider:
             return self._dynamic_objects[lower]
 
         return None
-
-    def get_object_instance_name(self, instance_id: str) -> str:
-        """
-        Return the "name" of the object instance from its unique instance id
-        """
-        if instance_id not in self._object_instance_mapping.keys():
-            raise ValueError("Instance id {} not found".format(instance_id))
-        return self._object_instance_mapping[instance_id]["instance_name"]
 
     def get_hand_poses(self, timestamp_ns: int) -> Optional[List[HandPose]]:
         """

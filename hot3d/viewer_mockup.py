@@ -16,6 +16,7 @@ import argparse
 import os
 
 import rerun as rr
+from data_loaders.loader_object_library import load_object_library, ObjectLibrary
 
 from dataset_api import DeviceType, Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
@@ -33,9 +34,16 @@ from UmeTrack.common.hand import LANDMARK_CONNECTIVITY
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--folder",
+        "--sequence_folder",
         type=str,
         help="path to hot3d data sequence",
+        required=True,
+    )
+    parser.add_argument(
+        "--object_library_folder",
+        type=str,
+        help="path to object library folder containing instance.json and assets/*.glb cad files",
+        required=True,
     )
 
     parser.add_argument("--jpeg_quality", type=int, default=75, help=argparse.SUPPRESS)
@@ -50,16 +58,26 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(f"args provided: {args}")
 
-    #
-    # Gather data input
-    #
-    if args.folder is None:
-        print("Nothing to display.")
-        exit(1)
+    sequence_folder = args.sequence_folder
+    object_library_folder = args.object_library_folder
+
+    if not os.path.exists(sequence_folder):
+        raise RuntimeError(f"Sequence folder {sequence_folder} does not exist")
+    if not os.path.exists(object_library_folder):
+        raise RuntimeError(
+            f"Object Library folder {object_library_folder} does not exist"
+        )
+
+    object_library: ObjectLibrary = load_object_library(
+        object_library_folderpath=object_library_folder
+    )
 
     # Initialize hot3d data provider
-    data_provider = Hot3DDataProvider(args.folder)
+    data_provider = Hot3DDataProvider(
+        sequence_folder=sequence_folder, object_library=object_library
+    )
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(not args.rrd_output_path))
@@ -221,8 +239,13 @@ def main():
         objects_data = data_provider.get_object_poses(timestamp)
         for object_data_key, object_data_value in objects_data.items():
 
-            object_name = data_provider.get_object_instance_name(object_data_key)
+            object_name = object_library.object_id_to_name_dict[object_data_key]
             object_name = object_name + "_" + str(object_data_key)
+            object_cad_asset_filepath = ObjectLibrary.get_cad_asset_path(
+                object_library_folderpath=object_library_folder,
+                object_id=object_data_key,
+            )
+
             rr.log(
                 f"/world/objects/{object_name}",
                 ToTransform3D(object_data_value[0], False),
@@ -235,11 +258,7 @@ def main():
                 rr.log(
                     f"/world/objects/{object_name}",
                     rr.Asset3D(
-                        path=os.path.join(
-                            os.path.dirname(args.folder),
-                            "assets",
-                            object_data_key + ".glb",
-                        ),
+                        path=object_cad_asset_filepath,
                         transform=rr.TranslationRotationScale3D(scale=scale),
                     ),
                     timeless=True,

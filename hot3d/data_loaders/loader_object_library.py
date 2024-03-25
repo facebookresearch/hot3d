@@ -12,28 +12,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 
-from typing import Dict
+import os
+from typing import Any, Dict, Set
+
+from .io_utils import load_json
 
 
-def load_object_instance(filename: str) -> Dict:
-    """Load Objects library meta data.
+class ObjectLibrary(object):
+    def __init__(self, object_library_json: Dict[str, Any], asset_folder: str):
+        self._object_library_json = object_library_json
+        (
+            self._object_id_to_name_dict,
+            self._object_name_to_id_dict,
+        ) = self._get_object_id_name_mappings(object_library_json)
+        (
+            self._headset_id_to_name_dict,
+            self._headset_name_to_id_dict,
+        ) = self._get_headset_id_name_mappings(object_library_json)
 
-    Keyword arguments:
-    filename -- the json file i.e. sequence_folder + "/instance.csv"
-    """
+    @property
+    def object_id_to_name_dict(self):
+        return self._object_id_to_name_dict
 
-    object_instance = {}
+    @property
+    def object_name_to_id_dict(self):
+        return self._object_name_to_id_dict
 
-    # Open the JSON file for reading
-    with open(filename, "r") as f:
+    @property
+    def headset_id_to_name_dict(self):
+        return self._headset_id_to_name_dict
 
-        # Parse the JSON file
-        object_instance = json.load(f)
+    @property
+    def headset_name_to_id_dict(self):
+        return self._headset_name_to_id_dict
 
-    print(
-        f"Object instance data loading stats: \n\
-        \tNumber of instances: {len(object_instance.keys())}"
-    )
-    return object_instance
+    @property
+    def object_uids(self) -> Set[str]:
+        return set(self._object_name_to_id_dict.values())
+
+    @property
+    def headset_uids(self) -> Set[str]:
+        return set(self._headset_name_to_id_dict.values())
+
+    def _get_object_id_name_mappings(self, object_info_json):
+
+        object_id_to_name_dict = {
+            k: v["instance_name"]
+            for k, v in object_info_json.items()
+            if v["instance_type"] == "object" and v["motion_type"] == "dynamic"
+        }
+        object_name_to_id_dict = {v: k for k, v in object_id_to_name_dict.items()}
+        return object_id_to_name_dict, object_name_to_id_dict
+
+    def _get_headset_id_name_mappings(self, object_info_json):
+        headset_id_to_name_dict = {
+            k: v["instance_name"]
+            for k, v in object_info_json.items()
+            if v["instance_type"] == "headset"
+        }
+        headset_name_to_id_dict = {v: k for k, v in headset_id_to_name_dict.items()}
+        return headset_id_to_name_dict, headset_name_to_id_dict
+
+    @staticmethod
+    def get_cad_asset_path(object_library_folderpath: str, object_id: str) -> str:
+        return os.path.join(object_library_folderpath, "assets", f"{object_id}.glb")
+
+
+def load_object_library(object_library_folderpath: str) -> ObjectLibrary:
+    instance_filepath = os.path.join(object_library_folderpath, "instance.json")
+    object_library_json = load_json(instance_filepath)
+    asset_folder = os.path.join(object_library_folderpath, "assets")
+    return ObjectLibrary(object_library_json, asset_folder)
