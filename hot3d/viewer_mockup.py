@@ -137,7 +137,7 @@ def main():
     # Visualize the dataset sequence
     #
     # Loop over the timestamps of the sequence and visualize corresponding data
-    timestamps = data_provider.get_timestamps()
+    timestamps = data_provider.get_sequence_timestamps(rgb_stream_id)
     # Crop timestamp to the valid timing of the Image recording
     [min_timestamp, max_timestamp] = data_provider.get_valid_recording_range()
     timestamps = [

@@ -32,7 +32,6 @@ def load_object_instance(filename: str) -> Dict:
         # Parse the JSON file
         object_instance = json.load(f)
 
-    print(object_instance)
     print(
         f"Object instance data loading stats: \n\
         \tNumber of instances: {len(object_instance.keys())}"

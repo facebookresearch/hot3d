@@ -123,12 +123,6 @@ class Hot3DDataProvider:
             self.path_provider.hand_profile_file
         )
 
-        # rgb_stream_id = StreamId("214-1")
-        # timecode_vec = self._vrs_data_provider.get_timestamps_ns(
-        #     rgb_stream_id, TimeDomain.TIME_CODE
-        # )
-        # print(timecode_vec)
-
         # Aria specifics
         mps_possible_path = str(Path(sequence_folder + "/mps"))
         if os.path.exists(mps_possible_path):
@@ -147,26 +141,15 @@ class Hot3DDataProvider:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
         device_start_timestamp = self._vrs_data_provider.get_first_time_ns_all_streams(
-            TimeDomain.DEVICE_TIME
+            time_domain
         )
         device_end_timestamp = self._vrs_data_provider.get_last_time_ns_all_streams(
-            TimeDomain.DEVICE_TIME
-        )
-
-        device_start_timestamp = (
-            self._vrs_data_provider.convert_from_device_time_to_timecode_ns(
-                device_start_timestamp
-            )
-        )
-        device_end_timestamp = (
-            self._vrs_data_provider.convert_from_device_time_to_timecode_ns(
-                device_end_timestamp
-            )
+            time_domain
         )
 
         return [device_start_timestamp, device_end_timestamp]
 
-    def get_timestamps(
+    def _get_timestamps(
         self, time_domain: TimeDomain = TimeDomain.TIME_CODE
     ) -> List[int]:
         """
@@ -176,6 +159,17 @@ class Hot3DDataProvider:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
         return self._timestamp_list  # default is TimeDomain.TIME_CODE
+
+    def get_sequence_timestamps(
+        self, stream_id: StreamId, time_domain: TimeDomain = TimeDomain.TIME_CODE
+    ) -> List[int]:
+        """
+        Returns the list of device timestamp for the specified StreamId
+        """
+        if self.get_device_type() == DeviceType.ARIA:
+            return self._vrs_data_provider.get_timestamps_ns(stream_id, time_domain)
+        else:
+            return None
 
     def _timestamp_convert(
         self, timestamp: int, time_domain_in: TimeDomain, time_domain_out: TimeDomain

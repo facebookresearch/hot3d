@@ -43,7 +43,6 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
 
         # Read the rest of the rows in the CSV file
         for row in reader:
-            # print(row)
             translation = [
                 row[header.index("t_wo_x[m]")],
                 row[header.index("t_wo_y[m]")],
