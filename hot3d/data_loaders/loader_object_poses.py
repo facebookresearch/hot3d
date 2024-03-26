@@ -12,26 +12,147 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import bisect
 import csv
+import itertools
+from dataclasses import dataclass
 
-from typing import Dict, List
+from typing import Any, Dict, List, Optional, Set
 
 import numpy as np
+from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
 
 
-def load_dynamic_objects(filename: str) -> Dict[int, Dict[str, List[SE3]]]:
+@dataclass
+class Pose3D:
+    """
+    Class to store pose of a single entity (object/headset)
+    """
+
+    T_world_object: Optional[SE3] = None
+
+
+@dataclass
+class Pose3DCollection:
+    """
+    Class to store the poses for a given timestamp
+    """
+
+    timestamp_ns: int
+    poses: Dict[str, Pose3D]
+
+    @property
+    def object_uid_list(self) -> Set[str]:
+        return set(self.poses.keys())
+
+
+Pose3DTrajectory = Dict[int, Pose3DCollection]
+
+
+@dataclass
+class Pose3DCollectionWithDt:
+    pose3d_collection: Pose3DCollection
+    time_delta_ns: int
+
+
+class Pose3DProvider(object):
+    def __init__(self, pose3d_trajectory: Pose3DTrajectory):
+        self._pose3d_trajectory: Pose3DTrajectory = pose3d_trajectory
+        self._sorted_timestamp_ns_list: List[int] = sorted(
+            self._pose3d_trajectory.keys()
+        )
+        self._object_uids_with_poses: Set = {
+            x for v in self._pose3d_trajectory.values() for x in v.object_uid_list
+        }
+
+    @property
+    def timestamp_ns_list(self) -> List[int]:
+        return self._sorted_timestamp_ns_list
+
+    @property
+    def object_uids_with_poses(self) -> Set[str]:
+        return set(self._object_uids_with_poses)
+
+    def get_data_statistics(self) -> Dict[str, Any]:
+        """
+        Returns the stats of the trajectory
+        """
+        stats = {}
+        stats["num_frames"] = len(self._sorted_timestamp_ns_list)
+        stats["num_objects"] = len(self._object_uids_with_poses)
+        stats["object_uids"] = [str(x) for x in self._object_uids_with_poses]
+        return stats
+
+    def get_pose_at_timestamp(
+        self,
+        timestamp_ns: int,
+        time_query_options: TimeQueryOptions,
+        time_domain: TimeDomain,
+    ) -> Optional[Pose3DCollectionWithDt]:
+        """
+        Return the list of poses at the given timestamp
+        """
+        if time_domain is not TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+
+        pose3d_collection = None
+        time_delta_ns = None
+
+        if timestamp_ns in self._sorted_timestamp_ns_list:
+            pose3d_collection = self._pose3d_trajectory[timestamp_ns]
+            time_delta_ns = 0
+        else:
+            left_frame_tsns, right_frame_tsns, alpha = get_left_right_frames(
+                reference_tsns_list=self._sorted_timestamp_ns_list,
+                query_tsns=timestamp_ns,
+            )
+            if time_query_options == TimeQueryOptions.BEFORE:
+                pose3d_collection = self._pose3d_trajectory[left_frame_tsns]
+                time_delta_ns = timestamp_ns - left_frame_tsns
+            elif time_query_options == TimeQueryOptions.AFTER:
+                pose3d_collection = self._pose3d_trajectory[right_frame_tsns]
+                time_delta_ns = timestamp_ns - right_frame_tsns
+            elif time_query_options == TimeQueryOptions.CLOSEST:
+                if abs(timestamp_ns - left_frame_tsns) < abs(
+                    timestamp_ns - right_frame_tsns
+                ):
+                    pose3d_collection = self._pose3d_trajectory[left_frame_tsns]
+                    time_delta_ns = timestamp_ns - left_frame_tsns
+                else:
+                    pose3d_collection = self._pose3d_trajectory[right_frame_tsns]
+                    time_delta_ns = timestamp_ns - right_frame_tsns
+
+        if pose3d_collection is None or time_delta_ns is None:
+            return None
+        else:
+            return Pose3DCollectionWithDt(
+                pose3d_collection=pose3d_collection, time_delta_ns=time_delta_ns
+            )
+
+
+def get_left_right_frames(reference_tsns_list, query_tsns):
+    index_less_than_query = bisect.bisect_left(reference_tsns_list, query_tsns) - 1
+    index_greater_than_query = index_less_than_query + 1
+    left_frame_tsns = reference_tsns_list[index_less_than_query]
+    right_frame_tsns = reference_tsns_list[index_greater_than_query]
+
+    alpha = (query_tsns - left_frame_tsns) / (right_frame_tsns - left_frame_tsns)
+
+    return left_frame_tsns, right_frame_tsns, alpha
+
+
+def load_pose_trajectory_from_csv(filename: str) -> Pose3DTrajectory:
     """Load Dynamic Objects meta data from a CSV file.
 
     Keyword arguments:
     filename -- the csv file i.e. sequence_folder + "/dynamic_objects.csv"
     """
 
-    objects_per_timestamp = {}
-    object_count = set()
+    pose3d_trajectory: Pose3DTrajectory = {}
     # Open the CSV file for reading
     with open(filename, "r") as f:
         reader = csv.reader(f)
@@ -55,25 +176,29 @@ def load_dynamic_objects(filename: str) -> Dict[int, Dict[str, List[SE3]]]:
                 row[header.index("q_wo_z")],
             ]
             quaternion_w = row[header.index("q_wo_w")]
-            timestamp = int(row[header.index("timestamp[ns]")])
-            object_uid = row[header.index("object_uid")]
+            timestamp_ns = int(row[header.index("timestamp[ns]")])
+            object_uid = str(row[header.index("object_uid")])
 
-            object_pose = SE3.from_quat_and_translation(
+            T_world_object = SE3.from_quat_and_translation(
                 float(quaternion_w),
                 np.array([float(o) for o in quaternion_xyz]),
                 np.array([float(o) for o in translation]),
             )[0]
 
-            if timestamp not in objects_per_timestamp:
-                objects_per_timestamp[timestamp] = {}
-            if object_uid not in objects_per_timestamp[timestamp]:
-                objects_per_timestamp[timestamp][object_uid] = []
-            objects_per_timestamp[timestamp][object_uid].append(object_pose)
-            object_count.add(object_uid)
+            pose3d = Pose3D(T_world_object=T_world_object)
 
-    print(
-        f"Objects data loading stats: \n\
-        \tNumber of timestamps: {len(objects_per_timestamp.keys())}\n\
-        \tNumber of objects: {len(object_count)}"
-    )
-    return objects_per_timestamp
+            if timestamp_ns not in pose3d_trajectory:
+                pose3d_trajectory[timestamp_ns] = Pose3DCollection(
+                    timestamp_ns=timestamp_ns, poses={}
+                )
+
+            pose3d_trajectory[timestamp_ns].poses[object_uid] = pose3d
+
+    return pose3d_trajectory
+
+
+def load_pose_provider_from_csv(filename: str) -> Pose3DProvider:
+    """
+    Load pose_provider from csv
+    """
+    return Pose3DProvider(pose3d_trajectory=load_pose_trajectory_from_csv(filename))

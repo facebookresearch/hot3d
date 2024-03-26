@@ -14,15 +14,17 @@
 
 import argparse
 import os
+from typing import Optional
 
 import rerun as rr
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
-
+from data_loaders.loader_object_poses import Pose3DCollectionWithDt
 from dataset_api import DeviceType, Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
     filter_points_from_confidence,
     filter_points_from_count,
 )
+from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
 from projectaria_tools.core.stream_id import StreamId
 from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
 
@@ -78,6 +80,7 @@ def main():
     data_provider = Hot3DDataProvider(
         sequence_folder=sequence_folder, object_library=object_library
     )
+    print(f"data_provider statistics: {data_provider.get_data_statistics()}")
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(not args.rrd_output_path))
@@ -236,25 +239,35 @@ def main():
                 )
 
         # 1.c Object poses
-        objects_data = data_provider.get_object_poses(timestamp)
-        for object_data_key, object_data_value in objects_data.items():
 
-            object_name = object_library.object_id_to_name_dict[object_data_key]
-            object_name = object_name + "_" + str(object_data_key)
+        objects_pose3d_collection_with_dt: Optional[Pose3DCollectionWithDt] = (
+            data_provider.get_object_poses(
+                timestamp_ns=timestamp, time_query_options=TimeQueryOptions.CLOSEST
+            )
+        )
+        objects_pose3d_collection = objects_pose3d_collection_with_dt.pose3d_collection
+
+        for (
+            object_uid,
+            object_pose3d,
+        ) in objects_pose3d_collection.poses.items():
+
+            object_name = object_library.object_id_to_name_dict[object_uid]
+            object_name = object_name + "_" + str(object_uid)
             object_cad_asset_filepath = ObjectLibrary.get_cad_asset_path(
                 object_library_folderpath=object_library_folder,
-                object_id=object_data_key,
+                object_id=object_uid,
             )
 
             rr.log(
                 f"/world/objects/{object_name}",
-                ToTransform3D(object_data_value[0], False),
+                ToTransform3D(object_pose3d.T_world_object, False),
             )
 
             # Link the corresponding 3D object
             scale = rr.datatypes.Scale3D(1e-3)
-            if object_data_key not in object_table.keys():
-                object_table[object_data_key] = True
+            if object_uid not in object_table.keys():
+                object_table[object_uid] = True
                 rr.log(
                     f"/world/objects/{object_name}",
                     rr.Asset3D(

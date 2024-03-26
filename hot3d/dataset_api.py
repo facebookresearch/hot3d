@@ -16,7 +16,7 @@ import os
 from enum import Enum
 from pathlib import Path
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -25,7 +25,10 @@ from data_loaders.loader_device_poses import load_device_poses
 from data_loaders.loader_hand_poses import HandPose, load_hand_poses
 from data_loaders.loader_object_library import ObjectLibrary
 
-from data_loaders.loader_object_poses import load_dynamic_objects
+from data_loaders.loader_object_poses import (
+    load_pose_provider_from_csv,
+    Pose3DCollectionWithDt,
+)
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
 
@@ -107,15 +110,15 @@ class Hot3DDataProvider:
                 "Invalid hot3d path.. Not all expected data are present."
             )
 
-        self._dynamic_objects = load_dynamic_objects(
+        self._dynamic_objects_provider = load_pose_provider_from_csv(
             self.path_provider.dynamic_objects_filepath
         )
+
         self._device_poses = load_device_poses(
             self.path_provider.headset_trajectory_filepath
         )
 
         self._object_library: ObjectLibrary = object_library
-        self._timestamp_list = sorted(self._dynamic_objects.keys())
 
         self._vrs_data_provider = None
         self._vrs_data_provider = data_provider.create_vrs_data_provider(
@@ -137,6 +140,13 @@ class Hot3DDataProvider:
             mps_data_paths = mps_data_paths_provider.get_data_paths()
             self.mps_data_provider = MpsDataProvider(mps_data_paths)
             print(mps_data_paths)
+
+    def get_data_statistics(self) -> Dict[str, Any]:
+        statistics_dict = {}
+        statistics_dict["dynamic_objects"] = (
+            self._dynamic_objects_provider.get_data_statistics()
+        )
+        return statistics_dict
 
     @property
     def object_library(self):
@@ -162,17 +172,6 @@ class Hot3DDataProvider:
         )
 
         return [device_start_timestamp, device_end_timestamp]
-
-    def _get_timestamps(
-        self, time_domain: TimeDomain = TimeDomain.TIME_CODE
-    ) -> List[int]:
-        """
-        Returns the list of device timestamp for the specified sequence
-        """
-        if time_domain != TimeDomain.TIME_CODE:
-            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
-
-        return self._timestamp_list  # default is TimeDomain.TIME_CODE
 
     def get_sequence_timestamps(
         self, stream_id: StreamId, time_domain: TimeDomain = TimeDomain.TIME_CODE
@@ -317,34 +316,22 @@ class Hot3DDataProvider:
             raise ValueError("TODO Implement for Quest device.")
 
     def get_object_poses(
-        self, timestamp_ns: int, time_domain: TimeDomain = TimeDomain.TIME_CODE
-    ):
+        self,
+        timestamp_ns: int,
+        time_query_options: TimeQueryOptions,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+    ) -> Optional[Pose3DCollectionWithDt]:
         """
         Return the list of object poses at the given timestamp
         """
-        if time_domain != TimeDomain.TIME_CODE:
+        if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        # Interpolated
-        # Closed GT
-        # Before
-        # After
-        # Export the TimeDelta, or the corresponding timestamp of the return data?
-
-        # Visibility
-        # Exclusion list (is_valid)
-
-        # If something not supported -> return Exception
-        if timestamp_ns in self._dynamic_objects:
-            return self._dynamic_objects[timestamp_ns]
-        else:
-            # We use bisection to find the closest timestamp
-            lower, upper, alpha = query_left_right(
-                list(self._dynamic_objects.keys()), timestamp_ns
-            )
-            return self._dynamic_objects[lower]
-
-        return None
+        return self._dynamic_objects_provider.get_pose_at_timestamp(
+            timestamp_ns=timestamp_ns,
+            time_query_options=time_query_options,
+            time_domain=time_domain,
+        )
 
     def get_hand_poses(self, timestamp_ns: int) -> Optional[List[HandPose]]:
         """
