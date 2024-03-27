@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import bisect
 import csv
-import itertools
 from dataclasses import dataclass
 
 from typing import Any, Dict, List, Optional, Set
@@ -25,6 +23,7 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
+from .pose_utils import query_left_right
 
 
 @dataclass
@@ -106,9 +105,9 @@ class Pose3DProvider(object):
             pose3d_collection = self._pose3d_trajectory[timestamp_ns]
             time_delta_ns = 0
         else:
-            left_frame_tsns, right_frame_tsns, alpha = get_left_right_frames(
-                reference_tsns_list=self._sorted_timestamp_ns_list,
-                query_tsns=timestamp_ns,
+            left_frame_tsns, right_frame_tsns, alpha = query_left_right(
+                ordered_timestamps=self._sorted_timestamp_ns_list,
+                query_timestamp=timestamp_ns,
             )
             if time_query_options == TimeQueryOptions.BEFORE:
                 pose3d_collection = self._pose3d_trajectory[left_frame_tsns]
@@ -132,17 +131,6 @@ class Pose3DProvider(object):
             return Pose3DCollectionWithDt(
                 pose3d_collection=pose3d_collection, time_delta_ns=time_delta_ns
             )
-
-
-def get_left_right_frames(reference_tsns_list, query_tsns):
-    index_less_than_query = bisect.bisect_left(reference_tsns_list, query_tsns) - 1
-    index_greater_than_query = index_less_than_query + 1
-    left_frame_tsns = reference_tsns_list[index_less_than_query]
-    right_frame_tsns = reference_tsns_list[index_greater_than_query]
-
-    alpha = (query_tsns - left_frame_tsns) / (right_frame_tsns - left_frame_tsns)
-
-    return left_frame_tsns, right_frame_tsns, alpha
 
 
 def load_pose_trajectory_from_csv(filename: str) -> Pose3DTrajectory:
