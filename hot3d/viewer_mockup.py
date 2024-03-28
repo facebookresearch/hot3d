@@ -20,13 +20,13 @@ import rerun as rr
 from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
 from data_loaders.loader_object_poses import Pose3DCollectionWithDt
+
 from dataset_api import Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
     filter_points_from_confidence,
     filter_points_from_count,
 )
 from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
-from projectaria_tools.core.stream_id import StreamId
 from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
 
 from tqdm import tqdm
@@ -182,9 +182,13 @@ def main():
 
         # 1. Plot 3D assets
         # 1.a Device pose
-        device_pose_data = data_provider.get_device_pose(timestamp)
-        if device_pose_data:
-            rr.log("world/device", ToTransform3D(device_pose_data, False))
+        headset_pose3d_with_dt = data_provider.get_device_pose(
+            timestamp_ns=timestamp, time_query_options=TimeQueryOptions.CLOSEST
+        )
+        headset_pose3d = headset_pose3d_with_dt.pose3d
+
+        if headset_pose3d:
+            rr.log("world/device", ToTransform3D(headset_pose3d.T_world_device, False))
 
         #  1.b hands
         hands_data = data_provider.get_hand_poses(timestamp)

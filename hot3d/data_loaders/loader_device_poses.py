@@ -13,24 +13,100 @@
 # limitations under the License.
 
 import csv
-
-from typing import Dict
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
+from .pose_utils import lookup_timestamp
 
 
-def load_device_poses(filename: str) -> Dict[int, SE3]:
+@dataclass
+class HeadsetPose3D:
+    """
+    Class to store pose of a headset
+    """
+
+    T_world_device: Optional[SE3] = None
+
+
+HeadsetPose3DTrajectory = Dict[int, HeadsetPose3D]
+
+
+@dataclass
+class HeadsetPose3DWithDt:
+    pose3d: HeadsetPose3D
+    time_delta_ns: int
+
+
+class HeadsetPose3DProvider(object):
+    def __init__(
+        self, headset_pose3d_trajectory: HeadsetPose3DTrajectory, headset_uid: str
+    ):
+        self._pose3d_trajectory: HeadsetPose3DTrajectory = headset_pose3d_trajectory
+        self._sorted_timestamp_ns_list: List[int] = sorted(
+            self._pose3d_trajectory.keys()
+        )
+        self._headset_uid: str = str(headset_uid)
+
+    @property
+    def timestamp_ns_list(self) -> List[int]:
+        return self._sorted_timestamp_ns_list
+
+    @property
+    def headset_uid(self) -> str:
+        return self._headset_uid
+
+    def get_data_statistics(self) -> Dict[str, Any]:
+        """
+        Returns the stats of the trajectory
+        """
+        stats = {}
+        stats["num_frames"] = len(self._sorted_timestamp_ns_list)
+        stats["headset_uid"] = str(self._headset_uid)
+        return stats
+
+    def get_pose_at_timestamp(
+        self,
+        timestamp_ns: int,
+        time_query_options: TimeQueryOptions,
+        time_domain: TimeDomain,
+    ) -> Optional[HeadsetPose3DWithDt]:
+        """
+        Return the list of poses at the given timestamp
+        """
+        if time_domain is not TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+
+        headset_pose3d, time_delta_ns = lookup_timestamp(
+            time_indexed_dict=self._pose3d_trajectory,
+            sorted_timestamp_list=self._sorted_timestamp_ns_list,
+            query_timestamp=timestamp_ns,
+            time_query_options=time_query_options,
+        )
+
+        if headset_pose3d is None or time_delta_ns is None:
+            return None
+        else:
+            return HeadsetPose3DWithDt(
+                pose3d=headset_pose3d, time_delta_ns=time_delta_ns
+            )
+
+
+def load_headset_pose_trajectory_from_csv(filename: str) -> Tuple[Dict[int, SE3], str]:
     """Load Device Poses meta data from a CSV file.
 
     Keyword arguments:
     filename -- the csv file i.e. sequence_folder + "/headset_trajectory.csv"
     """
-    device_pose_per_timestamp = {}
-    device_pose_count = set()
+
+    pose3d_trajectory: HeadsetPose3DTrajectory = {}
+    headset_uids = set()
+
     # Open the CSV file for reading
     with open(filename, "r") as f:
         reader = csv.reader(f)
@@ -54,8 +130,8 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
                 row[header.index("q_wo_z")],
             ]
             quaternion_w = row[header.index("q_wo_w")]
-            timestamp = int(row[header.index("timestamp[ns]")])
-            object_uid = row[header.index("object_uid")]
+            timestamp_ns = int(row[header.index("timestamp[ns]")])
+            headset_uids.add(str(row[header.index("object_uid")]))
 
             object_pose = SE3.from_quat_and_translation(
                 float(quaternion_w),
@@ -63,16 +139,25 @@ def load_device_poses(filename: str) -> Dict[int, SE3]:
                 np.array([float(o) for o in translation]),
             )[0]
 
-            if timestamp not in device_pose_per_timestamp:
-                device_pose_per_timestamp[timestamp] = {}
-            device_pose_per_timestamp[timestamp] = object_pose
-            device_pose_count.add(object_uid)
+            pose3d_trajectory[timestamp_ns] = HeadsetPose3D(T_world_device=object_pose)
 
-    # Print statistics
-    print(
-        f"Device trajectory data loading stats: \n\
-        \tNumber of timestamps: {len(device_pose_per_timestamp.keys())}\n\
-        \tNumber of Device: {len(device_pose_count)}"
+    if len(headset_uids) != 1:
+        raise ValueError(
+            f"Expected 1 headset pose per timestamp, got {len(headset_uids)}. headset_uids: {headset_uids}"
+        )
+
+    return pose3d_trajectory, headset_uids.pop()
+
+
+def load_headset_pose_provider_from_csv(filename: str) -> HeadsetPose3DProvider:
+    """
+    Load pose_provider from csv
+    """
+
+    headset_pose3d_trajectory, headset_uid = load_headset_pose_trajectory_from_csv(
+        filename
     )
-    assert len(device_pose_count) == 1  # Only one device should be tracked
-    return device_pose_per_timestamp
+    return HeadsetPose3DProvider(
+        headset_pose3d_trajectory=headset_pose3d_trajectory,
+        headset_uid=headset_uid,
+    )

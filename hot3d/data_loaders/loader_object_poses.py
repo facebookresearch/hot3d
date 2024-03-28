@@ -23,7 +23,7 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
 from .loader_poses_utils import check_csv_columns
-from .pose_utils import query_left_right
+from .pose_utils import lookup_timestamp
 
 
 @dataclass
@@ -98,32 +98,12 @@ class Pose3DProvider(object):
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        pose3d_collection = None
-        time_delta_ns = None
-
-        if timestamp_ns in self._sorted_timestamp_ns_list:
-            pose3d_collection = self._pose3d_trajectory[timestamp_ns]
-            time_delta_ns = 0
-        else:
-            left_frame_tsns, right_frame_tsns, alpha = query_left_right(
-                ordered_timestamps=self._sorted_timestamp_ns_list,
-                query_timestamp=timestamp_ns,
-            )
-            if time_query_options == TimeQueryOptions.BEFORE:
-                pose3d_collection = self._pose3d_trajectory[left_frame_tsns]
-                time_delta_ns = timestamp_ns - left_frame_tsns
-            elif time_query_options == TimeQueryOptions.AFTER:
-                pose3d_collection = self._pose3d_trajectory[right_frame_tsns]
-                time_delta_ns = timestamp_ns - right_frame_tsns
-            elif time_query_options == TimeQueryOptions.CLOSEST:
-                if abs(timestamp_ns - left_frame_tsns) < abs(
-                    timestamp_ns - right_frame_tsns
-                ):
-                    pose3d_collection = self._pose3d_trajectory[left_frame_tsns]
-                    time_delta_ns = timestamp_ns - left_frame_tsns
-                else:
-                    pose3d_collection = self._pose3d_trajectory[right_frame_tsns]
-                    time_delta_ns = timestamp_ns - right_frame_tsns
+        pose3d_collection, time_delta_ns = lookup_timestamp(
+            time_indexed_dict=self._pose3d_trajectory,
+            sorted_timestamp_list=self._sorted_timestamp_ns_list,
+            query_timestamp=timestamp_ns,
+            time_query_options=time_query_options,
+        )
 
         if pose3d_collection is None or time_delta_ns is None:
             return None

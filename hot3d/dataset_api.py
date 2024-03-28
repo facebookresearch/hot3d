@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import os
-from enum import Enum
-from pathlib import Path
 
 from typing import Any, Dict, List, Optional
 
@@ -25,7 +23,10 @@ from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 
-from data_loaders.loader_device_poses import load_device_poses
+from data_loaders.loader_device_poses import (
+    HeadsetPose3DWithDt,
+    load_headset_pose_provider_from_csv,
+)
 from data_loaders.loader_hand_poses import HandPose, load_hand_poses
 from data_loaders.loader_object_library import ObjectLibrary
 
@@ -36,14 +37,13 @@ from data_loaders.loader_object_poses import (
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
 
-from projectaria_tools.core import calibration
+from projectaria_tools.core import calibration  # @manual
 from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
     MpsDataProvider,
 )
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
-from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
@@ -108,7 +108,7 @@ class Hot3DDataProvider:
             self.path_provider.dynamic_objects_filepath
         )
 
-        self._device_poses = load_device_poses(
+        self._device_pose_provider = load_headset_pose_provider_from_csv(
             self.path_provider.headset_trajectory_filepath
         )
 
@@ -269,24 +269,22 @@ class Hot3DDataProvider:
         return None
 
     def get_device_pose(
-        self, timestamp_ns: int, time_domain: TimeDomain = TimeDomain.TIME_CODE
-    ):
+        self,
+        timestamp_ns: int,
+        time_query_options: TimeQueryOptions,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+    ) -> Optional[HeadsetPose3DWithDt]:
         """
-        Return the device pose at the given timestamp
+        Return the list of headset poses at the given timestamp
         """
-        if time_domain != TimeDomain.TIME_CODE:
+        if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        if timestamp_ns in self._device_poses:
-            return self._device_poses[timestamp_ns]
-        else:
-            # We use bisection to find the closest timestamp
-            lower, upper, alpha = query_left_right(
-                list(self._device_poses.keys()), timestamp_ns
-            )
-            return self._device_poses[lower]
-
-        return None
+        return self._device_pose_provider.get_pose_at_timestamp(
+            timestamp_ns=timestamp_ns,
+            time_query_options=time_query_options,
+            time_domain=time_domain,
+        )
 
     def get_device_type(self) -> Headset:
         """
