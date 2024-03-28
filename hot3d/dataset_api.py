@@ -21,6 +21,10 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import torch
 
+from data_loaders.AriaDataProvider import AriaDataProvider
+from data_loaders.headsets import Headset
+from data_loaders.io_utils import load_json
+
 from data_loaders.loader_device_poses import load_device_poses
 from data_loaders.loader_hand_poses import HandPose, load_hand_poses
 from data_loaders.loader_object_library import ObjectLibrary
@@ -32,12 +36,7 @@ from data_loaders.loader_object_poses import (
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
 
-from projectaria_tools.core import calibration, data_provider  # @manual
-from projectaria_tools.core.calibration import (  # @manual
-    CameraCalibration,
-    distort_by_calibration,
-)
-
+from projectaria_tools.core import calibration
 from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
@@ -71,11 +70,6 @@ def get_triangular_mesh_normals(
     norm[triangles[:, 1]] += n
     norm[triangles[:, 2]] += n
     return normalized(norm)
-
-
-class DeviceType(Enum):
-    QUEST3 = 1
-    ARIA = 2
 
 
 # 3D assets
@@ -120,11 +114,6 @@ class Hot3DDataProvider:
 
         self._object_library: ObjectLibrary = object_library
 
-        self._vrs_data_provider = None
-        self._vrs_data_provider = data_provider.create_vrs_data_provider(
-            self.path_provider.vrs_filepath
-        )
-
         self._hand_poses = load_hand_poses(
             self.path_provider.hand_pose_trajectory_filepath
         )
@@ -133,13 +122,24 @@ class Hot3DDataProvider:
             self.path_provider.hand_user_profile_filepath
         )
 
-        # Aria specifics
-        mps_possible_path = self.path_provider.mps_folderpath
-        if os.path.exists(mps_possible_path):
-            mps_data_paths_provider = MpsDataPathsProvider(mps_possible_path)
-            mps_data_paths = mps_data_paths_provider.get_data_paths()
-            self.mps_data_provider = MpsDataProvider(mps_data_paths)
-            print(mps_data_paths)
+        if self.get_device_type() == Headset.Aria:
+            # Aria specifics
+
+            # VRS data provider
+            self._device_data_provider = AriaDataProvider(
+                self.path_provider.vrs_filepath
+            )
+
+            # MPS data provider
+            mps_possible_path = self.path_provider.mps_folderpath
+            if os.path.exists(mps_possible_path):
+                mps_data_paths_provider = MpsDataPathsProvider(mps_possible_path)
+                mps_data_paths = mps_data_paths_provider.get_data_paths()
+                self.mps_data_provider = MpsDataProvider(mps_data_paths)
+                print(mps_data_paths)
+
+        else:
+            raise RuntimeError(f"Unsupported device type {self.get_device_type()}")
 
     def get_data_statistics(self) -> Dict[str, Any]:
         statistics_dict = {}
@@ -149,171 +149,18 @@ class Hot3DDataProvider:
         return statistics_dict
 
     @property
-    def object_library(self):
+    def object_library(self) -> ObjectLibrary:
         """
         Return the object library used for initializing the Hot3DDataProvider
         """
         return self._object_library
 
-    def get_valid_recording_range(
-        self, time_domain: TimeDomain = TimeDomain.TIME_CODE
-    ) -> tuple[int, int]:
+    @property
+    def device_data_provider(self):
         """
-        Return the valid recording range corresponding to the Device sequence
+        Return the device data provider
         """
-        if time_domain != TimeDomain.TIME_CODE:
-            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
-
-        device_start_timestamp = self._vrs_data_provider.get_first_time_ns_all_streams(
-            time_domain
-        )
-        device_end_timestamp = self._vrs_data_provider.get_last_time_ns_all_streams(
-            time_domain
-        )
-
-        return [device_start_timestamp, device_end_timestamp]
-
-    def get_sequence_timestamps(
-        self, stream_id: StreamId, time_domain: TimeDomain = TimeDomain.TIME_CODE
-    ) -> List[int]:
-        """
-        Returns the list of device timestamp for the specified StreamId
-        """
-        if self.get_device_type() == DeviceType.ARIA:
-            return self._vrs_data_provider.get_timestamps_ns(stream_id, time_domain)
-        else:
-            return None
-
-    def _timestamp_convert(
-        self, timestamp: int, time_domain_in: TimeDomain, time_domain_out: TimeDomain
-    ) -> int:
-        """
-        Returns the converted timestamp between two domains (TimeCode <-> Aria DeviceTime)
-        """
-        if (
-            self._vrs_data_provider
-            and time_domain_in == TimeDomain.TIME_CODE
-            and time_domain_out == TimeDomain.DEVICE_TIME
-        ):
-            # Map to corresponding timestamp
-            device_timestamp_ns = (
-                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
-                    timestamp
-                )
-            )
-            return device_timestamp_ns
-        return None
-
-    def get_image_stream_ids(self) -> List[StreamId]:
-        """
-        Return the list of image stream ids
-        """
-        if self._vrs_data_provider:
-            stream_ids = self._vrs_data_provider.get_all_streams()
-            image_stream_ids = [
-                p
-                for p in stream_ids
-                if self._vrs_data_provider.get_label_from_stream_id(p).startswith(
-                    "camera-"
-                )
-            ]
-            return image_stream_ids
-        return None
-
-    def get_image_stream_label(self, stream_id: StreamId) -> str:
-        """
-        Return the label of the image stream
-        """
-        if self._vrs_data_provider:
-            return self._vrs_data_provider.get_label_from_stream_id(stream_id)
-        return None
-
-    def get_image(self, timestamp_ns: int, stream_id: StreamId) -> np.ndarray:
-        """
-        Return the image corresponding to the requested timestamp and streamId
-        """
-        if self._vrs_data_provider:
-            # Map to corresponding timestamp
-            device_timestamp_ns = self._timestamp_convert(
-                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
-            )
-
-            if device_timestamp_ns:
-                # Get corresponding image
-                image = self._vrs_data_provider.get_image_data_by_time_ns(
-                    stream_id,
-                    device_timestamp_ns,
-                    TimeDomain.DEVICE_TIME,
-                    TimeQueryOptions.CLOSEST,
-                )
-                return image[0].to_numpy_array()
-
-        return None
-
-    def get_undistorted_image(
-        self, timestamp_ns: int, stream_id: StreamId
-    ) -> np.ndarray:
-        """
-        Return the undistorted image corresponding to the requested timestamp and streamId
-        """
-        if self._vrs_data_provider:
-            # Map to corresponding timestamp
-            device_timestamp_ns = self._timestamp_convert(
-                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
-            )
-
-            if device_timestamp_ns:
-                image = self._vrs_data_provider.get_image_data_by_time_ns(
-                    stream_id,
-                    device_timestamp_ns,
-                    TimeDomain.DEVICE_TIME,
-                    TimeQueryOptions.CLOSEST,
-                )
-
-                [T_device_camera, camera_calibration] = self.get_camera_calibration(
-                    stream_id
-                )
-                focal_lengths = camera_calibration.get_focal_lengths()
-                image_size = camera_calibration.get_image_size()
-                pinhole_calib = calibration.get_linear_camera_calibration(
-                    image_size[0], image_size[1], focal_lengths[0]
-                )
-
-                # Compute the actual undistorted image
-                undistorted_image = distort_by_calibration(
-                    image[0].to_numpy_array(), pinhole_calib, camera_calibration
-                )
-
-                return undistorted_image
-        return None
-
-    def device_calibration(self):
-        """
-        Return the device calibration (factory calibration of all sensors)
-        """
-        if self.get_device_type() == DeviceType.ARIA:
-            return self._vrs_data_provider.get_device_calibration()
-        else:
-            raise ValueError("TODO Implement for Quest device.")
-            return None
-
-    def get_camera_calibration(
-        self, stream_id: StreamId
-    ) -> tuple[SE3, CameraCalibration]:
-        """
-        Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
-        """
-        if self.get_device_type() == DeviceType.ARIA:
-
-            device_calibration = self.device_calibration()
-            rgb_stream_label = self._vrs_data_provider.get_label_from_stream_id(
-                stream_id
-            )
-            camera_calibration = device_calibration.get_camera_calib(rgb_stream_label)
-            T_device_camera = camera_calibration.get_transform_device_camera()
-            return [T_device_camera, camera_calibration]
-        else:
-            raise ValueError("TODO Implement for Quest device.")
+        return self._device_data_provider
 
     def get_object_poses(
         self,
@@ -430,9 +277,6 @@ class Hot3DDataProvider:
         if time_domain != TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        # BBox 2D, 3D
-        # OptiTrack
-        # MPS (would come from the MPSDataProvider)
         if timestamp_ns in self._device_poses:
             return self._device_poses[timestamp_ns]
         else:
@@ -444,18 +288,19 @@ class Hot3DDataProvider:
 
         return None
 
-    def get_device_type(self) -> DeviceType:
+    def get_device_type(self) -> Headset:
         """
         Return the type of device used for recording (e.g. Quest3, Aria, etc.)
         """
-        # => ENUM
-        return DeviceType.ARIA
+        return Headset[self.get_sequence_metadata()["headset"]]
 
     def get_sequence_metadata(self) -> Dict:
         """
         Return the metadata associated with the sequence
         """
-        pass
+        metadata_json = load_json(self.path_provider.scene_metadata_filepath)
+
+        return metadata_json
 
         # High level functions that are considered in the sequence
         # Details on the scenario, hardware used and sequences ...
@@ -474,14 +319,14 @@ class Hot3DDataProvider:
         """
         Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
         """
-        if self.get_device_type() != DeviceType.ARIA:
+        if self.get_device_type() != Headset.Aria:
             raise ValueError("Eye Gaze not available for this device.")
 
         # We have an Aria Device
         #
         # Map to corresponding timestamp
         if time_domain == TimeDomain.TIME_CODE:
-            device_timestamp_ns = self._timestamp_convert(
+            device_timestamp_ns = self._device_data_provider._timestamp_convert(
                 timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
             )
         elif time_domain == TimeDomain.DEVICE_TIME:
@@ -497,15 +342,15 @@ class Hot3DDataProvider:
                 gaze_vector_in_cpf = get_eyegaze_point_at_depth(
                     eye_gaze.yaw, eye_gaze.pitch, depth_m
                 )
-                [T_device_camera, camera_calibration] = self.get_camera_calibration(
-                    stream_id
+                [T_device_camera, camera_calibration] = (
+                    self._device_data_provider.get_camera_calibration(stream_id)
                 )
                 focal_lengths = camera_calibration.get_focal_lengths()
                 image_size = camera_calibration.get_image_size()
                 pinhole_calib = calibration.get_linear_camera_calibration(
                     image_size[0], image_size[1], focal_lengths[0]
                 )
-                device_calibration = self.device_calibration()
+                device_calibration = self._device_data_provider.get_device_calibration()
                 T_device_CPF = device_calibration.get_transform_device_cpf()
                 gaze_center_in_camera = (
                     T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
@@ -518,7 +363,7 @@ class Hot3DDataProvider:
         """
         Return the point cloud of the scene
         """
-        if self.get_device_type() != DeviceType.ARIA:
+        if self.get_device_type() != Headset.Aria:
             raise ValueError("Point cloud data is not available for this device.")
 
         if self.mps_data_provider.has_semidense_point_cloud():
@@ -529,7 +374,3 @@ class Hot3DDataProvider:
         return None
 
         pass
-
-    # Todo
-    # Need a mechanism to add filtering (visible in camera frustum , etc.)
-    # Interface to retrieve MPS data if available (see the getDeviceType())

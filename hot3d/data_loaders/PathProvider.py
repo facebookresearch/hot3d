@@ -71,6 +71,10 @@ class Quest3DatasetPaths(object):
         return f"{self._recording_instance_folderpath}/recording.vrs"
 
     @property
+    def scene_metadata_filepath(self):
+        return f"{self._recording_instance_folderpath}/metadata.json"
+
+    @property
     def required_filepaths(self):
         return [
             self.vrs_filepath,
@@ -121,6 +125,10 @@ class AriaDatasetPaths(object):
     @property
     def mps_folderpath(self):
         return f"{self._recording_instance_folderpath}/mps"
+
+    @property
+    def scene_metadata_filepath(self):
+        return f"{self._recording_instance_folderpath}/metadata.json"
 
     @property
     def required_filepaths(self):

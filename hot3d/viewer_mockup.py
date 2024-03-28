@@ -17,9 +17,10 @@ import os
 from typing import Optional
 
 import rerun as rr
+from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
 from data_loaders.loader_object_poses import Pose3DCollectionWithDt
-from dataset_api import DeviceType, Hot3DDataProvider
+from dataset_api import Hot3DDataProvider
 from projectaria_tools.core.mps.utils import (
     filter_points_from_confidence,
     filter_points_from_count,
@@ -82,6 +83,8 @@ def main():
     )
     print(f"data_provider statistics: {data_provider.get_data_statistics()}")
 
+    device_data_provider = data_provider.device_data_provider
+
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(not args.rrd_output_path))
     if args.rrd_output_path:
@@ -91,18 +94,19 @@ def main():
     rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Y_UP, timeless=True)
 
     # TODO:
-    # For convenience LOG the camera trajectory as a 3D line to help user understand the type of motion in the sequence
+    # For convenience LOG the camera trajectory as a 3D line to help user understand the type of user motion in the sequence
 
-    image_stream_ids = data_provider.get_image_stream_ids()
+    image_stream_ids = device_data_provider.get_image_stream_ids()
 
     # Deal with Aria specifics
-    if data_provider.get_device_type() == DeviceType.ARIA:
-
+    if data_provider.get_device_type() is Headset.Aria:
         for stream_id in image_stream_ids:
             # Log STATIC assets (aka Timeless assets)
             #
             # Plot the camera configuration
-            [extrinsics, intrinsics] = data_provider.get_camera_calibration(stream_id)
+            [extrinsics, intrinsics] = device_data_provider.get_camera_calibration(
+                stream_id
+            )
             rr.log(
                 f"world/device/{stream_id}",
                 ToTransform3D(extrinsics, False),
@@ -131,7 +135,7 @@ def main():
                 timeless=True,
             )
 
-        device_calibration = data_provider.device_calibration()
+        device_calibration = device_data_provider.get_device_calibration()
         aria_glasses_point_outline = AriaGlassesOutline(device_calibration)
         rr.log(
             "world/device/glasses_outline",
@@ -159,18 +163,7 @@ def main():
     # Visualize the dataset sequence
     #
     # Loop over the timestamps of the sequence and visualize corresponding data
-    rgb_stream_id = StreamId("214-1")  # default stream used for timestamp reference
-    if rgb_stream_id not in image_stream_ids:
-        raise ValueError(
-            "StreamId used to defined the timestamp should be available in the VRS data"
-        )
-
-    timestamps = data_provider.get_sequence_timestamps(rgb_stream_id)
-    # Crop timestamp to the valid timing of the Image recording
-    [min_timestamp, max_timestamp] = data_provider.get_valid_recording_range()
-    timestamps = [
-        x for x in timestamps if int(x) >= min_timestamp and int(x) <= max_timestamp
-    ]
+    timestamps = device_data_provider.get_sequence_timestamps()
 
     object_table = (
         {}
@@ -283,7 +276,10 @@ def main():
         for stream_id in image_stream_ids:
 
             # 2.a Image
-            image_data = data_provider.get_undistorted_image(timestamp, stream_id)
+            # image_data = device_data_provider.get_image(timestamp, stream_id)
+            image_data = device_data_provider.get_undistorted_image(
+                timestamp, stream_id
+            )
             if image_data is not None:
                 rr.log(
                     f"world/device/{stream_id}",
