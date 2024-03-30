@@ -136,7 +136,11 @@ def main():
         point_cloud = device_data_provider.get_point_cloud()
         if point_cloud:
             # Filter out low confidence points
-            point_cloud = filter_points_from_confidence(point_cloud)
+            threshold_invdep = 5e-4
+            threshold_dep = 5e-4
+            point_cloud = filter_points_from_confidence(
+                point_cloud, threshold_invdep, threshold_dep
+            )
             # Down sample points
             points_data_down_sampled = filter_points_from_count(point_cloud, 500_000)
             # Retrieve point position
