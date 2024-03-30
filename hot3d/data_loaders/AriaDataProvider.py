@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import List
 
 import numpy as np
 
 from projectaria_tools.core import calibration, data_provider  # @manual
-
 from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
+    DeviceCalibration,
     distort_by_calibration,
+)
+from projectaria_tools.core.mps import (  # @manual
+    get_eyegaze_point_at_depth,
+    MpsDataPathsProvider,
+    MpsDataProvider,
 )
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
@@ -29,8 +35,15 @@ from projectaria_tools.core.stream_id import StreamId  # @manual
 
 class AriaDataProvider:
 
-    def __init__(self, vrs_filepath: str) -> None:
+    def __init__(self, vrs_filepath: str, mps_folder_path: str) -> None:
         self._vrs_data_provider = data_provider.create_vrs_data_provider(vrs_filepath)
+
+        # MPS data provider
+        if os.path.exists(mps_folder_path):
+            mps_data_paths_provider = MpsDataPathsProvider(mps_folder_path)
+            mps_data_paths = mps_data_paths_provider.get_data_paths()
+            self._mps_data_provider = MpsDataProvider(mps_data_paths)
+            print(mps_data_paths)
 
     def get_image_stream_ids(self) -> List[StreamId]:
         # retrieve all streams ids and filter the one that are image based
@@ -84,7 +97,7 @@ class AriaDataProvider:
 
         return undistorted_image
 
-    def get_device_calibration(self):
+    def get_device_calibration(self) -> DeviceCalibration:
         """
         Return the device calibration (factory calibration of all sensors)
         """
@@ -120,4 +133,64 @@ class AriaDataProvider:
                 )
             )
             return device_timestamp_ns
+        return None
+
+    ###
+    # Add MPS data specifics
+    ###
+
+    def get_point_cloud(self) -> np.ndarray:
+        """
+        Return the point cloud of the scene
+        """
+        if self._mps_data_provider.has_semidense_point_cloud():
+            point_cloud_data = self._mps_data_provider.get_semidense_point_cloud()
+            # Point cloud filtering is left to the user
+            return point_cloud_data
+
+        return None
+
+    def get_eye_gaze_in_camera(
+        self,
+        stream_id: StreamId,
+        timestamp_ns: int,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+        depth_m: float = 1.0,
+    ):
+        """
+        Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
+        """
+        # Map to corresponding timestamp
+        if time_domain == TimeDomain.TIME_CODE:
+            device_timestamp_ns = self._timestamp_convert(
+                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
+            )
+        elif time_domain == TimeDomain.DEVICE_TIME:
+            device_timestamp_ns = timestamp_ns
+        else:
+            raise ValueError("Unsupported time domain")
+
+        if device_timestamp_ns:
+            eye_gaze = self._mps_data_provider.get_general_eyegaze(device_timestamp_ns)
+            if eye_gaze:
+                # Compute eye_gaze vector at depth_m and project it in the image
+                depth_m = 1.0
+                gaze_vector_in_cpf = get_eyegaze_point_at_depth(
+                    eye_gaze.yaw, eye_gaze.pitch, depth_m
+                )
+                [T_device_camera, camera_calibration] = self.get_camera_calibration(
+                    stream_id
+                )
+                focal_lengths = camera_calibration.get_focal_lengths()
+                image_size = camera_calibration.get_image_size()
+                pinhole_calib = calibration.get_linear_camera_calibration(
+                    image_size[0], image_size[1], focal_lengths[0]
+                )
+                device_calibration = self.get_device_calibration()
+                T_device_CPF = device_calibration.get_transform_device_cpf()
+                gaze_center_in_camera = (
+                    T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
+                )
+                gaze_projection = pinhole_calib.project(gaze_center_in_camera)
+                return gaze_projection
         return None

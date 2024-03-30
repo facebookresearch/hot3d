@@ -98,43 +98,32 @@ def main():
 
     image_stream_ids = device_data_provider.get_image_stream_ids()
 
+    # Log STATIC assets (aka Timeless assets)
+    for stream_id in image_stream_ids:
+        #
+        # Plot the camera configuration
+        [extrinsics, intrinsics] = device_data_provider.get_camera_calibration(
+            stream_id
+        )
+        rr.log(
+            f"world/device/{stream_id}",
+            ToTransform3D(extrinsics, False),
+            timeless=True,
+        )
+        rr.log(
+            f"world/device/{stream_id}",
+            rr.Pinhole(
+                resolution=[
+                    intrinsics.get_image_size()[0],
+                    intrinsics.get_image_size()[1],
+                ],
+                focal_length=float(intrinsics.get_focal_lengths()[0]),
+            ),
+            timeless=True,
+        )
+
     # Deal with Aria specifics
     if data_provider.get_device_type() is Headset.Aria:
-        for stream_id in image_stream_ids:
-            # Log STATIC assets (aka Timeless assets)
-            #
-            # Plot the camera configuration
-            [extrinsics, intrinsics] = device_data_provider.get_camera_calibration(
-                stream_id
-            )
-            rr.log(
-                f"world/device/{stream_id}",
-                ToTransform3D(extrinsics, False),
-                timeless=True,
-            )
-            rr.log(
-                f"world/device/{stream_id}",
-                rr.Pinhole(
-                    resolution=[
-                        intrinsics.get_image_size()[0],
-                        intrinsics.get_image_size()[1],
-                    ],
-                    focal_length=float(intrinsics.get_focal_lengths()[0]),
-                ),
-                timeless=True,
-            )
-            rr.log(
-                f"world/device/{stream_id}",
-                rr.Pinhole(
-                    resolution=[
-                        intrinsics.get_image_size()[0],
-                        intrinsics.get_image_size()[1],
-                    ],
-                    focal_length=float(intrinsics.get_focal_lengths()[0]),
-                ),
-                timeless=True,
-            )
-
         device_calibration = device_data_provider.get_device_calibration()
         aria_glasses_point_outline = AriaGlassesOutline(device_calibration)
         rr.log(
@@ -144,7 +133,7 @@ def main():
         )
 
         # Point cloud
-        point_cloud = data_provider.get_point_cloud()
+        point_cloud = device_data_provider.get_point_cloud()
         if point_cloud:
             # Filter out low confidence points
             point_cloud = filter_points_from_confidence(point_cloud)
@@ -293,7 +282,7 @@ def main():
             # Deal with device specifics
             # 2.b Eye Gaze image reprojection
             # Note: Eye Gaze is only available for the Aria device
-            eye_gaze_reprojection_data = data_provider.get_eye_gaze_in_camera(
+            eye_gaze_reprojection_data = device_data_provider.get_eye_gaze_in_camera(
                 stream_id, timestamp
             )
             if (

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -37,7 +35,6 @@ from data_loaders.loader_object_poses import (
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
 
-from projectaria_tools.core import calibration  # @manual
 from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
@@ -127,16 +124,9 @@ class Hot3DDataProvider:
 
             # VRS data provider
             self._device_data_provider = AriaDataProvider(
-                self.path_provider.vrs_filepath
+                self.path_provider.vrs_filepath,
+                self.path_provider.mps_folderpath,
             )
-
-            # MPS data provider
-            mps_possible_path = self.path_provider.mps_folderpath
-            if os.path.exists(mps_possible_path):
-                mps_data_paths_provider = MpsDataPathsProvider(mps_possible_path)
-                mps_data_paths = mps_data_paths_provider.get_data_paths()
-                self.mps_data_provider = MpsDataProvider(mps_data_paths)
-                print(mps_data_paths)
 
         else:
             raise RuntimeError(f"Unsupported device type {self.get_device_type()}")
@@ -299,76 +289,3 @@ class Hot3DDataProvider:
         metadata_json = load_json(self.path_provider.scene_metadata_filepath)
 
         return metadata_json
-
-        # High level functions that are considered in the sequence
-        # Details on the scenario, hardware used and sequences ...
-        # Device Ids
-        # Number of objects
-        # Participant Ids
-        # Length of the sequence
-
-    def get_eye_gaze_in_camera(
-        self,
-        stream_id: StreamId,
-        timestamp_ns: int,
-        time_domain: TimeDomain = TimeDomain.TIME_CODE,
-        depth_m: float = 1.0,
-    ):
-        """
-        Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
-        """
-        if self.get_device_type() != Headset.Aria:
-            raise ValueError("Eye Gaze not available for this device.")
-
-        # We have an Aria Device
-        #
-        # Map to corresponding timestamp
-        if time_domain == TimeDomain.TIME_CODE:
-            device_timestamp_ns = self._device_data_provider._timestamp_convert(
-                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
-            )
-        elif time_domain == TimeDomain.DEVICE_TIME:
-            device_timestamp_ns = timestamp_ns
-        else:
-            raise ValueError("Unsupported time domain")
-
-        if device_timestamp_ns:
-            eye_gaze = self.mps_data_provider.get_general_eyegaze(device_timestamp_ns)
-            if eye_gaze:
-                # Compute eye_gaze vector at depth_m and project it in the image
-                depth_m = 1.0
-                gaze_vector_in_cpf = get_eyegaze_point_at_depth(
-                    eye_gaze.yaw, eye_gaze.pitch, depth_m
-                )
-                [T_device_camera, camera_calibration] = (
-                    self._device_data_provider.get_camera_calibration(stream_id)
-                )
-                focal_lengths = camera_calibration.get_focal_lengths()
-                image_size = camera_calibration.get_image_size()
-                pinhole_calib = calibration.get_linear_camera_calibration(
-                    image_size[0], image_size[1], focal_lengths[0]
-                )
-                device_calibration = self._device_data_provider.get_device_calibration()
-                T_device_CPF = device_calibration.get_transform_device_cpf()
-                gaze_center_in_camera = (
-                    T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
-                )
-                gaze_projection = pinhole_calib.project(gaze_center_in_camera)
-                return gaze_projection
-        return None
-
-    def get_point_cloud(self) -> np.ndarray:
-        """
-        Return the point cloud of the scene
-        """
-        if self.get_device_type() != Headset.Aria:
-            raise ValueError("Point cloud data is not available for this device.")
-
-        if self.mps_data_provider.has_semidense_point_cloud():
-            point_cloud_data = self.mps_data_provider.get_semidense_point_cloud()
-            # Todo: Should we clean it?
-            return point_cloud_data
-
-        return None
-
-        pass
