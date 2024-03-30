@@ -84,6 +84,7 @@ def main():
     print(f"data_provider statistics: {data_provider.get_data_statistics()}")
 
     device_data_provider = data_provider.device_data_provider
+    hand_data_provider = data_provider.hand_data_provider
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(not args.rrd_output_path))
@@ -184,7 +185,7 @@ def main():
             rr.log("world/device", ToTransform3D(headset_pose3d.T_world_device, False))
 
         #  1.b hands
-        hands_data = data_provider.get_hand_poses(timestamp)
+        hands_data = hand_data_provider.get_hand_poses(timestamp)
         for hand_data in hands_data:
             if hand_data.hand_pose is not None:
 
@@ -195,7 +196,7 @@ def main():
                 )
 
                 # Skeleton/Joints landmark representation
-                hand_landmarks = data_provider.get_hand_landmarks(hand_data)
+                hand_landmarks = hand_data_provider.get_hand_landmarks(hand_data)
                 # convert landmarks to connected lines for display
                 points = []
                 for connectivity in LANDMARK_CONNECTIVITY:
@@ -209,7 +210,9 @@ def main():
                 )
 
                 # Vertices representation
-                hand_mesh_vertices = data_provider.get_hand_mesh_vertices(hand_data)
+                hand_mesh_vertices = hand_data_provider.get_hand_mesh_vertices(
+                    hand_data
+                )
                 rr.log(
                     f"/world/hands/mesh/{hand_data.handedness}",
                     rr.Points3D(hand_mesh_vertices),
@@ -217,7 +220,7 @@ def main():
 
                 # Triangular Mesh representation
                 [hand_triangles, hand_vertex_normals] = (
-                    data_provider.get_hand_mesh_faces_and_normals(hand_data)
+                    hand_data_provider.get_hand_mesh_faces_and_normals(hand_data)
                 )
                 rr.log(
                     f"/world/hands/mesh_faces/{hand_data.handedness}",

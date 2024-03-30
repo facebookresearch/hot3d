@@ -18,6 +18,7 @@ import numpy as np
 import torch
 
 from data_loaders.AriaDataProvider import AriaDataProvider
+from data_loaders.HandDataProvider import HandDataProvider
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 
@@ -42,31 +43,6 @@ from projectaria_tools.core.mps import (  # @manual
 )
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
-
-from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
-from UmeTrack.common.loader_handmodel import load_hand_model_from_file
-
-
-def normalized(
-    vecs: np.ndarray, axis: int = -1, add_const_to_denom: bool = True
-) -> np.ndarray:
-    denom = np.linalg.norm(vecs, axis=axis, keepdims=True)
-    if add_const_to_denom:
-        denom += 1e-5
-    return vecs / denom
-
-
-def get_triangular_mesh_normals(
-    vertices: np.ndarray, triangles: np.ndarray
-) -> np.ndarray:
-    norm = np.zeros_like(vertices)
-    tris = vertices[triangles]
-    n = np.cross(tris[::, 1] - tris[::, 0], tris[::, 2] - tris[::, 0])
-    n = normalized(n)
-    norm[triangles[:, 0]] += n
-    norm[triangles[:, 1]] += n
-    norm[triangles[:, 2]] += n
-    return normalized(norm)
 
 
 # 3D assets
@@ -111,12 +87,9 @@ class Hot3DDataProvider:
 
         self._object_library: ObjectLibrary = object_library
 
-        self._hand_poses = load_hand_poses(
-            self.path_provider.hand_pose_trajectory_filepath
-        )
-        # Hand profile
-        self._hand_model = load_hand_model_from_file(
-            self.path_provider.hand_user_profile_filepath
+        self._hand_data_provider = HandDataProvider(
+            self.path_provider.hand_pose_trajectory_filepath,
+            self.path_provider.hand_user_profile_filepath,
         )
 
         if self.get_device_type() == Headset.Aria:
@@ -152,6 +125,13 @@ class Hot3DDataProvider:
         """
         return self._device_data_provider
 
+    @property
+    def hand_data_provider(self):
+        """
+        Return the hand data provider
+        """
+        return self._hand_data_provider
+
     def get_object_poses(
         self,
         timestamp_ns: int,
@@ -169,94 +149,6 @@ class Hot3DDataProvider:
             time_query_options=time_query_options,
             time_domain=time_domain,
         )
-
-    def get_hand_poses(self, timestamp_ns: int) -> Optional[List[HandPose]]:
-        """
-        Return the list of hand poses at the given timestamp
-        """
-        if timestamp_ns in self._hand_poses:
-            return self._hand_poses[timestamp_ns]
-        else:
-            # We use bisection to find the closest timestamp
-            lower, upper, alpha = query_left_right(
-                list(self._hand_poses.keys()), timestamp_ns
-            )
-            return self._hand_poses[lower]
-
-        return None
-
-    def get_hand_mesh_vertices(self, hand_wrist_data: HandPose) -> torch.Tensor:
-        """
-        Return the hand mesh corresponding to given HandPose
-        """
-        if hand_wrist_data.hand_pose is not None:
-            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
-            hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
-
-            # Set translation to 0. Fix scaling and translation as a post processing step
-            hand_wrist_pose_tensor[:, 3] = torch.zeros(1, 4)
-
-            # self._hand_model is defined for the Left hand,
-            #  flipping here the pose X axis is moving the Left Hand to a Right Hand
-            if hand_wrist_data.handedness == "1":
-                hand_wrist_pose_tensor[:, 0] *= -1
-
-            mesh_vertices = skin_vertices(
-                self._hand_model,
-                torch.Tensor(hand_wrist_data.joint_angles),
-                hand_wrist_pose_tensor,
-            )
-            # Rescale and translate the vertices
-            scale = 1e-3
-            mesh_vertices = mesh_vertices.mul(scale)
-            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
-            return mesh_vertices + translation.expand_as(mesh_vertices)
-        return None
-
-    def get_hand_mesh_faces_and_normals(
-        self, hand_wrist_data: HandPose
-    ) -> Optional[tuple[np.array, np.array]]:
-        """
-        Return the hand mesh faces and normals
-        """
-        if self._hand_model is not None:
-            hand_triangles = self._hand_model.mesh_triangles.int().numpy()
-            vertices = self.get_hand_mesh_vertices(hand_wrist_data)
-            normals = get_triangular_mesh_normals(
-                vertices.float().numpy(), hand_triangles
-            )
-            return [hand_triangles, normals]
-        else:
-            return None
-
-    def get_hand_landmarks(self, hand_wrist_data: HandPose) -> Optional[torch.Tensor]:
-        """
-        Return the hand joint landmarks corresponding to given HandPose
-        See how to map the vertices together to represent a Hand as linked lines using LANDMARK_CONNECTIVITY
-        """
-        if hand_wrist_data.hand_pose is not None:
-            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
-            hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
-
-            # Set translation to 0. Fix scaling and translation as a post processing step
-            hand_wrist_pose_tensor[:, 3] = torch.zeros(1, 4)
-
-            # self._hand_model is defined for the Left hand,
-            #  flipping here the pose X axis is moving the Left Hand to a Right Hand
-            if hand_wrist_data.handedness == "1":
-                hand_wrist_pose_tensor[:, 0] *= -1
-            hand_landmarks = skin_landmarks(
-                self._hand_model,
-                torch.Tensor(hand_wrist_data.joint_angles),
-                hand_wrist_pose_tensor,
-            )
-            # Rescale and translate the vertices
-            scale = 1e-3
-            hand_landmarks = hand_landmarks.mul(scale)
-            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
-            return hand_landmarks + translation.expand_as(hand_landmarks)
-
-        return None
 
     def get_device_pose(
         self,
