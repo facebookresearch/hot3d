@@ -35,6 +35,7 @@ from data_loaders.loader_object_poses import (
 )
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.pose_utils import query_left_right
+from data_loaders.QuestDataProvider import QuestDataProvider
 
 from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
@@ -93,14 +94,14 @@ class Hot3DDataProvider:
         )
 
         if self.get_device_type() == Headset.Aria:
-            # Aria specifics
-
-            # VRS data provider
             self._device_data_provider = AriaDataProvider(
                 self.path_provider.vrs_filepath,
                 self.path_provider.mps_folderpath,
             )
-
+        elif self.get_device_type() == Headset.Quest3:
+            self._device_data_provider = QuestDataProvider(
+                self.path_provider.vrs_filepath
+            )
         else:
             raise RuntimeError(f"Unsupported device type {self.get_device_type()}")
 

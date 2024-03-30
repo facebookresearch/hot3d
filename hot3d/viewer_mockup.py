@@ -276,7 +276,6 @@ def main():
         for stream_id in image_stream_ids:
 
             # 2.a Image
-            # image_data = device_data_provider.get_image(timestamp, stream_id)
             image_data = device_data_provider.get_undistorted_image(
                 timestamp, stream_id
             )
@@ -286,20 +285,20 @@ def main():
                     rr.Image(image_data).compress(jpeg_quality=args.jpeg_quality),
                 )
 
-            # Deal with device specifics
-            # 2.b Eye Gaze image reprojection
-            # Note: Eye Gaze is only available for the Aria device
-            eye_gaze_reprojection_data = device_data_provider.get_eye_gaze_in_camera(
-                stream_id, timestamp
-            )
-            if (
-                eye_gaze_reprojection_data is not None
-                and eye_gaze_reprojection_data.any()
-            ):
-                rr.log(
-                    f"world/device/{stream_id}/eye-gaze_projection",
-                    rr.Points2D(eye_gaze_reprojection_data, radii=20),
+            if data_provider.get_device_type() is Headset.Aria:
+                # 2.b Eye Gaze image reprojection
+                # Note: Eye Gaze is only available for the Aria device
+                eye_gaze_reprojection_data = (
+                    device_data_provider.get_eye_gaze_in_camera(stream_id, timestamp)
                 )
+                if (
+                    eye_gaze_reprojection_data is not None
+                    and eye_gaze_reprojection_data.any()
+                ):
+                    rr.log(
+                        f"world/device/{stream_id}/eye-gaze_projection",
+                        rr.Points2D(eye_gaze_reprojection_data, radii=20),
+                    )
 
 
 if __name__ == "__main__":
