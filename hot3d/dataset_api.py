@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, Optional
-
-import numpy as np
-import torch
+from typing import Any, Dict, Optional
 
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.HandDataProvider import HandDataProvider
@@ -26,7 +23,6 @@ from data_loaders.loader_device_poses import (
     HeadsetPose3DWithDt,
     load_headset_pose_provider_from_csv,
 )
-from data_loaders.loader_hand_poses import HandPose, load_hand_poses
 from data_loaders.loader_object_library import ObjectLibrary
 
 from data_loaders.loader_object_poses import (
@@ -34,16 +30,9 @@ from data_loaders.loader_object_poses import (
     Pose3DCollectionWithDt,
 )
 from data_loaders.PathProvider import Hot3DDataPathProvider
-from data_loaders.pose_utils import query_left_right
 from data_loaders.QuestDataProvider import QuestDataProvider
 
-from projectaria_tools.core.mps import (  # @manual
-    get_eyegaze_point_at_depth,
-    MpsDataPathsProvider,
-    MpsDataProvider,
-)
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
-from projectaria_tools.core.stream_id import StreamId  # @manual
 
 
 # 3D assets

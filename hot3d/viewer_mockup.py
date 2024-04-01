@@ -21,7 +21,11 @@ from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
 from data_loaders.loader_object_poses import Pose3DCollectionWithDt
 
-from dataset_api import Hot3DDataProvider
+try:
+    from dataset_api import Hot3DDataProvider
+except ImportError:
+    from hot3d.dataset_api import Hot3DDataProvider
+
 from projectaria_tools.core.mps.utils import (
     filter_points_from_confidence,
     filter_points_from_count,
