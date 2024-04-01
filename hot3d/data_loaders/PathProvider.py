@@ -75,6 +75,10 @@ class Quest3DatasetPaths(object):
         return f"{self._recording_instance_folderpath}/metadata.json"
 
     @property
+    def camera_models_filepath(self):
+        return f"{self._recording_instance_folderpath}/camera_models.json"
+
+    @property
     def required_filepaths(self):
         return [
             self.vrs_filepath,
@@ -83,7 +87,6 @@ class Quest3DatasetPaths(object):
             self.headset_metadata_filepath,
             self.hand_pose_trajectory_filepath,
             self.hand_user_profile_filepath,
-            self.markers_frames_filepath,
         ]
 
     def is_valid(self) -> bool:

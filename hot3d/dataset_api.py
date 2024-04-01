@@ -100,7 +100,8 @@ class Hot3DDataProvider:
             )
         elif self.get_device_type() == Headset.Quest3:
             self._device_data_provider = QuestDataProvider(
-                self.path_provider.vrs_filepath
+                self.path_provider.vrs_filepath,
+                self.path_provider.camera_models_filepath,
             )
         else:
             raise RuntimeError(f"Unsupported device type {self.get_device_type()}")
