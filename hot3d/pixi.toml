@@ -11,8 +11,11 @@ platforms = ["osx-arm64", "linux-64"]
 setup = """
     python3 -m ensurepip;
     python3 -m pip install projectaria_tools torch;
-    python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git@stable'
+    python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git';
+    python3 -m pip install vrs;
     """
+
+viewer = "python3 viewer_mockup.py"
 
 [dependencies]
 python = "==3.10"
