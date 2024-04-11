@@ -30,7 +30,7 @@ from projectaria_tools.core.mps.utils import (  # @manual
     filter_points_from_confidence,
     filter_points_from_count,
 )
-from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
+from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.utils.rerun_helpers import (  # @manual
     AriaGlassesOutline,
     ToTransform3D,
@@ -193,51 +193,58 @@ def execute_rerun(
             rr.log("world/device", ToTransform3D(headset_pose3d.T_world_device, False))
 
         #  1.b hands
-        hands_data = hand_data_provider.get_hand_poses(timestamp)
-        for hand_data in hands_data:
-            if hand_data.hand_pose is not None:
+        hand_poses_with_dt = hand_data_provider.get_pose_at_timestamp(
+            timestamp_ns=timestamp,
+            time_query_options=TimeQueryOptions.CLOSEST,
+            time_domain=TimeDomain.TIME_CODE,
+        )
 
-                # Wrist pose representation
-                rr.log(
-                    f"/world/hands/pose/{hand_data.handedness}",
-                    ToTransform3D(hand_data.hand_pose, False),
-                )
+        if hand_poses_with_dt is not None:
+            hands_data = hand_poses_with_dt.hand_poses
+            for hand_data in hands_data:
+                if hand_data.hand_pose is not None:
 
-                # Skeleton/Joints landmark representation
-                hand_landmarks = hand_data_provider.get_hand_landmarks(hand_data)
-                # convert landmarks to connected lines for display
-                points = []
-                for connectivity in LANDMARK_CONNECTIVITY:
-                    connections = []
-                    for it in connectivity:
-                        connections.append(hand_landmarks[it].numpy().tolist())
-                    points.append(connections)
-                rr.log(
-                    f"/world/hands/joints/{hand_data.handedness}",
-                    rr.LineStrips3D(points),
-                )
+                    # Wrist pose representation
+                    rr.log(
+                        f"/world/hands/pose/{hand_data.handedness}",
+                        ToTransform3D(hand_data.hand_pose, False),
+                    )
 
-                # Vertices representation
-                hand_mesh_vertices = hand_data_provider.get_hand_mesh_vertices(
-                    hand_data
-                )
-                rr.log(
-                    f"/world/hands/mesh/{hand_data.handedness}",
-                    rr.Points3D(hand_mesh_vertices),
-                )
+                    # Skeleton/Joints landmark representation
+                    hand_landmarks = hand_data_provider.get_hand_landmarks(hand_data)
+                    # convert landmarks to connected lines for display
+                    points = []
+                    for connectivity in LANDMARK_CONNECTIVITY:
+                        connections = []
+                        for it in connectivity:
+                            connections.append(hand_landmarks[it].numpy().tolist())
+                        points.append(connections)
+                    rr.log(
+                        f"/world/hands/joints/{hand_data.handedness}",
+                        rr.LineStrips3D(points),
+                    )
 
-                # Triangular Mesh representation
-                [hand_triangles, hand_vertex_normals] = (
-                    hand_data_provider.get_hand_mesh_faces_and_normals(hand_data)
-                )
-                rr.log(
-                    f"/world/hands/mesh_faces/{hand_data.handedness}",
-                    rr.Mesh3D(
-                        vertex_positions=hand_mesh_vertices,
-                        vertex_normals=hand_vertex_normals,
-                        indices=hand_triangles,
-                    ),
-                )
+                    # Vertices representation
+                    hand_mesh_vertices = hand_data_provider.get_hand_mesh_vertices(
+                        hand_data
+                    )
+                    rr.log(
+                        f"/world/hands/mesh/{hand_data.handedness}",
+                        rr.Points3D(hand_mesh_vertices),
+                    )
+
+                    # Triangular Mesh representation
+                    [hand_triangles, hand_vertex_normals] = (
+                        hand_data_provider.get_hand_mesh_faces_and_normals(hand_data)
+                    )
+                    rr.log(
+                        f"/world/hands/mesh_faces/{hand_data.handedness}",
+                        rr.Mesh3D(
+                            vertex_positions=hand_mesh_vertices,
+                            vertex_normals=hand_vertex_normals,
+                            indices=hand_triangles,
+                        ),
+                    )
 
         # 1.c Object poses
 

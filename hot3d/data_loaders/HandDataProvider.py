@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
 from typing import List, Optional
 
 import numpy as np
 import torch
 
 from data_loaders.loader_hand_poses import HandPose, load_hand_poses
-from data_loaders.pose_utils import query_left_right
+from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 
 from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
 from UmeTrack.common.loader_handmodel import load_hand_model_from_file
+
+from .pose_utils import lookup_timestamp
+
+
+@dataclass
+class HandPosesWithDt:
+    hand_poses: List[HandPose]
+    time_delta_ns: int
 
 
 class HandDataProvider:
@@ -31,23 +40,36 @@ class HandDataProvider:
     ) -> None:
 
         self._hand_poses = load_hand_poses(hand_pose_trajectory_filepath)
+        self._sorted_timestamp_ns_list: List[int] = sorted(self._hand_poses.keys())
+
         # Hand profile
         self._hand_model = load_hand_model_from_file(hand_profile_filepath)
 
-    def get_hand_poses(self, timestamp_ns: int) -> Optional[List[HandPose]]:
+    def get_pose_at_timestamp(
+        self,
+        timestamp_ns: int,
+        time_query_options: TimeQueryOptions,
+        time_domain: TimeDomain,
+    ) -> Optional[HandPosesWithDt]:
         """
-        Return the list of hand poses at the given timestamp
+        Return the left and/or right hand poses at the given timestamp
         """
-        if timestamp_ns in self._hand_poses:
-            return self._hand_poses[timestamp_ns]
-        else:
-            # We use bisection to find the closest timestamp
-            lower, upper, alpha = query_left_right(
-                list(self._hand_poses.keys()), timestamp_ns
-            )
-            return self._hand_poses[lower]
+        if time_domain is not TimeDomain.TIME_CODE:
+            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        return None
+        hand_pose_list, time_delta_ns = lookup_timestamp(
+            time_indexed_dict=self._hand_poses,
+            sorted_timestamp_list=self._sorted_timestamp_ns_list,
+            query_timestamp=timestamp_ns,
+            time_query_options=time_query_options,
+        )
+
+        if hand_pose_list is None or time_delta_ns is None:
+            return None
+        else:
+            return HandPosesWithDt(
+                hand_poses=hand_pose_list, time_delta_ns=time_delta_ns
+            )
 
     def get_hand_mesh_vertices(self, hand_wrist_data: HandPose) -> torch.Tensor:
         """
