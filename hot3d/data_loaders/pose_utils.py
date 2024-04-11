@@ -23,13 +23,23 @@ def query_left_right(ordered_timestamps: List, query_timestamp: int):
     Return the left and right timestamp of the query timestamp by using bisection.
     Assumption: timestamps are monotonically sorted in the ordered_timestamps List
     """
-    index_less_than_query = bisect.bisect_left(ordered_timestamps, query_timestamp) - 1
-    index_greater_than_query = index_less_than_query + 1
-    lower_timestamp = ordered_timestamps[index_less_than_query]
-    upper_timestamp = ordered_timestamps[index_greater_than_query]
+    idx = bisect.bisect_left(ordered_timestamps, query_timestamp)
+    if idx == 0:
+        lower_timestamp = None
+    else:
+        lower_timestamp = ordered_timestamps[idx - 1]
 
-    alpha = (query_timestamp - lower_timestamp) / (upper_timestamp - lower_timestamp)
+    if idx == len(ordered_timestamps):
+        upper_timestamp = None
+    else:
+        upper_timestamp = ordered_timestamps[idx]
 
+    if lower_timestamp is not None and upper_timestamp is not None:
+        alpha = (query_timestamp - lower_timestamp) / (
+            upper_timestamp - lower_timestamp
+        )
+    else:
+        alpha = None
     return lower_timestamp, upper_timestamp, alpha
 
 
@@ -56,24 +66,36 @@ def lookup_timestamp(
     if query_timestamp in time_indexed_dict:
         obj = time_indexed_dict[query_timestamp]
         time_delta_ns = 0
+    else:
+        left_frame_tsns, right_frame_tsns, alpha = query_left_right(
+            ordered_timestamps=sorted_timestamp_list,
+            query_timestamp=query_timestamp,
+        )
+        if time_query_options == TimeQueryOptions.BEFORE:
+            if left_frame_tsns is not None:
+                obj = time_indexed_dict[left_frame_tsns]
+                time_delta_ns = query_timestamp - left_frame_tsns
 
-    left_frame_tsns, right_frame_tsns, alpha = query_left_right(
-        ordered_timestamps=sorted_timestamp_list,
-        query_timestamp=query_timestamp,
-    )
-    if time_query_options == TimeQueryOptions.BEFORE:
-        obj = time_indexed_dict[left_frame_tsns]
-        time_delta_ns = query_timestamp - left_frame_tsns
-    elif time_query_options == TimeQueryOptions.AFTER:
-        obj = time_indexed_dict[right_frame_tsns]
-        time_delta_ns = query_timestamp - right_frame_tsns
-    elif time_query_options == TimeQueryOptions.CLOSEST:
-        if abs(query_timestamp - left_frame_tsns) > abs(
-            query_timestamp - right_frame_tsns
-        ):
-            obj = time_indexed_dict[right_frame_tsns]
-            time_delta_ns = query_timestamp - right_frame_tsns
-        else:
-            obj = time_indexed_dict[left_frame_tsns]
-            time_delta_ns = query_timestamp - left_frame_tsns
+        elif time_query_options == TimeQueryOptions.AFTER:
+            if right_frame_tsns is not None:
+                obj = time_indexed_dict[right_frame_tsns]
+                time_delta_ns = query_timestamp - right_frame_tsns
+
+        elif time_query_options == TimeQueryOptions.CLOSEST:
+            if left_frame_tsns is not None and right_frame_tsns is not None:
+                if abs(query_timestamp - left_frame_tsns) > abs(
+                    query_timestamp - right_frame_tsns
+                ):
+                    obj = time_indexed_dict[right_frame_tsns]
+                    time_delta_ns = query_timestamp - right_frame_tsns
+                else:
+                    obj = time_indexed_dict[left_frame_tsns]
+                    time_delta_ns = query_timestamp - left_frame_tsns
+            elif left_frame_tsns is not None:
+                obj = time_indexed_dict[left_frame_tsns]
+                time_delta_ns = query_timestamp - left_frame_tsns
+            elif right_frame_tsns is not None:
+                obj = time_indexed_dict[right_frame_tsns]
+                time_delta_ns = query_timestamp - right_frame_tsns
+
     return obj, time_delta_ns

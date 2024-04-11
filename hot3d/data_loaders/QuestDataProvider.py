@@ -130,11 +130,18 @@ class QuestDataProvider:
         return str(stream_id)
 
     def get_image(self, timestamp_ns: int, stream_id: StreamId) -> np.ndarray:
-        record = self._vrs_reader.read_record_by_time(
-            stream_id=self.get_image_stream_label(stream_id),
-            timestamp=timestamp_ns / 1e9,
-        )
-        if record.record_type == "data":
+        try:
+            record = self._vrs_reader.read_record_by_time(
+                stream_id=self.get_image_stream_label(stream_id),
+                timestamp=timestamp_ns / 1e9,
+            )
+        except ValueError as e:
+            print(
+                f"No record found for timestamp {timestamp_ns} and stream {stream_id}. Caught exception: {e}"
+            )
+            record = None
+
+        if record is not None and record.record_type == "data":
             grey8 = Image.fromarray(record.image_blocks[0]).convert("RGB")
             return np.array(grey8)
         else:
