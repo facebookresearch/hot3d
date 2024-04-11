@@ -14,28 +14,31 @@
 
 import argparse
 import os
-from typing import Optional
+from typing import Optional, Type
 
-import rerun as rr
+import rerun as rr  # @manual
 from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
 from data_loaders.loader_object_poses import Pose3DCollectionWithDt
 
 try:
-    from dataset_api import Hot3DDataProvider
+    from dataset_api import Hot3DDataProvider  # @manual
 except ImportError:
     from hot3d.dataset_api import Hot3DDataProvider
 
-from projectaria_tools.core.mps.utils import (
+from projectaria_tools.core.mps.utils import (  # @manual
     filter_points_from_confidence,
     filter_points_from_count,
 )
 from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
-from projectaria_tools.utils.rerun_helpers import AriaGlassesOutline, ToTransform3D
+from projectaria_tools.utils.rerun_helpers import (  # @manual
+    AriaGlassesOutline,
+    ToTransform3D,
+)
 
 from tqdm import tqdm
 
-from UmeTrack.common.hand import LANDMARK_CONNECTIVITY
+from UmeTrack.common.hand import LANDMARK_CONNECTIVITY  # @manual
 
 
 def parse_args():
@@ -57,18 +60,19 @@ def parse_args():
 
     # If this path is set, we will save the rerun (.rrd) file to the given path
     parser.add_argument(
-        "--rrd_output_path", type=str, default="", help=argparse.SUPPRESS
+        "--rrd_output_path", type=str, default=None, help=argparse.SUPPRESS
     )
 
     return parser.parse_args()
 
 
-def main():
-    args = parse_args()
-    print(f"args provided: {args}")
-
-    sequence_folder = args.sequence_folder
-    object_library_folder = args.object_library_folder
+def execute_rerun(
+    sequence_folder: str,
+    object_library_folder: str,
+    rrd_output_path: Optional[str],
+    jpeg_quality: int,
+    timestamps_slice: Type[slice],
+):
 
     if not os.path.exists(sequence_folder):
         raise RuntimeError(f"Sequence folder {sequence_folder} does not exist")
@@ -91,10 +95,10 @@ def main():
     hand_data_provider = data_provider.hand_data_provider
 
     # Initializing rerun log configuration
-    rr.init("hot3d Data Viewer", spawn=(not args.rrd_output_path))
-    if args.rrd_output_path:
-        print(f"Saving .rrd file to {args.rrd_output_path}")
-        rr.save(args.rrd_output_path)
+    rr.init("hot3d Data Viewer", spawn=(rrd_output_path is None))
+    if rrd_output_path is not None:
+        print(f"Saving .rrd file to {rrd_output_path}")
+        rr.save(rrd_output_path)
 
     rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Y_UP, timeless=True)
 
@@ -166,7 +170,7 @@ def main():
     object_table = (
         {}
     )  # We want to log 3D assets once, we keep track of their addition here
-    for timestamp in tqdm(timestamps):
+    for timestamp in tqdm(timestamps[timestamps_slice]):
 
         rr.set_time_nanos("synchronization_time", int(timestamp))
         rr.set_time_sequence("timestamp", timestamp)
@@ -286,7 +290,7 @@ def main():
             if image_data is not None:
                 rr.log(
                     f"world/device/{stream_id}",
-                    rr.Image(image_data).compress(jpeg_quality=args.jpeg_quality),
+                    rr.Image(image_data).compress(jpeg_quality=jpeg_quality),
                 )
 
             if data_provider.get_device_type() is Headset.Aria:
@@ -303,6 +307,19 @@ def main():
                         f"world/device/{stream_id}/eye-gaze_projection",
                         rr.Points2D(eye_gaze_reprojection_data, radii=20),
                     )
+
+
+def main():
+    args = parse_args()
+    print(f"args provided: {args}")
+
+    execute_rerun(
+        sequence_folder=args.sequence_folder,
+        object_library_folder=args.object_library_folder,
+        rrd_output_path=args.rrd_output_path,
+        jpeg_quality=args.jpeg_quality,
+        timestamps_slice=slice(None, None, None),
+    )
 
 
 if __name__ == "__main__":
