@@ -23,11 +23,15 @@ from projectaria_tools.core.calibration import (  # @manual
     DeviceCadExtrinsics,
     DeviceCalibration,
     FISHEYE624,
-    get_linear_camera_calibration,
 )
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
-from pyvrs import ImageConversion, SyncVRSReader
+
+try:
+    from pyvrs import ImageConversion, SyncVRSReader  # @manual
+except ImportError:
+    from pyvrs2 import SyncVRSReader  # @manual
+    from vrsbindings import ImageConversion  # @manual
 
 
 class QuestDataProvider:
