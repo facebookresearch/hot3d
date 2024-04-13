@@ -52,7 +52,6 @@ class QuestDataProvider:
             if self._vrs_reader.might_contain_images(stream_id):
                 image_stream_ids.append(stream_id)
         image_stream_ids = sorted(image_stream_ids)
-        image_stream_ids = {image_stream_ids[2], image_stream_ids[3]}
 
         # Filter the reader
         filtered_reader = self._vrs_reader.filtered_by_fields(
@@ -73,10 +72,6 @@ class QuestDataProvider:
             # projection_model_type = it["projectionModelType"]
             projection_params = it["projectionParams"]
             serial_number = it["serialNumber"]
-
-            # reject small headset images
-            if image_height < 640:
-                continue
 
             T_world_device = SE3.from_quat_and_translation(
                 quaternion[0],
@@ -139,7 +134,6 @@ class QuestDataProvider:
             if self._vrs_reader.might_contain_images(stream_id):
                 image_stream_ids.append(stream_id)
         image_stream_ids = sorted(image_stream_ids)
-        print(image_stream_ids)
         return [StreamId(x) for x in image_stream_ids]
 
     def get_sequence_timestamps(self) -> List[int]:
