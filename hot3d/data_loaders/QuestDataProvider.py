@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from data_loaders.io_utils import load_json
@@ -153,7 +153,7 @@ class QuestDataProvider:
     def get_image_stream_label(self, stream_id: StreamId) -> str:
         return str(stream_id)
 
-    def get_image(self, timestamp_ns: int, stream_id: StreamId) -> np.ndarray:
+    def get_image(self, timestamp_ns: int, stream_id: StreamId) -> Optional[np.ndarray]:
         try:
             record = self._vrs_reader.read_record_by_time(
                 stream_id=self.get_image_stream_label(stream_id),
@@ -174,7 +174,7 @@ class QuestDataProvider:
 
     def get_undistorted_image(
         self, timestamp_ns: int, stream_id: StreamId
-    ) -> np.ndarray:
+    ) -> Optional[np.ndarray]:
         image = self.get_image(timestamp_ns, stream_id)
         if image is None:
             return None

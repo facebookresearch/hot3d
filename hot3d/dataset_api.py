@@ -16,10 +16,12 @@ from typing import Any, Dict, Optional
 
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.HandDataProvider import HandDataProvider
+
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 
 from data_loaders.loader_device_poses import (
+    HeadsetPose3DProvider,
     HeadsetPose3DWithDt,
     load_headset_pose_provider_from_csv,
 )
@@ -28,6 +30,7 @@ from data_loaders.loader_object_library import ObjectLibrary
 from data_loaders.loader_object_poses import (
     load_pose_provider_from_csv,
     Pose3DCollectionWithDt,
+    Pose3DProvider,
 )
 from data_loaders.PathProvider import Hot3DDataPathProvider
 from data_loaders.QuestDataProvider import QuestDataProvider
@@ -112,52 +115,30 @@ class Hot3DDataProvider:
     @property
     def device_data_provider(self):
         """
-        Return the device data provider
+        Return the device data provider (calibration and image stream data)
         """
         return self._device_data_provider
 
     @property
-    def hand_data_provider(self):
+    def hand_data_provider(self) -> Optional[HandDataProvider]:
         """
         Return the hand data provider
         """
         return self._hand_data_provider
 
-    def get_object_poses(
-        self,
-        timestamp_ns: int,
-        time_query_options: TimeQueryOptions,
-        time_domain: TimeDomain = TimeDomain.TIME_CODE,
-    ) -> Optional[Pose3DCollectionWithDt]:
+    @property
+    def object_pose_data_provider(self) -> Optional[Pose3DProvider]:
         """
-        Return the list of object poses at the given timestamp
+        Return the object pose provider
         """
-        if time_domain is not TimeDomain.TIME_CODE:
-            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
+        return self._dynamic_objects_provider
 
-        return self._dynamic_objects_provider.get_pose_at_timestamp(
-            timestamp_ns=timestamp_ns,
-            time_query_options=time_query_options,
-            time_domain=time_domain,
-        )
-
-    def get_device_pose(
-        self,
-        timestamp_ns: int,
-        time_query_options: TimeQueryOptions,
-        time_domain: TimeDomain = TimeDomain.TIME_CODE,
-    ) -> Optional[HeadsetPose3DWithDt]:
+    @property
+    def device_pose_data_provider(self) -> Optional[HeadsetPose3DProvider]:
         """
-        Return the list of headset poses at the given timestamp
+        Return the device pose provider
         """
-        if time_domain is not TimeDomain.TIME_CODE:
-            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
-
-        return self._device_pose_provider.get_pose_at_timestamp(
-            timestamp_ns=timestamp_ns,
-            time_query_options=time_query_options,
-            time_domain=time_domain,
-        )
+        return self._device_pose_provider
 
     def get_device_type(self) -> Headset:
         """

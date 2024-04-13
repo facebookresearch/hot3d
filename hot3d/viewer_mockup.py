@@ -91,8 +91,12 @@ def execute_rerun(
     )
     print(f"data_provider statistics: {data_provider.get_data_statistics()}")
 
+    # Device calibration and Image stream
     device_data_provider = data_provider.device_data_provider
+    # X at time T
+    device_pose_provider = data_provider.device_pose_data_provider
     hand_data_provider = data_provider.hand_data_provider
+    object_pose_data_provider = data_provider.object_pose_data_provider
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(rrd_output_path is None))
@@ -184,8 +188,10 @@ def execute_rerun(
 
         # 1. Plot 3D assets
         # 1.a Device pose
-        headset_pose3d_with_dt = data_provider.get_device_pose(
-            timestamp_ns=timestamp, time_query_options=TimeQueryOptions.CLOSEST
+        headset_pose3d_with_dt = device_pose_provider.get_pose_at_timestamp(
+            timestamp_ns=timestamp,
+            time_query_options=TimeQueryOptions.CLOSEST,
+            time_domain=TimeDomain.TIME_CODE,
         )
         headset_pose3d = headset_pose3d_with_dt.pose3d
 
@@ -247,43 +253,43 @@ def execute_rerun(
                     )
 
         # 1.c Object poses
-
-        objects_pose3d_collection_with_dt: Optional[Pose3DCollectionWithDt] = (
-            data_provider.get_object_poses(
-                timestamp_ns=timestamp, time_query_options=TimeQueryOptions.CLOSEST
-            )
+        object_poses_with_dt = object_pose_data_provider.get_pose_at_timestamp(
+            timestamp_ns=timestamp,
+            time_query_options=TimeQueryOptions.CLOSEST,
+            time_domain=TimeDomain.TIME_CODE,
         )
-        objects_pose3d_collection = objects_pose3d_collection_with_dt.pose3d_collection
+        if object_poses_with_dt is not None:
+            objects_pose3d_collection = object_poses_with_dt.pose3d_collection
 
-        for (
-            object_uid,
-            object_pose3d,
-        ) in objects_pose3d_collection.poses.items():
+            for (
+                object_uid,
+                object_pose3d,
+            ) in objects_pose3d_collection.poses.items():
 
-            object_name = object_library.object_id_to_name_dict[object_uid]
-            object_name = object_name + "_" + str(object_uid)
-            object_cad_asset_filepath = ObjectLibrary.get_cad_asset_path(
-                object_library_folderpath=object_library_folder,
-                object_id=object_uid,
-            )
+                object_name = object_library.object_id_to_name_dict[object_uid]
+                object_name = object_name + "_" + str(object_uid)
+                object_cad_asset_filepath = ObjectLibrary.get_cad_asset_path(
+                    object_library_folderpath=object_library_folder,
+                    object_id=object_uid,
+                )
 
-            rr.log(
-                f"/world/objects/{object_name}",
-                ToTransform3D(object_pose3d.T_world_object, False),
-            )
-
-            # Link the corresponding 3D object
-            scale = rr.datatypes.Scale3D(1e-3)
-            if object_uid not in object_table.keys():
-                object_table[object_uid] = True
                 rr.log(
                     f"/world/objects/{object_name}",
-                    rr.Asset3D(
-                        path=object_cad_asset_filepath,
-                        transform=rr.TranslationRotationScale3D(scale=scale),
-                    ),
-                    timeless=True,
+                    ToTransform3D(object_pose3d.T_world_object, False),
                 )
+
+                # Link the corresponding 3D object
+                scale = rr.datatypes.Scale3D(1e-3)
+                if object_uid not in object_table.keys():
+                    object_table[object_uid] = True
+                    rr.log(
+                        f"/world/objects/{object_name}",
+                        rr.Asset3D(
+                            path=object_cad_asset_filepath,
+                            transform=rr.TranslationRotationScale3D(scale=scale),
+                        ),
+                        timeless=True,
+                    )
 
         # 2. Plot image specifics assets
         #    - 2.a Image
