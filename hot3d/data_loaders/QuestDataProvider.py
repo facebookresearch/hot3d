@@ -22,7 +22,9 @@ from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
     DeviceCadExtrinsics,
     DeviceCalibration,
+    distort_by_calibration,
     FISHEYE624,
+    get_linear_camera_calibration,
 )
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
@@ -44,6 +46,20 @@ class QuestDataProvider:
             8010, ImageConversion.NORMALIZE_GREY8
         )
 
+        # Keep the two last stream ids (the one with largest resolution)
+        image_stream_ids = []
+        for stream_id in self._vrs_reader.stream_ids:
+            if self._vrs_reader.might_contain_images(stream_id):
+                image_stream_ids.append(stream_id)
+        image_stream_ids = sorted(image_stream_ids)
+        image_stream_ids = {image_stream_ids[2], image_stream_ids[3]}
+
+        # Filter the reader
+        filtered_reader = self._vrs_reader.filtered_by_fields(
+            stream_ids=image_stream_ids
+        )
+        self._vrs_reader = filtered_reader
+
         # Loading camera calibration data
         device_calibration_json = load_json(device_calibration_filepath)
         camera_calibration = {}
@@ -58,12 +74,19 @@ class QuestDataProvider:
             projection_params = it["projectionParams"]
             serial_number = it["serialNumber"]
 
+            # reject small headset images
+            if image_height < 640:
+                continue
+
             T_world_device = SE3.from_quat_and_translation(
                 quaternion[0],
                 quaternion[1:4],
                 translation,
             )
+            # Skip focal_y and rely on a single focal length for x,y
+            projection_params = projection_params[:1] + projection_params[2:]
 
+            # Build the corresponding camera calibration object
             camera_calibration[label] = CameraCalibration(
                 label,
                 FISHEYE624,
@@ -115,6 +138,7 @@ class QuestDataProvider:
         for stream_id in self._vrs_reader.stream_ids:
             if self._vrs_reader.might_contain_images(stream_id):
                 image_stream_ids.append(stream_id)
+        image_stream_ids = sorted(image_stream_ids)
         print(image_stream_ids)
         return [StreamId(x) for x in image_stream_ids]
 
@@ -142,7 +166,7 @@ class QuestDataProvider:
             record = None
 
         if record is not None and record.record_type == "data":
-            grey8 = Image.fromarray(record.image_blocks[0]).convert("RGB")
+            grey8 = Image.fromarray(record.image_blocks[0])
             return np.array(grey8)
         else:
             print(f"No image found for timestamp {timestamp_ns} and stream {stream_id}")
@@ -151,6 +175,19 @@ class QuestDataProvider:
     def get_undistorted_image(
         self, timestamp_ns: int, stream_id: StreamId
     ) -> np.ndarray:
-        # TODO
         image = self.get_image(timestamp_ns, stream_id)
-        return image
+        if image is None:
+            return None
+
+        [T_device_camera, camera_calibration] = self.get_camera_calibration(stream_id)
+        focal_lengths = camera_calibration.get_focal_lengths()
+        image_size = camera_calibration.get_image_size()
+        pinhole_calibration = get_linear_camera_calibration(
+            image_size[0], image_size[1], focal_lengths[0]
+        )
+
+        # Compute the actual undistorted image
+        undistorted_image = distort_by_calibration(
+            image, pinhole_calibration, camera_calibration
+        )
+        return undistorted_image
