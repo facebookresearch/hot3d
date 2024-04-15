@@ -23,3 +23,14 @@ POSE_DATA_CSV_COLUMNS = [
     "q_wo_y",
     "q_wo_z",
 ]
+
+BOX2D_DATA_CSV_COLUMNS = [
+    "stream_id",
+    "object_uid",
+    "timestamp[ns]",
+    "x_min[pixel]",
+    "x_max[pixel]",
+    "y_min[pixel]",
+    "y_max[pixel]",
+    "visibility_ratio[%]",
+]

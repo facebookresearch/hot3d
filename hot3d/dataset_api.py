@@ -14,6 +14,8 @@
 
 from typing import Any, Dict, Optional
 
+import data_loaders.ObjectBox2dDataProvider as ObjectBox2dDataProvider
+
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.HandDataProvider import HandDataProvider
 
@@ -78,6 +80,12 @@ class Hot3DDataProvider:
             self.path_provider.headset_trajectory_filepath
         )
 
+        self._object_box2d_provider = (
+            ObjectBox2dDataProvider.load_box2d_trajectory_from_csv(
+                self.path_provider.box2d_objects_filepath
+            )
+        )
+
         self._object_library: ObjectLibrary = object_library
 
         self._hand_data_provider = HandDataProvider(
@@ -103,6 +111,10 @@ class Hot3DDataProvider:
         statistics_dict["dynamic_objects"] = (
             self._dynamic_objects_provider.get_data_statistics()
         )
+        if self._object_box2d_provider is not None:
+            statistics_dict["object_box2ds"] = (
+                self.object_box2d_data_provider.get_data_statistics()
+            )
         return statistics_dict
 
     @property
@@ -125,6 +137,13 @@ class Hot3DDataProvider:
         Return the hand data provider
         """
         return self._hand_data_provider
+
+    @property
+    def object_box2d_data_provider(self):
+        """
+        Return the object box2d data provider
+        """
+        return self._object_box2d_provider
 
     @property
     def object_pose_data_provider(self) -> Optional[Pose3DProvider]:

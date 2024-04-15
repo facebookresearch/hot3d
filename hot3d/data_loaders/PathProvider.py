@@ -71,6 +71,14 @@ class Quest3DatasetPaths(object):
         return f"{self._recording_instance_folderpath}/recording.vrs"
 
     @property
+    def box2d_objects_filepath(self):
+        return f"{self._recording_instance_folderpath}/box2d_objects.csv"
+
+    @property
+    def box2d_hands_filepath(self):
+        return f"{self._recording_instance_folderpath}/box2d_hands.csv"
+
+    @property
     def scene_metadata_filepath(self):
         return f"{self._recording_instance_folderpath}/metadata.json"
 
@@ -124,6 +132,14 @@ class AriaDatasetPaths(object):
     @property
     def vrs_filepath(self):
         return f"{self._recording_instance_folderpath}/recording.vrs"
+
+    @property
+    def box2d_objects_filepath(self):
+        return f"{self._recording_instance_folderpath}/box2d_objects.csv"
+
+    @property
+    def box2d_hands_filepath(self):
+        return f"{self._recording_instance_folderpath}/box2d_hands.csv"
 
     @property
     def mps_folderpath(self):
