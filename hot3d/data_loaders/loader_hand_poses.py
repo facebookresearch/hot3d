@@ -46,7 +46,12 @@ class HandPose:
     - Note that joint_angles and Hand_pose can be set to None if the hand was not seen.
     """
 
-    def __init__(self, handedness: str, hand_pose: SE3, joint_angles: List[float]):
+    def __init__(
+        self,
+        handedness: str,
+        hand_pose: Optional[SE3],
+        joint_angles: Optional[List[float]],
+    ):
         self._handedness = handedness
         self._hand_pose = hand_pose
         self._joint_angles = joint_angles
@@ -60,11 +65,11 @@ class HandPose:
         self._handedness = value
 
     @property
-    def hand_pose(self) -> SE3:
+    def hand_pose(self) -> Optional[SE3]:
         return self._hand_pose
 
     @property
-    def joint_angles(self) -> List[float]:
+    def joint_angles(self) -> Optional[List[float]]:
         return self._joint_angles
 
 

@@ -75,6 +75,7 @@ class HeadsetPose3DProvider(object):
         timestamp_ns: int,
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
+        acceptable_time_delta: Optional[int] = None,
     ) -> Optional[HeadsetPose3DWithDt]:
         """
         Return the list of poses at the given timestamp
@@ -89,7 +90,14 @@ class HeadsetPose3DProvider(object):
             time_query_options=time_query_options,
         )
 
-        if headset_pose3d is None or time_delta_ns is None:
+        if (
+            headset_pose3d is None
+            or time_delta_ns is None
+            or (
+                acceptable_time_delta is not None
+                and abs(time_delta_ns) > acceptable_time_delta
+            )
+        ):
             return None
         else:
             return HeadsetPose3DWithDt(
