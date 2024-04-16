@@ -34,3 +34,14 @@ BOX2D_DATA_CSV_COLUMNS = [
     "y_max[pixel]",
     "visibility_ratio[%]",
 ]
+
+HAND_BOX2D_DATA_CSV_COLUMNS = [
+    "stream_id",
+    "hand_index",
+    "timestamp[ns]",
+    "x_min[pixel]",
+    "x_max[pixel]",
+    "y_min[pixel]",
+    "y_max[pixel]",
+    "visibility_ratio[%]",
+]
