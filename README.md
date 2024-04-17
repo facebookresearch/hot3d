@@ -12,6 +12,7 @@ python3 -m ensurepip
 python3 -m pip install projectaria_tools torch
 python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git'
 python3 -m pip install vrs
+python3 -m pip install matplotlib
 python3 viewer_mockup --sequence_folder <Sequence i.e <PATH>/aria_P0009_PickupDropOff_cf323827> --object_library_folder <PATH>
 ```
 
