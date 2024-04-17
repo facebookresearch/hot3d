@@ -274,6 +274,10 @@ def execute_rerun(
         if object_poses_with_dt is not None:
             objects_pose3d_collection = object_poses_with_dt.pose3d_collection
 
+            # Keep a mapping to know what object has been seen, and which one has not
+            object_uids = object_pose_data_provider.object_uids_with_poses
+            logging_status = {x: False for x in object_uids}
+
             for (
                 object_uid,
                 object_pose3d,
@@ -290,6 +294,8 @@ def execute_rerun(
                     f"/world/objects/{object_name}",
                     ToTransform3D(object_pose3d.T_world_object, False),
                 )
+                # Mark object has been seen
+                logging_status[object_uid] = True
 
                 # Link the corresponding 3D object
                 scale = rr.datatypes.Scale3D(1e-3)
@@ -301,8 +307,18 @@ def execute_rerun(
                             path=object_cad_asset_filepath,
                             transform=rr.TranslationRotationScale3D(scale=scale),
                         ),
-                        timeless=True,
                     )
+            # If some object are not visible, we clear the bounding box visualization
+            for object_uid, displayed in logging_status.items():
+                if not displayed:
+                    object_name = object_library.object_id_to_name_dict[object_uid]
+                    object_name = object_name + "_" + str(object_uid)
+                    rr.log(
+                        f"world/objects/{object_name}",
+                        rr.Clear.recursive(),
+                    )
+                    if object_uid in object_table.keys():
+                        del object_table[object_uid]  # We will log the mesh again
 
         # 2. Plot image specifics assets
         #    - 2.a Image
