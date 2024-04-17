@@ -205,14 +205,23 @@ def execute_rerun(
             time_domain=TimeDomain.TIME_CODE,
         )
 
+        logged_right_hand_data = False
+        logged_left_hand_data = False
         if hand_poses_with_dt is not None:
             hands_data = hand_poses_with_dt.hand_poses
             for hand_data in hands_data:
                 if hand_data.hand_pose is not None:
 
+                    if hand_data.is_left_hand():
+                        logged_left_hand_data = True
+                    elif hand_data.is_right_hand():
+                        logged_right_hand_data = True
+
+                    handedness_label = hand_data.handedness_label()
+
                     # Wrist pose representation
                     rr.log(
-                        f"/world/hands/pose/{hand_data.handedness}",
+                        f"/world/hands/{handedness_label}/pose",
                         ToTransform3D(hand_data.hand_pose, False),
                     )
 
@@ -226,7 +235,7 @@ def execute_rerun(
                             connections.append(hand_landmarks[it].numpy().tolist())
                         points.append(connections)
                     rr.log(
-                        f"/world/hands/joints/{hand_data.handedness}",
+                        f"/world/hands/{handedness_label}/joints",
                         rr.LineStrips3D(points),
                     )
 
@@ -235,7 +244,7 @@ def execute_rerun(
                         hand_data
                     )
                     rr.log(
-                        f"/world/hands/mesh/{hand_data.handedness}",
+                        f"/world/hands/{handedness_label}/mesh",
                         rr.Points3D(hand_mesh_vertices),
                     )
 
@@ -244,13 +253,18 @@ def execute_rerun(
                         hand_data_provider.get_hand_mesh_faces_and_normals(hand_data)
                     )
                     rr.log(
-                        f"/world/hands/mesh_faces/{hand_data.handedness}",
+                        f"/world/hands/{handedness_label}/mesh_faces",
                         rr.Mesh3D(
                             vertex_positions=hand_mesh_vertices,
                             vertex_normals=hand_vertex_normals,
-                            indices=hand_triangles,
+                            indices=hand_triangles,  # TODO: we could avoid sending this list if we want to save memory
                         ),
                     )
+        # If some hand data has not been logged, do not show it in the visualizer
+        if logged_left_hand_data is False:
+            rr.log("/world/hands/left", rr.Clear.recursive())
+        if logged_right_hand_data is False:
+            rr.log("/world/hands/right", rr.Clear.recursive())
 
         # 1.c Object poses
         object_poses_with_dt = object_pose_data_provider.get_pose_at_timestamp(

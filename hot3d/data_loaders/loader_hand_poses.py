@@ -72,6 +72,15 @@ class HandPose:
     def joint_angles(self) -> Optional[List[float]]:
         return self._joint_angles
 
+    def is_left_hand(self) -> bool:
+        return self._handedness == "0"
+
+    def is_right_hand(self) -> bool:
+        return self._handedness == "1"
+
+    def handedness_label(self) -> str:
+        return "left" if self.is_left_hand() else "right"
+
 
 def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
     """Load Hand Poses meta data from a JSONL file.
@@ -99,18 +108,23 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
         left_joint_angles = _get_joint_angles("0", hand_poses_json)
         right_joint_angles = _get_joint_angles("1", hand_poses_json)
 
-        if timestamp_ns not in hand_poses_per_timestamp:
+        if (
+            timestamp_ns not in hand_poses_per_timestamp
+            and left_hand_pose is not None
+            or right_hand_pose is not None
+        ):
             hand_poses_per_timestamp[timestamp_ns] = []
 
-        hand_poses_per_timestamp[timestamp_ns].append(
-            HandPose("0", left_hand_pose, left_joint_angles)
-        )
-        hand_poses_per_timestamp[timestamp_ns].append(
-            HandPose("1", right_hand_pose, right_joint_angles)
-        )
         if left_hand_pose is not None:
+            hand_poses_per_timestamp[timestamp_ns].append(
+                HandPose("0", left_hand_pose, left_joint_angles)
+            )
             hand_poses_count["0"] += 1
+
         if right_hand_pose is not None:
+            hand_poses_per_timestamp[timestamp_ns].append(
+                HandPose("1", right_hand_pose, right_joint_angles)
+            )
             hand_poses_count["1"] += 1
 
     # Print statistics
