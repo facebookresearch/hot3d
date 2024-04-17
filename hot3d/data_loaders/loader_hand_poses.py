@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Dict, List, Optional
 
@@ -49,36 +50,19 @@ def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[f
     return None
 
 
+@dataclass
 class HandPose:
-    """Define a Hand as hand_pose, handedness (left, right) and joint_angles."""
+    """Define a Hand as handedness (left, right), hand_pose (SE3D), and joint_angles."""
 
-    def __init__(
-        self,
-        handedness: Handedness,
-        hand_pose: Optional[SE3],
-        joint_angles: Optional[List[float]],
-    ):
-        self._handedness = handedness
-        self._hand_pose = hand_pose
-        self._joint_angles = joint_angles
-
-    @property
-    def handedness(self) -> Handedness:
-        return self._handedness
-
-    @property
-    def hand_pose(self) -> Optional[SE3]:
-        return self._hand_pose
-
-    @property
-    def joint_angles(self) -> Optional[List[float]]:
-        return self._joint_angles
+    handedness: Handedness
+    hand_pose: SE3
+    joint_angles: List[float]
 
     def is_left_hand(self) -> bool:
-        return self._handedness == Handedness.Left
+        return self.handedness == Handedness.Left
 
     def is_right_hand(self) -> bool:
-        return self._handedness == Handedness.Right
+        return self.handedness == Handedness.Right
 
     def handedness_label(self) -> str:
         return "left" if self.is_left_hand() else "right"
@@ -108,11 +92,10 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
         right_hand_pose = _get_hand_pose(str(RIGHT_HAND_INDEX), hand_poses_json)
         right_joint_angles = _get_joint_angles(str(RIGHT_HAND_INDEX), hand_poses_json)
 
+        # If hand pose data is available, add it to the dictionary
         if (
-            timestamp_ns not in hand_poses_per_timestamp
-            and left_hand_pose is not None
-            or right_hand_pose is not None
-        ):
+            left_hand_pose is not None or right_hand_pose is not None
+        ) and timestamp_ns not in hand_poses_per_timestamp:
             hand_poses_per_timestamp[timestamp_ns] = []
 
         if left_hand_pose is not None:
