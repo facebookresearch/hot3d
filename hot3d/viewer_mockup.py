@@ -16,6 +16,9 @@ import argparse
 import os
 from typing import Optional, Type
 
+import matplotlib as mpl
+import numpy as np
+
 import rerun as rr  # @manual
 from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
@@ -98,6 +101,12 @@ def execute_rerun(
     object_pose_data_provider = data_provider.object_pose_data_provider
     # Bounding box at time T
     object_box2d_data_provider = data_provider.object_box2d_data_provider
+
+    # Colormap for visualizing object bounding box with consistent color across image streams
+    color_map = mpl.colormaps["viridis"]
+    bbox_colors = color_map(
+        np.linspace(0, 1, len(object_box2d_data_provider.object_uids))
+    )
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(rrd_output_path is None))
@@ -394,9 +403,10 @@ def execute_rerun(
                         rr.log(
                             f"world/device/{stream_id}_raw/bbox/{object_name}",
                             rr.Boxes2D(
-                                mins=[box.left, box.top], sizes=[box.width, box.height]
+                                mins=[box.left, box.top],
+                                sizes=[box.width, box.height],
+                                colors=bbox_colors[object_uids.index(object_uid)],
                             ),
-                            # Todo: use the same colors for many objects
                         )
                     # If some object are not visible, we clear the bounding box visualization
                     for key, value in logging_status.items():
