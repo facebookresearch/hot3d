@@ -91,9 +91,10 @@ class Pose3DProvider(object):
         timestamp_ns: int,
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
+        acceptable_time_delta: Optional[int] = None,
     ) -> Optional[Pose3DCollectionWithDt]:
         """
-        Return the list of poses at the given timestamp
+        Return the list of poses available at the given timestamp
         """
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
@@ -105,7 +106,14 @@ class Pose3DProvider(object):
             time_query_options=time_query_options,
         )
 
-        if pose3d_collection is None or time_delta_ns is None:
+        if (
+            pose3d_collection is None
+            or time_delta_ns is None
+            or (
+                acceptable_time_delta is not None
+                and abs(time_delta_ns) > acceptable_time_delta
+            )
+        ):
             return None
         else:
             return Pose3DCollectionWithDt(
