@@ -19,7 +19,6 @@ from typing import Optional, Type
 import rerun as rr  # @manual
 from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
-from data_loaders.loader_object_poses import Pose3DCollectionWithDt
 
 try:
     from dataset_api import Hot3DDataProvider  # @manual
@@ -104,7 +103,7 @@ def execute_rerun(
         print(f"Saving .rrd file to {rrd_output_path}")
         rr.save(rrd_output_path)
 
-    rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Y_UP, timeless=True)
+    rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Z_UP, timeless=True)
 
     # TODO:
     # For convenience LOG the camera trajectory as a 3D line to help user understand the type of user motion in the sequence
