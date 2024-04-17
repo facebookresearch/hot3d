@@ -18,7 +18,7 @@ from typing import List, Optional
 import numpy as np
 import torch
 
-from data_loaders.loader_hand_poses import HandPose, load_hand_poses
+from data_loaders.loader_hand_poses import Handedness, HandPose, load_hand_poses
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 
 from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
@@ -84,7 +84,7 @@ class HandDataProvider:
 
             # self._hand_model is defined for the Left hand,
             #  flipping here the pose X axis is moving the Left Hand to a Right Hand
-            if hand_wrist_data.handedness == "1":
+            if hand_wrist_data.handedness == Handedness.Right:
                 hand_wrist_pose_tensor[:, 0] *= -1
 
             mesh_vertices = skin_vertices(
@@ -129,7 +129,7 @@ class HandDataProvider:
 
             # self._hand_model is defined for the Left hand,
             #  flipping here the pose X axis is moving the Left Hand to a Right Hand
-            if hand_wrist_data.handedness == "1":
+            if hand_wrist_data.handedness == Handedness.Right:
                 hand_wrist_pose_tensor[:, 0] *= -1
             hand_landmarks = skin_landmarks(
                 self._hand_model,

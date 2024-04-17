@@ -13,10 +13,18 @@
 # limitations under the License.
 
 import json
+from enum import auto, Enum
 from typing import Dict, List, Optional
 
 import numpy as np
 from projectaria_tools.core.sophus import SE3  # @manual
+
+from UmeTrack.common.hand import LEFT_HAND_INDEX, RIGHT_HAND_INDEX  # @manual
+
+
+class Handedness(Enum):
+    Left = auto()
+    Right = auto()
 
 
 def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
@@ -42,13 +50,11 @@ def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[f
 
 
 class HandPose:
-    """Define a Hand as hand_pose, handedness (0: left, 1: right) and joint_angles.
-    - Note that joint_angles and Hand_pose can be set to None if the hand was not seen.
-    """
+    """Define a Hand as hand_pose, handedness (left, right) and joint_angles."""
 
     def __init__(
         self,
-        handedness: str,
+        handedness: Handedness,
         hand_pose: Optional[SE3],
         joint_angles: Optional[List[float]],
     ):
@@ -57,12 +63,8 @@ class HandPose:
         self._joint_angles = joint_angles
 
     @property
-    def handedness(self) -> str:
+    def handedness(self) -> Handedness:
         return self._handedness
-
-    @handedness.setter
-    def handedness(self, value: str):
-        self._handedness = value
 
     @property
     def hand_pose(self) -> Optional[SE3]:
@@ -73,10 +75,10 @@ class HandPose:
         return self._joint_angles
 
     def is_left_hand(self) -> bool:
-        return self._handedness == "0"
+        return self._handedness == Handedness.Left
 
     def is_right_hand(self) -> bool:
-        return self._handedness == "1"
+        return self._handedness == Handedness.Right
 
     def handedness_label(self) -> str:
         return "left" if self.is_left_hand() else "right"
@@ -89,9 +91,7 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
     filename -- the jsonl file i.e. sequence_folder + "/hand_pose_trajectory.jsonl"
     """
     hand_poses_per_timestamp = {}
-    hand_poses_count = {}
-    hand_poses_count["0"] = 0
-    hand_poses_count["1"] = 0
+    hand_poses_count = {Handedness.Left: 0, Handedness.Right: 0}
     # Open the CSV file for reading
     f = open(filename, "r")
 
@@ -102,11 +102,11 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
         hand_poses_json = hand_pose_instance["hand_poses"]
 
         # Read hand pose data
-        left_hand_pose = _get_hand_pose("0", hand_poses_json)
-        right_hand_pose = _get_hand_pose("1", hand_poses_json)
+        left_hand_pose = _get_hand_pose(str(LEFT_HAND_INDEX), hand_poses_json)
+        left_joint_angles = _get_joint_angles(str(LEFT_HAND_INDEX), hand_poses_json)
 
-        left_joint_angles = _get_joint_angles("0", hand_poses_json)
-        right_joint_angles = _get_joint_angles("1", hand_poses_json)
+        right_hand_pose = _get_hand_pose(str(RIGHT_HAND_INDEX), hand_poses_json)
+        right_joint_angles = _get_joint_angles(str(RIGHT_HAND_INDEX), hand_poses_json)
 
         if (
             timestamp_ns not in hand_poses_per_timestamp
@@ -117,21 +117,21 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
 
         if left_hand_pose is not None:
             hand_poses_per_timestamp[timestamp_ns].append(
-                HandPose("0", left_hand_pose, left_joint_angles)
+                HandPose(Handedness.Left, left_hand_pose, left_joint_angles)
             )
-            hand_poses_count["0"] += 1
+            hand_poses_count[Handedness.Left] += 1
 
         if right_hand_pose is not None:
             hand_poses_per_timestamp[timestamp_ns].append(
-                HandPose("1", right_hand_pose, right_joint_angles)
+                HandPose(Handedness.Right, right_hand_pose, right_joint_angles)
             )
-            hand_poses_count["1"] += 1
+            hand_poses_count[Handedness.Right] += 1
 
     # Print statistics
     print(
         f"Hand pose data loading stats: \n\
         \tNumber of timestamps: {len(hand_poses_per_timestamp.keys())}\n\
-        \tNumber of Left Hand pose: {hand_poses_count['0']}\n\
-        \tNumber of Right Hand pose: {hand_poses_count['1']}"
+        \tNumber of Left Hand pose: {hand_poses_count[Handedness.Left]}\n\
+        \tNumber of Right Hand pose: {hand_poses_count[Handedness.Right]}"
     )
     return hand_poses_per_timestamp
