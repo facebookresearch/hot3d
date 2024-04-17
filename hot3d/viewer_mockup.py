@@ -96,6 +96,8 @@ def execute_rerun(
     device_pose_provider = data_provider.device_pose_data_provider
     hand_data_provider = data_provider.hand_data_provider
     object_pose_data_provider = data_provider.object_pose_data_provider
+    # Bounding box at time T
+    object_box2d_data_provider = data_provider.object_box2d_data_provider
 
     # Initializing rerun log configuration
     rr.init("hot3d Data Viewer", spawn=(rrd_output_path is None))
@@ -323,6 +325,7 @@ def execute_rerun(
         # 2. Plot image specifics assets
         #    - 2.a Image
         #    - 2.b Eye Gaze image reprojection
+        #    - 2.c Object bounding boxes
         for stream_id in image_stream_ids:
 
             # 2.a Image
@@ -349,6 +352,63 @@ def execute_rerun(
                         f"world/device/{stream_id}/eye-gaze_projection",
                         rr.Points2D(eye_gaze_reprojection_data, radii=20),
                     )
+
+            # 2.c Object bounding boxes (valid for native raw images)
+            image_data = device_data_provider.get_image(timestamp, stream_id)
+            if image_data is not None:
+                rr.log(
+                    f"world/device/{stream_id}_raw",
+                    rr.Image(image_data).compress(jpeg_quality=jpeg_quality),
+                )
+
+                # Keep a mapping to know what object has been seen, and which one has not
+                object_uids = list(object_box2d_data_provider.object_uids)
+                logging_status = {x: False for x in object_uids}
+
+                # Plot 2d bounding boxes
+                box2d_collection_with_dt = (
+                    object_box2d_data_provider.get_box2d_at_timestamp(
+                        stream_id=stream_id,
+                        timestamp_ns=timestamp,
+                        time_query_options=TimeQueryOptions.CLOSEST,
+                        time_domain=TimeDomain.TIME_CODE,
+                    )
+                )
+
+                if (
+                    box2d_collection_with_dt is not None
+                    and box2d_collection_with_dt.box2d_collection is not None
+                ):
+                    object_uids_at_query_timestamp = (
+                        box2d_collection_with_dt.box2d_collection.object_uid_list
+                    )
+
+                    for object_uid in object_uids_at_query_timestamp:
+                        object_name = object_library.object_id_to_name_dict[object_uid]
+                        axis_aligned_box2d = (
+                            box2d_collection_with_dt.box2d_collection.box2ds[object_uid]
+                        )
+                        # TODO: do we want use visibility_ratio = axis_aligned_box2d.visibility_ratio
+                        box = axis_aligned_box2d.box2d
+                        logging_status[object_uid] = True
+                        rr.log(
+                            f"world/device/{stream_id}_raw/bbox/{object_name}",
+                            rr.Boxes2D(
+                                mins=[box.left, box.top], sizes=[box.width, box.height]
+                            ),
+                            # Todo: use the same colors for many objects
+                        )
+                    # If some object are not visible, we clear the bounding box visualization
+                    for key, value in logging_status.items():
+                        if not value:
+                            object_name = object_library.object_id_to_name_dict[key]
+                            rr.log(
+                                f"world/device/{stream_id}_raw/bbox/{object_name}",
+                                rr.Clear.flat(),
+                            )
+                else:
+                    # No bounding box are retrieved, we clear all the bounding box visualization
+                    rr.log(f"world/device/{stream_id}_raw/bbox", rr.Clear.recursive())
 
 
 def main():
