@@ -22,10 +22,43 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from UmeTrack.common.hand import LEFT_HAND_INDEX, RIGHT_HAND_INDEX  # @manual
 
+from .loader_object_poses import Pose3D
+
 
 class Handedness(Enum):
     Left = auto()
     Right = auto()
+
+
+@dataclass
+class HandPose:
+    """Define a Hand pose as hand_pose (SE3D), and joint_angles."""
+
+    handedness: Handedness
+    hand_pose: Pose3D
+    joint_angles: List[float]
+
+    def is_left_hand(self) -> bool:
+        return self.handedness == Handedness.Left
+
+    def is_right_hand(self) -> bool:
+        return self.handedness == Handedness.Right
+
+    def handedness_label(self) -> str:
+        return "left" if self.is_left_hand() else "right"
+
+
+@dataclass
+class HandPose3DCollection:
+    """
+    Class to store the Hand poses for a given timestamp
+    """
+
+    timestamp_ns: int
+    poses: Dict[Handedness, HandPose]
+
+
+TimestampHandPoses3D = Dict[int, HandPose3DCollection]
 
 
 def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
@@ -68,14 +101,13 @@ class HandPose:
         return "left" if self.is_left_hand() else "right"
 
 
-def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
+def load_hand_poses(filename: str) -> TimestampHandPoses3D:
     """Load Hand Poses meta data from a JSONL file.
 
     Keyword arguments:
     filename -- the jsonl file i.e. sequence_folder + "/hand_pose_trajectory.jsonl"
     """
-    hand_poses_per_timestamp = {}
-    hand_poses_count = {Handedness.Left: 0, Handedness.Right: 0}
+    hand_poses_per_timestamp: TimestampHandPoses3D = {}
     # Open the CSV file for reading
     f = open(filename, "r")
 
@@ -96,25 +128,18 @@ def load_hand_poses(filename: str) -> Dict[int, List[HandPose]]:
         if (
             left_hand_pose is not None or right_hand_pose is not None
         ) and timestamp_ns not in hand_poses_per_timestamp:
-            hand_poses_per_timestamp[timestamp_ns] = []
+            hand_poses_per_timestamp[timestamp_ns] = HandPose3DCollection(
+                timestamp_ns=timestamp_ns, poses={}
+            )
 
         if left_hand_pose is not None:
-            hand_poses_per_timestamp[timestamp_ns].append(
-                HandPose(Handedness.Left, left_hand_pose, left_joint_angles)
+            hand_poses_per_timestamp[timestamp_ns].poses[Handedness.Left] = HandPose(
+                Handedness.Left, left_hand_pose, left_joint_angles
             )
-            hand_poses_count[Handedness.Left] += 1
 
         if right_hand_pose is not None:
-            hand_poses_per_timestamp[timestamp_ns].append(
-                HandPose(Handedness.Right, right_hand_pose, right_joint_angles)
+            hand_poses_per_timestamp[timestamp_ns].poses[Handedness.Right] = HandPose(
+                Handedness.Right, right_hand_pose, right_joint_angles
             )
-            hand_poses_count[Handedness.Right] += 1
 
-    # Print statistics
-    print(
-        f"Hand pose data loading stats: \n\
-        \tNumber of timestamps: {len(hand_poses_per_timestamp.keys())}\n\
-        \tNumber of Left Hand pose: {hand_poses_count[Handedness.Left]}\n\
-        \tNumber of Right Hand pose: {hand_poses_count[Handedness.Right]}"
-    )
     return hand_poses_per_timestamp

@@ -29,7 +29,7 @@ from .pose_utils import lookup_timestamp
 @dataclass
 class Pose3D:
     """
-    Class to store pose of a single entity (object/headset)
+    Class to store pose of a single entity (object/headset/hand)
     """
 
     T_world_object: Optional[SE3] = None

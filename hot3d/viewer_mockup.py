@@ -218,58 +218,58 @@ def execute_rerun(
         logged_right_hand_data = False
         logged_left_hand_data = False
         if hand_poses_with_dt is not None:
-            hands_data = hand_poses_with_dt.hand_poses
-            for hand_data in hands_data:
-                if hand_data.hand_pose is not None:
+            hand_pose_collection = hand_poses_with_dt.pose3d_collection
 
-                    if hand_data.is_left_hand():
-                        logged_left_hand_data = True
-                    elif hand_data.is_right_hand():
-                        logged_right_hand_data = True
+            for hand_pose_data in hand_pose_collection.poses.values():
 
-                    handedness_label = hand_data.handedness_label()
+                if hand_pose_data.is_left_hand():
+                    logged_left_hand_data = True
+                elif hand_pose_data.is_right_hand():
+                    logged_right_hand_data = True
 
-                    # Wrist pose representation
-                    rr.log(
-                        f"/world/hands/{handedness_label}/pose",
-                        ToTransform3D(hand_data.hand_pose, False),
-                    )
+                handedness_label = hand_pose_data.handedness_label()
 
-                    # Skeleton/Joints landmark representation
-                    hand_landmarks = hand_data_provider.get_hand_landmarks(hand_data)
-                    # convert landmarks to connected lines for display
-                    points = []
-                    for connectivity in LANDMARK_CONNECTIVITY:
-                        connections = []
-                        for it in connectivity:
-                            connections.append(hand_landmarks[it].numpy().tolist())
-                        points.append(connections)
-                    rr.log(
-                        f"/world/hands/{handedness_label}/joints",
-                        rr.LineStrips3D(points),
-                    )
+                # Wrist pose representation
+                rr.log(
+                    f"/world/hands/{handedness_label}/pose",
+                    ToTransform3D(hand_pose_data.hand_pose, False),
+                )
 
-                    # Vertices representation
-                    hand_mesh_vertices = hand_data_provider.get_hand_mesh_vertices(
-                        hand_data
-                    )
-                    rr.log(
-                        f"/world/hands/{handedness_label}/mesh",
-                        rr.Points3D(hand_mesh_vertices),
-                    )
+                # Skeleton/Joints landmark representation
+                hand_landmarks = hand_data_provider.get_hand_landmarks(hand_pose_data)
+                # convert landmarks to connected lines for display
+                points = []
+                for connectivity in LANDMARK_CONNECTIVITY:
+                    connections = []
+                    for it in connectivity:
+                        connections.append(hand_landmarks[it].numpy().tolist())
+                    points.append(connections)
+                rr.log(
+                    f"/world/hands/{handedness_label}/joints",
+                    rr.LineStrips3D(points),
+                )
 
-                    # Triangular Mesh representation
-                    [hand_triangles, hand_vertex_normals] = (
-                        hand_data_provider.get_hand_mesh_faces_and_normals(hand_data)
-                    )
-                    rr.log(
-                        f"/world/hands/{handedness_label}/mesh_faces",
-                        rr.Mesh3D(
-                            vertex_positions=hand_mesh_vertices,
-                            vertex_normals=hand_vertex_normals,
-                            indices=hand_triangles,  # TODO: we could avoid sending this list if we want to save memory
-                        ),
-                    )
+                # Vertices representation
+                hand_mesh_vertices = hand_data_provider.get_hand_mesh_vertices(
+                    hand_pose_data
+                )
+                rr.log(
+                    f"/world/hands/{handedness_label}/mesh",
+                    rr.Points3D(hand_mesh_vertices),
+                )
+
+                # Triangular Mesh representation
+                [hand_triangles, hand_vertex_normals] = (
+                    hand_data_provider.get_hand_mesh_faces_and_normals(hand_pose_data)
+                )
+                rr.log(
+                    f"/world/hands/{handedness_label}/mesh_faces",
+                    rr.Mesh3D(
+                        vertex_positions=hand_mesh_vertices,
+                        vertex_normals=hand_vertex_normals,
+                        indices=hand_triangles,  # TODO: we could avoid sending this list if we want to save memory
+                    ),
+                )
         # If some hand data has not been logged, do not show it in the visualizer
         if logged_left_hand_data is False:
             rr.log("/world/hands/left", rr.Clear.recursive())

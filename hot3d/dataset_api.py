@@ -119,6 +119,11 @@ class Hot3DDataProvider:
         statistics_dict["dynamic_objects"] = (
             self._dynamic_objects_provider.get_data_statistics()
         )
+        if self._hand_data_provider is not None:
+            statistics_dict["hand_poses"] = (
+                self.hand_data_provider.get_data_statistics()
+            )
+
         if self._object_box2d_provider is not None:
             statistics_dict["object_box2ds"] = (
                 self.object_box2d_data_provider.get_data_statistics()

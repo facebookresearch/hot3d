@@ -13,12 +13,17 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
 
-from data_loaders.loader_hand_poses import Handedness, HandPose, load_hand_poses
+from data_loaders.loader_hand_poses import (
+    Handedness,
+    HandPose,
+    HandPose3DCollection,
+    load_hand_poses,
+)
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 
 from UmeTrack.common.hand_skinning import skin_landmarks, skin_vertices
@@ -28,8 +33,8 @@ from .pose_utils import lookup_timestamp
 
 
 @dataclass
-class HandPosesWithDt:
-    hand_poses: List[HandPose]
+class HandPose3DCollectionWithDt:
+    pose3d_collection: HandPose3DCollection
     time_delta_ns: int
 
 
@@ -45,30 +50,60 @@ class HandDataProvider:
         # Hand profile
         self._hand_model = load_hand_model_from_file(hand_profile_filepath)
 
+    def get_data_statistics(self) -> Dict[str, Any]:
+        """
+        Returns the stats of the Hand data
+        """
+        stats = {}
+        stats["num_frames"] = len(self._sorted_timestamp_ns_list)
+        stats["num_right_hands"] = sum(
+            [
+                1
+                for it in self._hand_poses.values()
+                if Handedness.Right in it.poses.keys()
+            ]
+        )
+        stats["num_left_hands"] = sum(
+            [
+                1
+                for it in self._hand_poses.values()
+                if Handedness.Left in it.poses.keys()
+            ]
+        )
+        return stats
+
     def get_pose_at_timestamp(
         self,
         timestamp_ns: int,
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
-    ) -> Optional[HandPosesWithDt]:
+        acceptable_time_delta: Optional[int] = None,
+    ) -> Optional[HandPose3DCollectionWithDt]:
         """
-        Return the left and/or right hand poses at the given timestamp
+        Return the list of hands available at a given timestamp
         """
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
-        hand_pose_list, time_delta_ns = lookup_timestamp(
+        hand_pose_collection, time_delta_ns = lookup_timestamp(
             time_indexed_dict=self._hand_poses,
             sorted_timestamp_list=self._sorted_timestamp_ns_list,
             query_timestamp=timestamp_ns,
             time_query_options=time_query_options,
         )
 
-        if hand_pose_list is None or time_delta_ns is None:
+        if (
+            hand_pose_collection is None
+            or time_delta_ns is None
+            or (
+                acceptable_time_delta is not None
+                and abs(time_delta_ns) > acceptable_time_delta
+            )
+        ):
             return None
         else:
-            return HandPosesWithDt(
-                hand_poses=hand_pose_list, time_delta_ns=time_delta_ns
+            return HandPose3DCollectionWithDt(
+                pose3d_collection=hand_pose_collection, time_delta_ns=time_delta_ns
             )
 
     def get_hand_mesh_vertices(self, hand_wrist_data: HandPose) -> torch.Tensor:
