@@ -55,10 +55,6 @@ class Quest3DatasetPaths(object):
         return f"{self._recording_instance_folderpath}/headset_trajectory.csv"
 
     @property
-    def headset_metadata_filepath(self):
-        return f"{self._recording_instance_folderpath}/headset_metadata.json"
-
-    @property
     def hand_pose_trajectory_filepath(self):
         return f"{self._recording_instance_folderpath}/hand_pose_trajectory.jsonl"
 
@@ -92,7 +88,6 @@ class Quest3DatasetPaths(object):
             self.vrs_filepath,
             self.dynamic_objects_filepath,
             self.headset_trajectory_filepath,
-            self.headset_metadata_filepath,
             self.hand_pose_trajectory_filepath,
             self.hand_user_profile_filepath,
         ]
@@ -116,10 +111,6 @@ class AriaDatasetPaths(object):
     @property
     def headset_trajectory_filepath(self):
         return f"{self._recording_instance_folderpath}/headset_trajectory.csv"
-
-    @property
-    def headset_metadata_filepath(self):
-        return f"{self._recording_instance_folderpath}/headset_metadata.json"
 
     @property
     def hand_pose_trajectory_filepath(self):
@@ -155,7 +146,6 @@ class AriaDatasetPaths(object):
             self.vrs_filepath,
             self.dynamic_objects_filepath,
             self.headset_trajectory_filepath,
-            self.headset_metadata_filepath,
             self.hand_pose_trajectory_filepath,
         ]
 
