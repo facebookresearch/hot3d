@@ -155,6 +155,7 @@ class AriaDataProvider:
         stream_id: StreamId,
         timestamp_ns: int,
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
+        raw_image=False,  # If False we project for corresponding pinhole camera model
         depth_m: float = 1.0,
     ):
         """
@@ -183,14 +184,18 @@ class AriaDataProvider:
                 )
                 focal_lengths = camera_calibration.get_focal_lengths()
                 image_size = camera_calibration.get_image_size()
-                pinhole_calib = calibration.get_linear_camera_calibration(
-                    image_size[0], image_size[1], focal_lengths[0]
+                image_calibration = (
+                    camera_calibration
+                    if raw_image
+                    else calibration.get_linear_camera_calibration(
+                        image_size[0], image_size[1], focal_lengths[0]
+                    )
                 )
                 device_calibration = self.get_device_calibration()
                 T_device_CPF = device_calibration.get_transform_device_cpf()
                 gaze_center_in_camera = (
                     T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
                 )
-                gaze_projection = pinhole_calib.project(gaze_center_in_camera)
+                gaze_projection = image_calibration.project(gaze_center_in_camera)
                 return gaze_projection
         return None
