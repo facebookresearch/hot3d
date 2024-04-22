@@ -35,14 +35,14 @@ from data_loaders.HandDataProvider import (  # @manual
     HandDataProvider,
     HandPose3DCollectionWithDt,
 )
-
-from data_loaders.loader_object_poses import (  # @manual
-    Pose3DCollectionWithDt,
-    Pose3DProvider,
-)
 from data_loaders.ObjectBox2dDataProvider import (  # @manual
     ObjectBox2dCollectionWithDt,
     ObjectBox2dProvider,
+)
+
+from data_loaders.Pose3DProvider import (  # @manual
+    Pose3DCollectionWithDt,
+    Pose3DProvider,
 )
 
 from projectaria_tools.core.calibration import CameraCalibration, DeviceCalibration

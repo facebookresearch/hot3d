@@ -22,7 +22,7 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from UmeTrack.common.hand import LEFT_HAND_INDEX, RIGHT_HAND_INDEX  # @manual
 
-from .loader_object_poses import Pose3D
+from .Pose3DProvider import Pose3D
 
 
 class Handedness(Enum):
