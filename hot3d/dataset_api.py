@@ -35,7 +35,7 @@ from data_loaders.Pose3DProvider import load_pose_provider_from_csv, Pose3DProvi
 
 from data_loaders.QuestDataProvider import QuestDataProvider
 
-from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
+from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
 
 
 # 3D assets

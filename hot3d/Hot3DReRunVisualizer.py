@@ -29,8 +29,6 @@ try:
 except ImportError:
     from hot3d.dataset_api import Hot3DDataProvider
 
-from enum import auto, Enum
-
 from data_loaders.HandDataProvider import (  # @manual
     HandDataProvider,
     HandPose3DCollectionWithDt,
