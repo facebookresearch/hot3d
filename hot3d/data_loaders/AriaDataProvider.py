@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
@@ -44,6 +44,8 @@ class AriaDataProvider:
             mps_data_paths = mps_data_paths_provider.get_data_paths()
             self._mps_data_provider = MpsDataProvider(mps_data_paths)
             print(mps_data_paths)
+        else:
+            self._mps_data_provider = None
 
     def get_image_stream_ids(self) -> List[StreamId]:
         # retrieve all streams ids and filter the one that are image based
@@ -139,10 +141,12 @@ class AriaDataProvider:
     # Add MPS data specifics
     ###
 
-    def get_point_cloud(self) -> np.ndarray:
+    def get_point_cloud(self) -> Optional[np.ndarray]:
         """
         Return the point cloud of the scene
         """
+        if self._mps_data_provider is None:
+            return None
         if self._mps_data_provider.has_semidense_point_cloud():
             point_cloud_data = self._mps_data_provider.get_semidense_point_cloud()
             # Point cloud filtering is left to the user
