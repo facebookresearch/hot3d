@@ -43,9 +43,11 @@ from data_loaders.Pose3DProvider import (  # @manual
     Pose3DProvider,
 )
 
-from projectaria_tools.core.calibration import (  # @manual
+from projectaria_tools.core.calibration import (
     CameraCalibration,
     DeviceCalibration,
+    FISHEYE624,
+    LINEAR,
 )
 
 from projectaria_tools.core.mps.utils import (  # @manual
@@ -289,12 +291,12 @@ class Hot3DReRunVisualizer:
             if self._hot3d_data_provider.get_device_type() is Headset.Aria:
 
                 # Reproject EyeGaze for raw and pinhole images
-                camera_configurations = [False, True]
-                for is_image_raw in camera_configurations:
+                camera_configurations = [FISHEYE624, LINEAR]
+                for camera_model in camera_configurations:
 
                     eye_gaze_reprojection_data = (
                         self._device_data_provider.get_eye_gaze_in_camera(
-                            stream_id, timestamp_ns, raw_image=is_image_raw
+                            stream_id, timestamp_ns, camera_model=camera_model
                         )
                     )
                     if (
@@ -303,7 +305,7 @@ class Hot3DReRunVisualizer:
                     ):
                         label = (
                             f"world/device/{stream_id}/eye-gaze_projection"
-                            if is_image_raw
+                            if camera_model == LINEAR
                             else f"world/device/{stream_id}_raw/eye-gaze_projection_raw"
                         )
                         rr.log(

@@ -27,6 +27,7 @@ from projectaria_tools.core.calibration import (  # @manual
     LINEAR,
 )
 from projectaria_tools.core.mps import (  # @manual
+    EyeGaze,
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
     MpsDataProvider,
@@ -179,17 +180,41 @@ class AriaDataProvider:
 
         return None
 
+    def _get_gaze_vector_reprojection(
+        self,
+        eye_gaze: EyeGaze,
+        stream_id_label: str,
+        device_calibration: DeviceCalibration,
+        camera_calibration: CameraCalibration,
+    ) -> np.ndarray:
+        """
+        Helper function to project a eye gaze output onto a given image and its calibration, assuming specified fixed depth
+        """
+        gaze_center_in_cpf = get_eyegaze_point_at_depth(
+            eye_gaze.yaw, eye_gaze.pitch, depth_m=eye_gaze.depth or 1.0
+        )
+        transform_device_cpf = device_calibration.get_transform_device_cpf()
+        transform_device_camera = camera_calibration.get_transform_device_camera()
+        transform_camera_cpf = transform_device_camera.inverse() @ transform_device_cpf
+        gaze_center_in_camera = transform_camera_cpf @ gaze_center_in_cpf
+        gaze_center_in_pixels = camera_calibration.project(gaze_center_in_camera)
+        return gaze_center_in_pixels
+
     def get_eye_gaze_in_camera(
         self,
         stream_id: StreamId,
         timestamp_ns: int,
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
-        raw_image=False,  # If False we project for corresponding pinhole camera model
-        depth_m: float = 1.0,
+        camera_model=FISHEYE624,
     ):
         """
         Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
         """
+        if not (camera_model is FISHEYE624 or camera_model is LINEAR):
+            raise ValueError(
+                "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
+            )
+
         # Map to corresponding timestamp
         if time_domain == TimeDomain.TIME_CODE:
             device_timestamp_ns = self._timestamp_convert(
@@ -203,28 +228,15 @@ class AriaDataProvider:
         if device_timestamp_ns:
             eye_gaze = self._mps_data_provider.get_general_eyegaze(device_timestamp_ns)
             if eye_gaze:
-                # Compute eye_gaze vector at depth_m and project it in the image
-                depth_m = 1.0
-                gaze_vector_in_cpf = get_eyegaze_point_at_depth(
-                    eye_gaze.yaw, eye_gaze.pitch, depth_m
-                )
                 [T_device_camera, camera_calibration] = self.get_camera_calibration(
-                    stream_id
+                    stream_id, camera_model
                 )
-                focal_lengths = camera_calibration.get_focal_lengths()
-                image_size = camera_calibration.get_image_size()
-                image_calibration = (
-                    camera_calibration
-                    if raw_image
-                    else get_linear_camera_calibration(
-                        image_size[0], image_size[1], focal_lengths[0]
-                    )
+                # Compute eye_gaze vector at depth_m and project it in the image
+                gaze_projection = self._get_gaze_vector_reprojection(
+                    eye_gaze,
+                    self.get_image_stream_label(stream_id),
+                    self.get_device_calibration(),
+                    camera_calibration,
                 )
-                device_calibration = self.get_device_calibration()
-                T_device_CPF = device_calibration.get_transform_device_cpf()
-                gaze_center_in_camera = (
-                    T_device_camera.inverse() @ T_device_CPF @ gaze_vector_in_cpf
-                )
-                gaze_projection = image_calibration.project(gaze_center_in_camera)
                 return gaze_projection
         return None
