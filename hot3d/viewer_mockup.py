@@ -24,7 +24,11 @@ try:
 except ImportError:
     from hot3d.dataset_api import Hot3DDataProvider
 
-from Hot3DReRunVisualizer import Hot3DReRunVisualizer
+try:
+    from Hot3DReRunVisualizer import Hot3DReRunVisualizer
+except ImportError:
+    from hot3d.Hot3DReRunVisualizer import Hot3DReRunVisualizer
+
 from tqdm import tqdm
 
 

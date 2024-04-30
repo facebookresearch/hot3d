@@ -43,7 +43,10 @@ from data_loaders.Pose3DProvider import (  # @manual
     Pose3DProvider,
 )
 
-from projectaria_tools.core.calibration import CameraCalibration, DeviceCalibration
+from projectaria_tools.core.calibration import (  # @manual
+    CameraCalibration,
+    DeviceCalibration,
+)
 
 from projectaria_tools.core.mps.utils import (  # @manual
     filter_points_from_confidence,
