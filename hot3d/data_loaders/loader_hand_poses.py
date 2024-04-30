@@ -26,8 +26,8 @@ from .Pose3DProvider import Pose3D
 
 
 class Handedness(Enum):
-    Left = auto()
-    Right = auto()
+    Left = int(LEFT_HAND_INDEX)
+    Right = int(RIGHT_HAND_INDEX)
 
 
 @dataclass
