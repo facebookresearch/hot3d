@@ -18,7 +18,7 @@ from .headsets import Headset
 from .io_utils import load_json
 
 
-class Hot3DDataPathProvider(object):
+class Hot3dDataPathProvider(object):
     @staticmethod
     def fromRecordingFolder(recording_instance_folderpath):
 

@@ -26,7 +26,7 @@ from .pose_utils import lookup_timestamp
 
 
 @dataclass
-class HeadsetPose3D:
+class HeadsetPose3d:
     """
     Class to store pose of a headset
     """
@@ -34,20 +34,20 @@ class HeadsetPose3D:
     T_world_device: Optional[SE3] = None
 
 
-HeadsetPose3DTrajectory = Dict[int, HeadsetPose3D]
+HeadsetPose3dTrajectory = Dict[int, HeadsetPose3d]
 
 
 @dataclass
-class HeadsetPose3DWithDt:
-    pose3d: HeadsetPose3D
+class HeadsetPose3dWithDt:
+    pose3d: HeadsetPose3d
     time_delta_ns: int
 
 
-class HeadsetPose3DProvider(object):
+class HeadsetPose3dProvider(object):
     def __init__(
-        self, headset_pose3d_trajectory: HeadsetPose3DTrajectory, headset_uid: str
+        self, headset_pose3d_trajectory: HeadsetPose3dTrajectory, headset_uid: str
     ):
-        self._pose3d_trajectory: HeadsetPose3DTrajectory = headset_pose3d_trajectory
+        self._pose3d_trajectory: HeadsetPose3dTrajectory = headset_pose3d_trajectory
         self._sorted_timestamp_ns_list: List[int] = sorted(
             self._pose3d_trajectory.keys()
         )
@@ -76,7 +76,7 @@ class HeadsetPose3DProvider(object):
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
-    ) -> Optional[HeadsetPose3DWithDt]:
+    ) -> Optional[HeadsetPose3dWithDt]:
         """
         Return the list of poses at the given timestamp
         """
@@ -100,7 +100,7 @@ class HeadsetPose3DProvider(object):
         ):
             return None
         else:
-            return HeadsetPose3DWithDt(
+            return HeadsetPose3dWithDt(
                 pose3d=headset_pose3d, time_delta_ns=time_delta_ns
             )
 
@@ -112,7 +112,7 @@ def load_headset_pose_trajectory_from_csv(filename: str) -> Tuple[Dict[int, SE3]
     filename -- the csv file i.e. sequence_folder + "/headset_trajectory.csv"
     """
 
-    pose3d_trajectory: HeadsetPose3DTrajectory = {}
+    pose3d_trajectory: HeadsetPose3dTrajectory = {}
     headset_uids = set()
 
     # Open the CSV file for reading
@@ -147,7 +147,7 @@ def load_headset_pose_trajectory_from_csv(filename: str) -> Tuple[Dict[int, SE3]
                 np.array([float(o) for o in translation]),
             )[0]
 
-            pose3d_trajectory[timestamp_ns] = HeadsetPose3D(T_world_device=object_pose)
+            pose3d_trajectory[timestamp_ns] = HeadsetPose3d(T_world_device=object_pose)
 
     if len(headset_uids) != 1:
         raise ValueError(
@@ -157,7 +157,7 @@ def load_headset_pose_trajectory_from_csv(filename: str) -> Tuple[Dict[int, SE3]
     return pose3d_trajectory, headset_uids.pop()
 
 
-def load_headset_pose_provider_from_csv(filename: str) -> HeadsetPose3DProvider:
+def load_headset_pose_provider_from_csv(filename: str) -> HeadsetPose3dProvider:
     """
     Load pose_provider from csv
     """
@@ -165,7 +165,7 @@ def load_headset_pose_provider_from_csv(filename: str) -> HeadsetPose3DProvider:
     headset_pose3d_trajectory, headset_uid = load_headset_pose_trajectory_from_csv(
         filename
     )
-    return HeadsetPose3DProvider(
+    return HeadsetPose3dProvider(
         headset_pose3d_trajectory=headset_pose3d_trajectory,
         headset_uid=headset_uid,
     )

@@ -21,17 +21,20 @@ import data_loaders.ObjectBox2dDataProvider as ObjectBox2dDataProvider
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.HandDataProvider import HandDataProvider
 
-from data_loaders.HeadsetPose3DProvider import (
-    HeadsetPose3DProvider,
+from data_loaders.HeadsetPose3dProvider import (
+    HeadsetPose3dProvider,
     load_headset_pose_provider_from_csv,
 )
 
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 from data_loaders.loader_object_library import ObjectLibrary
-from data_loaders.PathProvider import Hot3DDataPathProvider
 
-from data_loaders.Pose3DProvider import load_pose_provider_from_csv, Pose3DProvider
+from data_loaders.ObjectPose3dProvider import (
+    load_pose_provider_from_csv,
+    ObjectPose3dProvider,
+)
+from data_loaders.PathProvider import Hot3dDataPathProvider
 
 from data_loaders.QuestDataProvider import QuestDataProvider
 
@@ -48,7 +51,7 @@ from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
 # and offer a generic interface to retrieve timestamp data by TYPE (Image, Object, Hand, etc.)
 
 
-class Hot3DDataProvider:
+class Hot3dDataProvider:
     """
     High Level interface to retrieve and use data from the hot3d dataset
     """
@@ -61,7 +64,7 @@ class Hot3DDataProvider:
         # Hands
         # Objects
         # Device type, ...
-        self.path_provider = Hot3DDataPathProvider.fromRecordingFolder(
+        self.path_provider = Hot3dDataPathProvider.fromRecordingFolder(
             recording_instance_folderpath=sequence_folder
         )
 
@@ -134,7 +137,7 @@ class Hot3DDataProvider:
     @property
     def object_library(self) -> ObjectLibrary:
         """
-        Return the object library used for initializing the Hot3DDataProvider
+        Return the object library used for initializing the Hot3dDataProvider
         """
         return self._object_library
 
@@ -167,14 +170,14 @@ class Hot3DDataProvider:
         return self._hand_box2d_provider
 
     @property
-    def object_pose_data_provider(self) -> Optional[Pose3DProvider]:
+    def object_pose_data_provider(self) -> Optional[ObjectPose3dProvider]:
         """
         Return the object pose provider
         """
         return self._dynamic_objects_provider
 
     @property
-    def device_pose_data_provider(self) -> Optional[HeadsetPose3DProvider]:
+    def device_pose_data_provider(self) -> Optional[HeadsetPose3dProvider]:
         """
         Return the device pose provider
         """

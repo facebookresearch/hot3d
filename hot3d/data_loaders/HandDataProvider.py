@@ -21,7 +21,7 @@ import torch
 from data_loaders.loader_hand_poses import (
     Handedness,
     HandPose,
-    HandPose3DCollection,
+    HandPose3dCollection,
     load_hand_poses,
 )
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
@@ -33,8 +33,8 @@ from .pose_utils import lookup_timestamp
 
 
 @dataclass
-class HandPose3DCollectionWithDt:
-    pose3d_collection: HandPose3DCollection
+class HandPose3dCollectionWithDt:
+    pose3d_collection: HandPose3dCollection
     time_delta_ns: int
 
 
@@ -78,7 +78,7 @@ class HandDataProvider:
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
-    ) -> Optional[HandPose3DCollectionWithDt]:
+    ) -> Optional[HandPose3dCollectionWithDt]:
         """
         Return the list of hands available at a given timestamp
         """
@@ -102,7 +102,7 @@ class HandDataProvider:
         ):
             return None
         else:
-            return HandPose3DCollectionWithDt(
+            return HandPose3dCollectionWithDt(
                 pose3d_collection=hand_pose_collection, time_delta_ns=time_delta_ns
             )
 

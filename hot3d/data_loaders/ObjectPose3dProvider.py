@@ -27,7 +27,7 @@ from .pose_utils import lookup_timestamp
 
 
 @dataclass
-class Pose3D:
+class Pose3d:
     """
     Class to store pose of a single entity (object/headset/hand)
     """
@@ -36,31 +36,31 @@ class Pose3D:
 
 
 @dataclass
-class Pose3DCollection:
+class ObjectPose3dCollection:
     """
     Class to store the poses for a given timestamp
     """
 
     timestamp_ns: int
-    poses: Dict[str, Pose3D]
+    poses: Dict[str, Pose3d]
 
     @property
     def object_uid_list(self) -> Set[str]:
         return set(self.poses.keys())
 
 
-Pose3DTrajectory = Dict[int, Pose3DCollection]
+Pose3dTrajectory = Dict[int, ObjectPose3dCollection]
 
 
 @dataclass
-class Pose3DCollectionWithDt:
-    pose3d_collection: Pose3DCollection
+class ObjectPose3dCollectionWithDt:
+    pose3d_collection: ObjectPose3dCollection
     time_delta_ns: int
 
 
-class Pose3DProvider(object):
-    def __init__(self, pose3d_trajectory: Pose3DTrajectory):
-        self._pose3d_trajectory: Pose3DTrajectory = pose3d_trajectory
+class ObjectPose3dProvider(object):
+    def __init__(self, pose3d_trajectory: Pose3dTrajectory):
+        self._pose3d_trajectory: Pose3dTrajectory = pose3d_trajectory
         self._sorted_timestamp_ns_list: List[int] = sorted(
             self._pose3d_trajectory.keys()
         )
@@ -92,7 +92,7 @@ class Pose3DProvider(object):
         time_query_options: TimeQueryOptions,
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
-    ) -> Optional[Pose3DCollectionWithDt]:
+    ) -> Optional[ObjectPose3dCollectionWithDt]:
         """
         Return the list of poses available at the given timestamp
         """
@@ -116,19 +116,19 @@ class Pose3DProvider(object):
         ):
             return None
         else:
-            return Pose3DCollectionWithDt(
+            return ObjectPose3dCollectionWithDt(
                 pose3d_collection=pose3d_collection, time_delta_ns=time_delta_ns
             )
 
 
-def load_pose_trajectory_from_csv(filename: str) -> Pose3DTrajectory:
+def load_object_pose_trajectory_from_csv(filename: str) -> Pose3dTrajectory:
     """Load Dynamic Objects meta data from a CSV file.
 
     Keyword arguments:
     filename -- the csv file i.e. sequence_folder + "/dynamic_objects.csv"
     """
 
-    pose3d_trajectory: Pose3DTrajectory = {}
+    pose3d_trajectory: Pose3dTrajectory = {}
     # Open the CSV file for reading
     with open(filename, "r") as f:
         reader = csv.reader(f)
@@ -161,10 +161,10 @@ def load_pose_trajectory_from_csv(filename: str) -> Pose3DTrajectory:
                 np.array([float(o) for o in translation]),
             )[0]
 
-            pose3d = Pose3D(T_world_object=T_world_object)
+            pose3d = Pose3d(T_world_object=T_world_object)
 
             if timestamp_ns not in pose3d_trajectory:
-                pose3d_trajectory[timestamp_ns] = Pose3DCollection(
+                pose3d_trajectory[timestamp_ns] = ObjectPose3dCollection(
                     timestamp_ns=timestamp_ns, poses={}
                 )
 
@@ -173,8 +173,10 @@ def load_pose_trajectory_from_csv(filename: str) -> Pose3DTrajectory:
     return pose3d_trajectory
 
 
-def load_pose_provider_from_csv(filename: str) -> Pose3DProvider:
+def load_pose_provider_from_csv(filename: str) -> ObjectPose3dProvider:
     """
-    Load pose_provider from csv
+    Load the ObjectPose3dProvider from a csv file
     """
-    return Pose3DProvider(pose3d_trajectory=load_pose_trajectory_from_csv(filename))
+    return ObjectPose3dProvider(
+        pose3d_trajectory=load_object_pose_trajectory_from_csv(filename)
+    )

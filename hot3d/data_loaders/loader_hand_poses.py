@@ -22,7 +22,7 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from UmeTrack.common.hand import LEFT_HAND_INDEX, RIGHT_HAND_INDEX  # @manual
 
-from .Pose3DProvider import Pose3D
+from .ObjectPose3dProvider import Pose3d
 
 
 class Handedness(Enum):
@@ -35,7 +35,7 @@ class HandPose:
     """Define a Hand pose as hand_pose (SE3D), and joint_angles."""
 
     handedness: Handedness
-    hand_pose: Pose3D
+    hand_pose: Pose3d
     joint_angles: List[float]
 
     def is_left_hand(self) -> bool:
@@ -49,7 +49,7 @@ class HandPose:
 
 
 @dataclass
-class HandPose3DCollection:
+class HandPose3dCollection:
     """
     Class to store the Hand poses for a given timestamp
     """
@@ -58,7 +58,7 @@ class HandPose3DCollection:
     poses: Dict[Handedness, HandPose]
 
 
-TimestampHandPoses3D = Dict[int, HandPose3DCollection]
+TimestampHandPoses3d = Dict[int, HandPose3dCollection]
 
 
 def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
@@ -83,31 +83,13 @@ def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[f
     return None
 
 
-@dataclass
-class HandPose:
-    """Define a Hand as handedness (left, right), hand_pose (SE3D), and joint_angles."""
-
-    handedness: Handedness
-    hand_pose: SE3
-    joint_angles: List[float]
-
-    def is_left_hand(self) -> bool:
-        return self.handedness == Handedness.Left
-
-    def is_right_hand(self) -> bool:
-        return self.handedness == Handedness.Right
-
-    def handedness_label(self) -> str:
-        return "left" if self.is_left_hand() else "right"
-
-
-def load_hand_poses(filename: str) -> TimestampHandPoses3D:
+def load_hand_poses(filename: str) -> TimestampHandPoses3d:
     """Load Hand Poses meta data from a JSONL file.
 
     Keyword arguments:
     filename -- the jsonl file i.e. sequence_folder + "/hand_pose_trajectory.jsonl"
     """
-    hand_poses_per_timestamp: TimestampHandPoses3D = {}
+    hand_poses_per_timestamp: TimestampHandPoses3d = {}
     # Open the CSV file for reading
     f = open(filename, "r")
 
@@ -128,7 +110,7 @@ def load_hand_poses(filename: str) -> TimestampHandPoses3D:
         if (
             left_hand_pose is not None or right_hand_pose is not None
         ) and timestamp_ns not in hand_poses_per_timestamp:
-            hand_poses_per_timestamp[timestamp_ns] = HandPose3DCollection(
+            hand_poses_per_timestamp[timestamp_ns] = HandPose3dCollection(
                 timestamp_ns=timestamp_ns, poses={}
             )
 

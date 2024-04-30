@@ -20,9 +20,9 @@ import rerun as rr  # @manual
 from data_loaders.loader_object_library import load_object_library
 
 try:
-    from dataset_api import Hot3DDataProvider  # @manual
+    from dataset_api import Hot3dDataProvider  # @manual
 except ImportError:
-    from hot3d.dataset_api import Hot3DDataProvider
+    from hot3d.dataset_api import Hot3dDataProvider
 
 try:
     from Hot3DReRunVisualizer import Hot3DReRunVisualizer
@@ -79,7 +79,7 @@ def execute_rerun(
     #
     # Initialize hot3d data provider
     #
-    data_provider = Hot3DDataProvider(
+    data_provider = Hot3dDataProvider(
         sequence_folder=sequence_folder, object_library=object_library
     )
     print(f"data_provider statistics: {data_provider.get_data_statistics()}")

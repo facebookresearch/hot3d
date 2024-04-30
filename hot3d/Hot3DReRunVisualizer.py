@@ -25,22 +25,22 @@ from projectaria_tools.core.stream_id import StreamId  # @manual
 from UmeTrack.common.hand import LANDMARK_CONNECTIVITY  # @manual
 
 try:
-    from dataset_api import Hot3DDataProvider  # @manual
+    from dataset_api import Hot3dDataProvider  # @manual
 except ImportError:
-    from hot3d.dataset_api import Hot3DDataProvider
+    from hot3d.dataset_api import Hot3dDataProvider
 
 from data_loaders.HandDataProvider import (  # @manual
     HandDataProvider,
-    HandPose3DCollectionWithDt,
+    HandPose3dCollectionWithDt,
 )
 from data_loaders.ObjectBox2dDataProvider import (  # @manual
     ObjectBox2dCollectionWithDt,
     ObjectBox2dProvider,
 )
 
-from data_loaders.Pose3DProvider import (  # @manual
-    Pose3DCollectionWithDt,
-    Pose3DProvider,
+from data_loaders.ObjectPose3dProvider import (  # @manual
+    ObjectPose3dCollectionWithDt,
+    ObjectPose3dProvider,
 )
 
 from projectaria_tools.core.calibration import (
@@ -66,7 +66,7 @@ class Hot3DReRunVisualizer:
 
     def __init__(
         self,
-        hot3d_data_provider: Hot3DDataProvider,
+        hot3d_data_provider: Hot3dDataProvider,
         object_library_folder: str,
     ) -> None:
 
@@ -351,7 +351,7 @@ class Hot3DReRunVisualizer:
     def log_hands(
         label: str,
         hand_data_provider: HandDataProvider,
-        hand_poses_with_dt: HandPose3DCollectionWithDt,
+        hand_poses_with_dt: HandPose3dCollectionWithDt,
         show_hand_mesh=True,
         show_hand_vertices=True,
         show_hand_landmarks=True,
@@ -430,8 +430,8 @@ class Hot3DReRunVisualizer:
     @staticmethod
     def log_object_poses(
         label: str,  # "world/objects",
-        object_poses_with_dt: Pose3DCollectionWithDt,
-        object_pose_data_provider: Pose3DProvider,
+        object_poses_with_dt: ObjectPose3dCollectionWithDt,
+        object_pose_data_provider: ObjectPose3dProvider,
         object_library: ObjectLibrary,
         object_library_folderpath: str,
         object_cache_status: Dict[int, bool],
