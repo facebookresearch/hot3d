@@ -35,11 +35,13 @@ from projectaria_tools.core.stream_id import StreamId  # @manual
 
 class AriaDataProvider:
 
-    def __init__(self, vrs_filepath: str, mps_folder_path: str) -> None:
+    def __init__(
+        self, vrs_filepath: str, mps_folder_path: Optional[str] = None
+    ) -> None:
         self._vrs_data_provider = data_provider.create_vrs_data_provider(vrs_filepath)
 
         # MPS data provider
-        if os.path.exists(mps_folder_path):
+        if mps_folder_path is not None and os.path.exists(mps_folder_path):
             mps_data_paths_provider = MpsDataPathsProvider(mps_folder_path)
             mps_data_paths = mps_data_paths_provider.get_data_paths()
             self._mps_data_provider = MpsDataProvider(mps_data_paths)
