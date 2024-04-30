@@ -121,13 +121,16 @@ def main():
     args = parse_args()
     print(f"args provided: {args}")
 
-    execute_rerun(
-        sequence_folder=args.sequence_folder,
-        object_library_folder=args.object_library_folder,
-        rrd_output_path=args.rrd_output_path,
-        jpeg_quality=args.jpeg_quality,
-        timestamps_slice=slice(None, None, None),
-    )
+    try:
+        execute_rerun(
+            sequence_folder=args.sequence_folder,
+            object_library_folder=args.object_library_folder,
+            rrd_output_path=args.rrd_output_path,
+            jpeg_quality=args.jpeg_quality,
+            timestamps_slice=slice(None, None, None),
+        )
+    except Exception as error:
+        print(f"An exception occurred: {error}")
 
 
 if __name__ == "__main__":
