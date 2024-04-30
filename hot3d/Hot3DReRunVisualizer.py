@@ -109,7 +109,10 @@ class Hot3DReRunVisualizer:
         """
 
         # Configure the world coordinate system to ease navigation
-        rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Z_UP, timeless=True)
+        if self._hot3d_data_provider.get_device_type() is Headset.Aria:
+            rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Z_UP, timeless=True)
+        else:
+            rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Y_UP, timeless=True)
 
         # For each of the stream ids we want to use, export the camera calibration (intrinsics and extrinsics)
         for stream_id in image_stream_ids:
