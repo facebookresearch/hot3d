@@ -12,14 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 
 from data_loaders.ObjectBox2dDataProvider import load_box2d_trajectory_from_csv
-from libfb.py import parutil
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
-box2d_objects_resource = "test_data/aria_sample_recording/box2d_objects.csv"
+box2d_objects_resource = "aria_sample_recording/box2d_objects.csv"
+
+try:
+    from libfb.py import parutil
+
+    box2d_objects_filepath = parutil.get_file_path(
+        "test_data/" + box2d_objects_resource, pkg=__package__
+    )
+except ImportError:
+    from pathlib import Path
+
+    THIS_DIR = Path(__file__)
+    box2d_objects_filepath = str(THIS_DIR.parent / box2d_objects_resource)
 
 
 class TestObjectBox2dDataProvider(unittest.TestCase):
@@ -27,9 +39,7 @@ class TestObjectBox2dDataProvider(unittest.TestCase):
         super().setUp()
 
     def test_provider_aria_recording(self) -> None:
-        box2d_objects_filepath = parutil.get_file_path(
-            box2d_objects_resource, pkg=__package__
-        )
+        self.assertTrue(os.path.exists(box2d_objects_filepath))
         provider = load_box2d_trajectory_from_csv(filename=box2d_objects_filepath)
         object_uids = provider.object_uids
         self.assertEqual(len(object_uids), 6)

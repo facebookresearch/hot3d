@@ -12,14 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 
 from data_loaders.AriaDataProvider import AriaDataProvider
-from libfb.py import parutil
 from projectaria_tools.core.calibration import FISHEYE624, LINEAR
 from projectaria_tools.core.stream_id import StreamId
 
-aria_vrs_resource = "test_data/aria_sample_recording/sequence.vrs"
+aria_vrs_resource = "aria_sample_recording/sequence.vrs"
+
+try:
+    from libfb.py import parutil
+
+    vrs_file_filepath = parutil.get_file_path(
+        "test_data/" + aria_vrs_resource, pkg=__package__
+    )
+except ImportError:
+    from pathlib import Path
+
+    THIS_DIR = Path(__file__)
+    vrs_file_filepath = str(THIS_DIR.parent / aria_vrs_resource)
 
 
 class TestAriaDataProvider(unittest.TestCase):
@@ -27,7 +39,7 @@ class TestAriaDataProvider(unittest.TestCase):
         super().setUp()
 
     def test_provider_aria_recording(self) -> None:
-        vrs_file_filepath = parutil.get_file_path(aria_vrs_resource, pkg=__package__)
+        self.assertTrue(os.path.exists(vrs_file_filepath))
         provider = AriaDataProvider(vrs_file_filepath, "")
 
         self.assertIsNotNone(provider)
