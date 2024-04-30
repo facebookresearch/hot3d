@@ -25,6 +25,7 @@ from projectaria_tools.core.calibration import (  # @manual
     distort_by_calibration,
     FISHEYE624,
     get_linear_camera_calibration,
+    LINEAR,
 )
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
@@ -105,11 +106,21 @@ class QuestDataProvider:
         return self._device_calibration
 
     def get_camera_calibration(
-        self, stream_id: StreamId
+        self,
+        stream_id: StreamId,
+        camera_model=FISHEYE624,
     ) -> tuple[SE3, CameraCalibration]:
         """
         Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
+        Note:
+         - A corresponding pinhole camera can be requested by using camera_model = LINEAR.
+         - This is the camera model used to generate the 'get_undistorted_image'.
         """
+        if not (camera_model is FISHEYE624 or camera_model is LINEAR):
+            raise ValueError(
+                "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
+            )
+
         device_calibration = self.get_device_calibration()
         # Map the string to the right label
         stream_label = self.get_image_stream_label(stream_id)
@@ -124,6 +135,16 @@ class QuestDataProvider:
         camera_calibration = device_calibration.get_camera_calib(
             corresponding_calibration_label
         )
+
+        # If a corresponding pinhole camera is requested, we build one on the fly
+        if camera_model == LINEAR:
+            focal_lengths = camera_calibration.get_focal_lengths()
+            image_size = camera_calibration.get_image_size()
+            camera_calibration = get_linear_camera_calibration(
+                image_size[0], image_size[1], focal_lengths[0]
+            )
+        # else return the native FISHEYE624 camera model
+
         T_device_camera = camera_calibration.get_transform_device_camera()
         return [T_device_camera, camera_calibration]
 
@@ -173,15 +194,15 @@ class QuestDataProvider:
         if image is None:
             return None
 
-        [T_device_camera, camera_calibration] = self.get_camera_calibration(stream_id)
-        focal_lengths = camera_calibration.get_focal_lengths()
-        image_size = camera_calibration.get_image_size()
-        pinhole_calibration = get_linear_camera_calibration(
-            image_size[0], image_size[1], focal_lengths[0]
+        [T_device_camera, native_camera_calibration] = self.get_camera_calibration(
+            stream_id, camera_model=FISHEYE624
+        )
+        [T_device_camera, pinhole_camera_calibration] = self.get_camera_calibration(
+            stream_id, camera_model=LINEAR
         )
 
         # Compute the actual undistorted image
         undistorted_image = distort_by_calibration(
-            image, pinhole_calibration, camera_calibration
+            image, pinhole_camera_calibration, native_camera_calibration
         )
         return undistorted_image

@@ -17,11 +17,14 @@ from typing import List, Optional
 
 import numpy as np
 
-from projectaria_tools.core import calibration, data_provider  # @manual
+from projectaria_tools.core import data_provider  # @manual
 from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
     DeviceCalibration,
     distort_by_calibration,
+    FISHEYE624,
+    get_linear_camera_calibration,
+    LINEAR,
 )
 from projectaria_tools.core.mps import (  # @manual
     get_eyegaze_point_at_depth,
@@ -87,16 +90,16 @@ class AriaDataProvider:
     ) -> np.ndarray:
         image = self.get_image(timestamp_ns, stream_id)
 
-        [T_device_camera, camera_calibration] = self.get_camera_calibration(stream_id)
-        focal_lengths = camera_calibration.get_focal_lengths()
-        image_size = camera_calibration.get_image_size()
-        pinhole_calibration = calibration.get_linear_camera_calibration(
-            image_size[0], image_size[1], focal_lengths[0]
+        [T_device_camera, native_camera_calibration] = self.get_camera_calibration(
+            stream_id, camera_model=FISHEYE624
+        )
+        [T_device_camera, pinhole_camera_calibration] = self.get_camera_calibration(
+            stream_id, camera_model=LINEAR
         )
 
         # Compute the actual undistorted image
         undistorted_image = distort_by_calibration(
-            image, pinhole_calibration, camera_calibration
+            image, pinhole_camera_calibration, native_camera_calibration
         )
 
         return undistorted_image
@@ -108,14 +111,34 @@ class AriaDataProvider:
         return self._vrs_data_provider.get_device_calibration()
 
     def get_camera_calibration(
-        self, stream_id: StreamId
+        self,
+        stream_id: StreamId,
+        camera_model=FISHEYE624,
     ) -> tuple[SE3, CameraCalibration]:
         """
         Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
+        Note:
+         - A corresponding pinhole camera can be requested by using camera_model = LINEAR.
+         - This is the camera model used to generate the 'get_undistorted_image'.
         """
+        if not (camera_model is FISHEYE624 or camera_model is LINEAR):
+            raise ValueError(
+                "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
+            )
+
         device_calibration = self.get_device_calibration()
         rgb_stream_label = self._vrs_data_provider.get_label_from_stream_id(stream_id)
         camera_calibration = device_calibration.get_camera_calib(rgb_stream_label)
+
+        # If a corresponding pinhole camera is requested, we build one on the fly
+        if camera_model == LINEAR:
+            focal_lengths = camera_calibration.get_focal_lengths()
+            image_size = camera_calibration.get_image_size()
+            camera_calibration = get_linear_camera_calibration(
+                image_size[0], image_size[1], focal_lengths[0]
+            )
+        # else return the native FISHEYE624 camera model
+
         T_device_camera = camera_calibration.get_transform_device_camera()
         return [T_device_camera, camera_calibration]
 
@@ -193,7 +216,7 @@ class AriaDataProvider:
                 image_calibration = (
                     camera_calibration
                     if raw_image
-                    else calibration.get_linear_camera_calibration(
+                    else get_linear_camera_calibration(
                         image_size[0], image_size[1], focal_lengths[0]
                     )
                 )

@@ -16,7 +16,8 @@ import unittest
 
 from data_loaders.AriaDataProvider import AriaDataProvider
 from libfb.py import parutil
-from projectaria_tools.core.stream_id import StreamId  # @manual
+from projectaria_tools.core.calibration import FISHEYE624, LINEAR
+from projectaria_tools.core.stream_id import StreamId
 
 aria_vrs_resource = "test_data/aria_sample_recording/sequence.vrs"
 
@@ -53,7 +54,20 @@ class TestAriaDataProvider(unittest.TestCase):
             undistorted_img_array = provider.get_image(timestamps[0], stream_id)
             self.assertIsNotNone(undistorted_img_array)
 
+            # Retrieve camera calibration
             self.assertIsNotNone(provider.get_camera_calibration(stream_id))
+            self.assertIsNotNone(provider.get_camera_calibration(stream_id, FISHEYE624))
+            self.assertIsNotNone(provider.get_camera_calibration(stream_id, LINEAR))
+
+            # Assert we have the right camera type
+            self.assertEqual(
+                provider.get_camera_calibration(stream_id)[1].model_name(),
+                FISHEYE624,
+            )
+            self.assertEqual(
+                provider.get_camera_calibration(stream_id, LINEAR)[1].model_name(),
+                LINEAR,
+            )
 
         # MPS resources are empty since not initialized
         self.assertIsNone(provider.get_point_cloud())
