@@ -83,7 +83,23 @@ def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[f
     return None
 
 
-def load_hand_poses(filename: str) -> TimestampHandPoses3d:
+def _get_mano_joint_angles(
+    handedness: str, hand_poses_json: Dict
+) -> Optional[List[float]]:
+    if handedness in hand_poses_json.keys():
+        pose_pca = hand_poses_json[handedness]["pose"]
+        return pose_pca
+    return None
+
+
+class HandModelType(Enum):
+    NIMBLE = auto()
+    MANO = auto()
+
+
+def load_hand_poses(
+    filename: str, hand_model_type: HandModelType = HandModelType.NIMBLE
+) -> TimestampHandPoses3d:
     """Load Hand Poses meta data from a JSONL file.
 
     Keyword arguments:
@@ -101,10 +117,20 @@ def load_hand_poses(filename: str) -> TimestampHandPoses3d:
 
         # Read hand pose data
         left_hand_pose = _get_hand_pose(str(LEFT_HAND_INDEX), hand_poses_json)
-        left_joint_angles = _get_joint_angles(str(LEFT_HAND_INDEX), hand_poses_json)
-
         right_hand_pose = _get_hand_pose(str(RIGHT_HAND_INDEX), hand_poses_json)
-        right_joint_angles = _get_joint_angles(str(RIGHT_HAND_INDEX), hand_poses_json)
+
+        if hand_model_type == HandModelType.NIMBLE:
+            left_joint_angles = _get_joint_angles(str(LEFT_HAND_INDEX), hand_poses_json)
+            right_joint_angles = _get_joint_angles(
+                str(RIGHT_HAND_INDEX), hand_poses_json
+            )
+        else:
+            left_joint_angles = _get_mano_joint_angles(
+                str(LEFT_HAND_INDEX), hand_poses_json
+            )
+            right_joint_angles = _get_mano_joint_angles(
+                str(RIGHT_HAND_INDEX), hand_poses_json
+            )
 
         # If hand pose data is available, add it to the dictionary
         if (
@@ -125,3 +151,20 @@ def load_hand_poses(filename: str) -> TimestampHandPoses3d:
             )
 
     return hand_poses_per_timestamp
+
+
+def load_mano_shape_params(filename: str) -> Optional[List[float]]:
+    betas = None
+    with open(filename, "rb") as f:
+        for line in f:
+            hand_pose_instance = json.loads(line)
+            for handedness in ["0", "1"]:
+                if (
+                    handedness in hand_pose_instance["hand_poses"].keys()
+                    and "betas" in hand_pose_instance["hand_poses"][handedness]
+                ):
+                    betas = hand_pose_instance["hand_poses"][handedness]["betas"]
+                    break
+            if betas is not None:
+                break
+    return betas

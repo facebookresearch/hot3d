@@ -29,6 +29,8 @@ from data_loaders.HeadsetPose3dProvider import (
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 from data_loaders.loader_object_library import ObjectLibrary
+from data_loaders.mano_layer import mano_to_nimble_joint_mapping, MANOHandModel
+from data_loaders.ManoHandDataProvider import MANOHandDataProvider
 
 from data_loaders.ObjectPose3dProvider import (
     load_pose_provider_from_csv,
@@ -98,6 +100,13 @@ class Hot3dDataProvider:
         self._hand_data_provider = HandDataProvider(
             self.path_provider.hand_pose_trajectory_filepath,
             self.path_provider.hand_user_profile_filepath,
+        )
+
+        mano_model_files_dir = "/data/users/hampali/fbsource/fbcode/surreal/hot3d/hot3d_oss/hot3d/mano_model_files"
+        mano_layer = MANOHandModel(mano_model_files_dir, mano_to_nimble_joint_mapping)
+        self._mano_hand_data_provider = MANOHandDataProvider(
+            self.path_provider.mano_hand_pose_trajectory_filepath,
+            mano_layer,
         )
 
         if self.get_device_type() == Headset.Aria:

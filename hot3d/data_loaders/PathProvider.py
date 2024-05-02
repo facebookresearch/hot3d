@@ -59,6 +59,10 @@ class Quest3DatasetPaths(object):
         return f"{self._recording_instance_folderpath}/hand_pose_trajectory.jsonl"
 
     @property
+    def mano_hand_pose_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/mano_hand_pose_trajectory.jsonl"
+
+    @property
     def hand_user_profile_filepath(self):
         return f"{self._recording_instance_folderpath}/hand_user_profile.json"
 
@@ -115,6 +119,10 @@ class AriaDatasetPaths(object):
     @property
     def hand_pose_trajectory_filepath(self):
         return f"{self._recording_instance_folderpath}/hand_pose_trajectory.jsonl"
+
+    @property
+    def mano_hand_pose_trajectory_filepath(self):
+        return f"{self._recording_instance_folderpath}/mano_hand_pose_trajectory.jsonl"
 
     @property
     def hand_user_profile_filepath(self):
