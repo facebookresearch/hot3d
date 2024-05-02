@@ -102,7 +102,7 @@ class Hot3dDataProvider:
             self.path_provider.hand_user_profile_filepath,
         )
 
-        mano_model_files_dir = "/data/users/hampali/fbsource/fbcode/surreal/hot3d/hot3d_oss/hot3d/mano_model_files"
+        mano_model_files_dir = "/Users/pierrem/Downloads/mano_v1_2/models"
         mano_layer = MANOHandModel(mano_model_files_dir, mano_to_nimble_joint_mapping)
         self._mano_hand_data_provider = MANOHandDataProvider(
             self.path_provider.mano_hand_pose_trajectory_filepath,

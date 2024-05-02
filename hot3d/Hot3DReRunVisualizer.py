@@ -372,7 +372,7 @@ class Hot3DReRunVisualizer:
 
                 # Wrist pose representation
                 Hot3DReRunVisualizer.log_pose(
-                    f"{label}/{handedness_label}/pose", hand_pose_data.hand_pose
+                    f"{label}/{handedness_label}/pose", hand_pose_data.wrist_pose
                 )
 
                 # Skeleton/Joints landmark representation

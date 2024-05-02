@@ -55,8 +55,8 @@ class HandDataProvider(HandDataProviderBase):
         """
         Return the hand mesh corresponding to given HandPose
         """
-        if hand_wrist_data.hand_pose is not None:
-            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
+        if hand_wrist_data.wrist_pose is not None:
+            hand_wrist_pose_matrix = hand_wrist_data.wrist_pose.to_matrix()
             hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
 
             # Set translation to 0. Fix scaling and translation as a post processing step
@@ -75,7 +75,7 @@ class HandDataProvider(HandDataProviderBase):
             # Rescale and translate the vertices
             scale = 1e-3
             mesh_vertices = mesh_vertices.mul(scale)
-            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
+            translation = torch.Tensor(hand_wrist_data.wrist_pose.translation()[0])
             return mesh_vertices + translation.expand_as(mesh_vertices)
         return None
 
@@ -101,8 +101,8 @@ class HandDataProvider(HandDataProviderBase):
         Return the hand joint landmarks corresponding to given HandPose
         See how to map the vertices together to represent a Hand as linked lines using LANDMARK_CONNECTIVITY
         """
-        if hand_wrist_data.hand_pose is not None:
-            hand_wrist_pose_matrix = hand_wrist_data.hand_pose.to_matrix()
+        if hand_wrist_data.wrist_pose is not None:
+            hand_wrist_pose_matrix = hand_wrist_data.wrist_pose.to_matrix()
             hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
 
             # Set translation to 0. Fix scaling and translation as a post processing step
@@ -120,7 +120,7 @@ class HandDataProvider(HandDataProviderBase):
             # Rescale and translate the vertices
             scale = 1e-3
             hand_landmarks = hand_landmarks.mul(scale)
-            translation = torch.Tensor(hand_wrist_data.hand_pose.translation()[0])
+            translation = torch.Tensor(hand_wrist_data.wrist_pose.translation()[0])
             return hand_landmarks + translation.expand_as(hand_landmarks)
 
         return None

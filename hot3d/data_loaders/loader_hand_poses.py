@@ -22,8 +22,6 @@ from projectaria_tools.core.sophus import SE3  # @manual
 
 from UmeTrack.common.hand import LEFT_HAND_INDEX, RIGHT_HAND_INDEX  # @manual
 
-from .ObjectPose3dProvider import Pose3d
-
 
 class Handedness(Enum):
     Left = int(LEFT_HAND_INDEX)
@@ -32,10 +30,10 @@ class Handedness(Enum):
 
 @dataclass
 class HandPose:
-    """Define a Hand pose as hand_pose (SE3D), and joint_angles."""
+    """Define a Hand pose as wrist_pose (SE3), and joint_angles."""
 
     handedness: Handedness
-    hand_pose: Pose3d
+    wrist_pose: Optional[SE3]
     joint_angles: List[float]
 
     def is_left_hand(self) -> bool:
