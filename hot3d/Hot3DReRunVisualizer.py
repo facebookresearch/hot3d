@@ -268,7 +268,10 @@ class Hot3DReRunVisualizer:
                     rr.Image(image_data).compress(jpeg_quality=self._jpeg_quality),
                 )
 
-            if self._object_box2d_data_provider is not None:
+            if (
+                self._object_box2d_data_provider is not None
+                and stream_id in self._object_box2d_data_provider.stream_ids
+            ):
                 box2d_collection_with_dt = (
                     self._object_box2d_data_provider.get_box2d_at_timestamp(
                         stream_id=stream_id,
