@@ -49,11 +49,13 @@ from projectaria_tools.core.calibration import (
     FISHEYE624,
     LINEAR,
 )
+from projectaria_tools.core.mps import get_eyegaze_point_at_depth  # @manual
 
 from projectaria_tools.core.mps.utils import (  # @manual
     filter_points_from_confidence,
     filter_points_from_count,
 )
+
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.utils.rerun_helpers import (  # @manual
@@ -180,7 +182,7 @@ class Hot3DReRunVisualizer:
         """
 
         #
-        ## Retrieve and log not stream dependent data (pure 3D data)
+        ## Retrieve and log data that is not stream_id dependent (pure 3D data)
         #
 
         headset_pose3d_with_dt = None
@@ -208,6 +210,12 @@ class Hot3DReRunVisualizer:
                     time_domain=TimeDomain.TIME_CODE,
                 )
             )
+
+        aria_eye_gaze_data = (
+            self._device_data_provider.get_eye_gaze(timestamp_ns)
+            if self._hot3d_data_provider.get_device_type() is Headset.Aria
+            else None
+        )
 
         #
         ## Log Device pose
@@ -320,6 +328,27 @@ class Hot3DReRunVisualizer:
                             rr.Points2D(eye_gaze_reprojection_data, radii=20),
                             # TODO consistent color and size depending of camera resolution
                         )
+        #
+        ## Log device dependent remaining 3D data
+        #
+
+        # Log 3D eye gaze
+        if aria_eye_gaze_data is not None:
+            T_device_CPF = (
+                self._device_data_provider.get_device_calibration().get_transform_device_cpf()
+            )
+            # Compute eye_gaze vector at depth_m (30cm for a proxy 3D vector to display)
+            gaze_vector_in_cpf = get_eyegaze_point_at_depth(
+                aria_eye_gaze_data.yaw, aria_eye_gaze_data.pitch, depth_m=0.3
+            )
+            # Draw EyeGaze vector
+            rr.log(
+                "world/device/eye-gaze",
+                rr.Arrows3D(
+                    origins=[T_device_CPF @ [0, 0, 0]],
+                    vectors=[T_device_CPF @ gaze_vector_in_cpf],
+                ),
+            )
 
     @staticmethod
     def log_aria_glasses(

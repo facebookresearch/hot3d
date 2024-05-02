@@ -219,6 +219,29 @@ class AriaDataProvider:
                 "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
             )
 
+        eye_gaze = self.get_eye_gaze(timestamp_ns, time_domain)
+        if eye_gaze:
+            [T_device_camera, camera_calibration] = self.get_camera_calibration(
+                stream_id, camera_model
+            )
+            # Compute eye_gaze vector at depth_m and project it in the image
+            gaze_projection = self._get_gaze_vector_reprojection(
+                eye_gaze,
+                self.get_image_stream_label(stream_id),
+                self.get_device_calibration(),
+                camera_calibration,
+            )
+            return gaze_projection
+        return None
+
+    def get_eye_gaze(
+        self,
+        timestamp_ns: int,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+    ) -> Optional[EyeGaze]:
+        """
+        Return the eye_gaze data at the given timestamp
+        """
         # Map to corresponding timestamp
         if time_domain == TimeDomain.TIME_CODE:
             device_timestamp_ns = self._timestamp_convert(
@@ -230,17 +253,6 @@ class AriaDataProvider:
             raise ValueError("Unsupported time domain")
 
         if device_timestamp_ns:
-            eye_gaze = self._mps_data_provider.get_general_eyegaze(device_timestamp_ns)
-            if eye_gaze:
-                [T_device_camera, camera_calibration] = self.get_camera_calibration(
-                    stream_id, camera_model
-                )
-                # Compute eye_gaze vector at depth_m and project it in the image
-                gaze_projection = self._get_gaze_vector_reprojection(
-                    eye_gaze,
-                    self.get_image_stream_label(stream_id),
-                    self.get_device_calibration(),
-                    camera_calibration,
-                )
-                return gaze_projection
+            return self._mps_data_provider.get_general_eyegaze(device_timestamp_ns)
+
         return None
