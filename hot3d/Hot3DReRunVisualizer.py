@@ -373,11 +373,6 @@ class Hot3DReRunVisualizer:
 
                 handedness_label = hand_pose_data.handedness_label()
 
-                # Wrist pose representation
-                Hot3DReRunVisualizer.log_pose(
-                    f"{label}/{handedness_label}/pose", hand_pose_data.wrist_pose
-                )
-
                 # Skeleton/Joints landmark representation
                 if show_hand_landmarks:
                     hand_landmarks = hand_data_provider.get_hand_landmarks(
