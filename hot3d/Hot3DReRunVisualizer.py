@@ -293,6 +293,10 @@ class Hot3DReRunVisualizer:
             #
             if self._hot3d_data_provider.get_device_type() is Headset.Aria:
 
+                # We are showing EyeGaze reprojection only on the RGB image stream
+                if stream_id != StreamId("214-1"):
+                    continue
+
                 # Reproject EyeGaze for raw and pinhole images
                 camera_configurations = [FISHEYE624, LINEAR]
                 for camera_model in camera_configurations:

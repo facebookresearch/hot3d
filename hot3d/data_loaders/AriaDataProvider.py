@@ -194,7 +194,11 @@ class AriaDataProvider:
             eye_gaze.yaw, eye_gaze.pitch, depth_m=eye_gaze.depth or 1.0
         )
         transform_device_cpf = device_calibration.get_transform_device_cpf()
-        transform_device_camera = camera_calibration.get_transform_device_camera()
+        transform_device_camera = device_calibration.get_transform_device_sensor(
+            stream_id_label, True
+        )
+        # We use CAD value (this is the coordinate system used by the Eye Gaze model prediction)
+        # Using factory calibration (i.e CAD = False) would lead to less accurate EyeGaze reprojection.
         transform_camera_cpf = transform_device_camera.inverse() @ transform_device_cpf
         gaze_center_in_camera = transform_camera_cpf @ gaze_center_in_cpf
         gaze_center_in_pixels = camera_calibration.project(gaze_center_in_camera)
