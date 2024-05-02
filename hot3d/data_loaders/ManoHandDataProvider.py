@@ -18,8 +18,10 @@ from typing import List, Optional
 import numpy as np
 import pytorch3d
 import torch
+from data_loaders.HandDataProviderBase import HandDataProviderBase
 
 from data_loaders.loader_hand_poses import (
+    Handedness,
     HandModelType,
     HandPose,
     load_hand_poses,
@@ -29,8 +31,6 @@ from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @
 
 from .mano_layer import MANOHandModel
 
-from .pose_utils import lookup_timestamp
-
 
 @dataclass
 class HandPosesWithDt:
@@ -38,7 +38,7 @@ class HandPosesWithDt:
     time_delta_ns: int
 
 
-class MANOHandDataProvider:
+class MANOHandDataProvider(HandDataProviderBase):
 
     def __init__(
         self,
@@ -46,6 +46,7 @@ class MANOHandDataProvider:
         mano_layer: MANOHandModel,
     ) -> None:
 
+        super().__init__()
         self._hand_poses = load_hand_poses(
             hand_pose_trajectory_filepath, HandModelType.MANO
         )
@@ -60,33 +61,9 @@ class MANOHandDataProvider:
 
         self.mano_layer = mano_layer
 
-    def get_pose_at_timestamp(
-        self,
-        timestamp_ns: int,
-        time_query_options: TimeQueryOptions,
-        time_domain: TimeDomain,
-    ) -> Optional[HandPosesWithDt]:
-        """
-        Return the left and/or right hand poses at the given timestamp
-        """
-        if time_domain is not TimeDomain.TIME_CODE:
-            raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
-
-        hand_pose_list, time_delta_ns = lookup_timestamp(
-            time_indexed_dict=self._hand_poses,
-            sorted_timestamp_list=self._sorted_timestamp_ns_list,
-            query_timestamp=timestamp_ns,
-            time_query_options=time_query_options,
-        )
-
-        if hand_pose_list is None or time_delta_ns is None:
-            return None
-        else:
-            return HandPosesWithDt(
-                hand_poses=hand_pose_list, time_delta_ns=time_delta_ns
-            )
-
-    def get_hand_mesh_vertices(self, hand_wrist_data: HandPose) -> torch.Tensor:
+    def get_hand_mesh_vertices(
+        self, hand_wrist_data: HandPose
+    ) -> Optional[torch.Tensor]:
         """
         Return the hand mesh corresponding to given HandPose
         """
@@ -111,7 +88,7 @@ class MANOHandDataProvider:
                 self._mano_shape_params,
                 torch.from_numpy(np.array(hand_wrist_data.joint_angles)),
                 hand_wrist_pose_tensor,
-                torch.tensor([hand_wrist_data.handedness == "1"]),
+                torch.tensor([hand_wrist_data.handedness == Handedness.Right]),
             )
 
             # Rescale and translate the vertices
@@ -123,17 +100,18 @@ class MANOHandDataProvider:
 
     def get_hand_mesh_faces_and_normals(
         self, hand_wrist_data: HandPose
-    ) -> Optional[tuple[np.array, np.array]]:
+    ) -> Optional[List[np.ndarray]]:
         """
         Return the hand mesh faces and normals
         """
         if self.mano_layer is not None:
-            if hand_wrist_data.handedness == "1":
+            if hand_wrist_data.handedness == Handedness.Right:
                 hand_triangles = self.mano_layer.mano_layer_right.faces
             else:
                 hand_triangles = self.mano_layer.mano_layer_left.faces
 
             vertices = self.get_hand_mesh_vertices(hand_wrist_data)
+            assert vertices is not None
             normals = MANOHandDataProvider.get_triangular_mesh_normals(
                 vertices.float().numpy(), hand_triangles
             )
@@ -167,7 +145,7 @@ class MANOHandDataProvider:
                 self._mano_shape_params,
                 torch.from_numpy(np.array(hand_wrist_data.joint_angles)),
                 hand_wrist_pose_tensor,
-                torch.tensor([hand_wrist_data.handedness == "1"]),
+                torch.tensor([hand_wrist_data.handedness == Handedness.Right]),
             )
             # Rescale and translate the vertices
             scale = 1e-3
@@ -176,42 +154,3 @@ class MANOHandDataProvider:
             return hand_landmarks + translation.expand_as(hand_landmarks)
 
         return None
-
-    @staticmethod
-    def normalized(
-        vecs: np.ndarray, axis: int = -1, add_const_to_denom: bool = True
-    ) -> np.ndarray:
-        """
-        Normalize a set of vectors.
-        Args:
-            vecs: np.ndarray of shape (..., V).
-            axis: axis along which to normalize.
-            add_const_to_denom: if True, add a small constant to the denominator to prevent numerical issues.
-        Returns:
-            np.ndarray of the same shape as vecs.
-        """
-        denom = np.linalg.norm(vecs, axis=axis, keepdims=True)
-        if add_const_to_denom:
-            denom += 1e-5
-        return vecs / denom
-
-    @staticmethod
-    def get_triangular_mesh_normals(
-        vertices: np.ndarray, triangles: np.ndarray
-    ) -> np.ndarray:
-        """
-        Compute the normals of a triangular mesh.
-        Args:
-            vertices: np.ndarray of shape (..., V, 3).
-            triangles: np.ndarray of shape (..., F, 3).
-        Returns:
-            normals: np.ndarray of shape (..., F, 3).
-        """
-        norm = np.zeros_like(vertices)
-        tris = vertices[triangles]
-        n = np.cross(tris[::, 1] - tris[::, 0], tris[::, 2] - tris[::, 0])
-        n = MANOHandDataProvider.normalized(n)
-        norm[triangles[:, 0]] += n
-        norm[triangles[:, 1]] += n
-        norm[triangles[:, 2]] += n
-        return MANOHandDataProvider.normalized(norm)

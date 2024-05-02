@@ -46,6 +46,13 @@ mano_to_nimble_joint_mapping = [
 class MANOHandModel:
     N_VERT = 778
     N_LANDMARKS = 21
+    MANO_FINGERTIP_VERT_INDICES = {
+        "thumb": 744,
+        "index": 320,
+        "middle": 443,
+        "ring": 554,
+        "pinky": 671,
+    }
 
     def __init__(self, mano_model_files_dir: str, joint_mapper: Optional[List] = None):
 
@@ -158,9 +165,33 @@ class MANOHandModel:
             )
         ).to(self.device)
         if torch.any(torch.logical_not(is_right_hand)):
-            out_landmarks[torch.logical_not(is_right_hand)] = left_mano_output.joints
+            if left_mano_output.joints.shape[1] != self.N_LANDMARKS:
+                extra_joints = torch.index_select(
+                    left_mano_output.vertices,
+                    1,
+                    torch.tensor(
+                        list(self.MANO_FINGERTIP_VERT_INDICES.values()),
+                        dtype=torch.long,
+                    ),
+                )
+                joints = torch.cat([left_mano_output.joints, extra_joints], dim=1)
+            else:
+                joints = left_mano_output.joints
+            out_landmarks[torch.logical_not(is_right_hand)] = joints
         if torch.sum(is_right_hand) > 0:
-            out_landmarks[is_right_hand] = right_mano_output.joints
+            if right_mano_output.joints.shape[1] != self.N_LANDMARKS:
+                extra_joints = torch.index_select(
+                    right_mano_output.vertices,
+                    1,
+                    torch.tensor(
+                        list(self.MANO_FINGERTIP_VERT_INDICES.values()),
+                        dtype=torch.long,
+                    ),
+                )
+                joints = torch.cat([right_mano_output.joints, extra_joints], dim=1)
+            else:
+                joints = right_mano_output.joints
+            out_landmarks[is_right_hand] = joints
 
         assert out_landmarks.shape[1] == self.N_LANDMARKS
 
