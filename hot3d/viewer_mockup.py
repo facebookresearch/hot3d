@@ -18,6 +18,7 @@ from typing import Optional, Type
 
 import rerun as rr  # @manual
 from data_loaders.loader_object_library import load_object_library
+from data_loaders.mano_layer import mano_to_nimble_joint_mapping, MANOHandModel
 
 try:
     from dataset_api import Hot3dDataProvider  # @manual
@@ -46,6 +47,12 @@ def parse_args():
         help="path to object library folder containing instance.json and assets/*.glb cad files",
         required=True,
     )
+    parser.add_argument(
+        "--mano_model_folder",
+        type=str,
+        help="path to MANO models containing the MANO_RIGHT/LEFT.pkl files",
+        required=False,
+    )
 
     parser.add_argument("--jpeg_quality", type=int, default=75, help=argparse.SUPPRESS)
 
@@ -60,6 +67,7 @@ def parse_args():
 def execute_rerun(
     sequence_folder: str,
     object_library_folder: str,
+    mano_model_folder: Optional[str],
     rrd_output_path: Optional[str],
     jpeg_quality: int,
     timestamps_slice: Type[slice],
@@ -76,11 +84,18 @@ def execute_rerun(
         object_library_folderpath=object_library_folder
     )
 
+    if mano_model_folder is not None:
+        mano_hand_model = MANOHandModel(mano_model_folder, mano_to_nimble_joint_mapping)
+    else:
+        mano_hand_model = None
+
     #
     # Initialize hot3d data provider
     #
     data_provider = Hot3dDataProvider(
-        sequence_folder=sequence_folder, object_library=object_library
+        sequence_folder=sequence_folder,
+        object_library=object_library,
+        mano_hand_model=mano_hand_model,
     )
     print(f"data_provider statistics: {data_provider.get_data_statistics()}")
 
@@ -125,6 +140,7 @@ def main():
         execute_rerun(
             sequence_folder=args.sequence_folder,
             object_library_folder=args.object_library_folder,
+            mano_model_folder=args.mano_model_folder,
             rrd_output_path=args.rrd_output_path,
             jpeg_quality=args.jpeg_quality,
             timestamps_slice=slice(None, None, None),

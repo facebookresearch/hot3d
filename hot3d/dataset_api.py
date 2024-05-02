@@ -29,7 +29,7 @@ from data_loaders.HeadsetPose3dProvider import (
 from data_loaders.headsets import Headset
 from data_loaders.io_utils import load_json
 from data_loaders.loader_object_library import ObjectLibrary
-from data_loaders.mano_layer import mano_to_nimble_joint_mapping, MANOHandModel
+from data_loaders.mano_layer import MANOHandModel
 from data_loaders.ManoHandDataProvider import MANOHandDataProvider
 
 from data_loaders.ObjectPose3dProvider import (
@@ -58,7 +58,12 @@ class Hot3dDataProvider:
     High Level interface to retrieve and use data from the hot3d dataset
     """
 
-    def __init__(self, sequence_folder: str, object_library: ObjectLibrary) -> None:
+    def __init__(
+        self,
+        sequence_folder: str,
+        object_library: ObjectLibrary,
+        mano_hand_model: Optional[MANOHandModel] = None,
+    ) -> None:
         """
         INIT_DOC_STRING
         """
@@ -102,12 +107,13 @@ class Hot3dDataProvider:
             self.path_provider.hand_user_profile_filepath,
         )
 
-        mano_model_files_dir = "/Users/pierrem/Downloads/mano_v1_2/models"
-        mano_layer = MANOHandModel(mano_model_files_dir, mano_to_nimble_joint_mapping)
-        self._mano_hand_data_provider = MANOHandDataProvider(
-            self.path_provider.mano_hand_pose_trajectory_filepath,
-            mano_layer,
-        )
+        self._mano_hand_data_provider = None
+        if mano_hand_model is not None:
+            self._mano_hand_data_provider = MANOHandDataProvider(
+                self.path_provider.mano_hand_pose_trajectory_filepath, mano_hand_model
+            )
+        else:
+            print("No MANO hand model provided, skipping MANO hand data provider")
 
         if self.get_device_type() == Headset.Aria:
             self._device_data_provider = AriaDataProvider(
@@ -127,9 +133,14 @@ class Hot3dDataProvider:
         statistics_dict["dynamic_objects"] = (
             self._dynamic_objects_provider.get_data_statistics()
         )
+
         if self._hand_data_provider is not None:
             statistics_dict["hand_poses"] = (
                 self.hand_data_provider.get_data_statistics()
+            )
+        if self._mano_hand_data_provider is not None:
+            statistics_dict["mano_hand_poses"] = (
+                self._mano_hand_data_provider.get_data_statistics()
             )
 
         if self._object_box2d_provider is not None:
@@ -163,6 +174,13 @@ class Hot3dDataProvider:
         Return the hand data provider
         """
         return self._hand_data_provider
+
+    @property
+    def mano_hand_data_provider(self) -> Optional[MANOHandDataProvider]:
+        """
+        Return the Mano hand data provider
+        """
+        return self._mano_hand_data_provider
 
     @property
     def object_box2d_data_provider(self):
