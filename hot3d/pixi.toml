@@ -10,7 +10,12 @@ platforms = ["osx-arm64", "linux-64"]
 
 setup = """
     python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git';
+    python3 -m pip install 'git+https://github.com/vchoutas/smplx.git';
+    python3 -m pip install 'git+https://github.com/mattloper/chumpy';
     """
+# Note:
+# Getting chumpy and smplx from git matters to have last update not pushed to pypi
+# See chumpy https://github.com/mattloper/chumpy/issues/55
 
 viewer = "python3 viewer_mockup.py"
 
