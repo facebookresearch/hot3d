@@ -1,14 +1,15 @@
 [project]
 name = "hot3d"
 version = "0.1.0"
-description = "Add a short description here"
+description = "Hot3D dataset API"
 authors = ["Pierre Moulon <pierrem@meta.com>"]
 channels = ["conda-forge"]
-platforms = ["osx-arm64", "linux-64"]
+platforms = ["osx-arm64", "linux-64", "osx-64"]
 
 [tasks]
 
 setup = """
+    python3 -m pip install projectaria_tools;
     python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git';
     python3 -m pip install 'git+https://github.com/vchoutas/smplx.git';
     python3 -m pip install 'git+https://github.com/mattloper/chumpy';
@@ -24,7 +25,6 @@ python = "==3.10"
 pip = "*"
 
 [pypi-dependencies]
-projectaria_tools = "*"
 torch = "*"
 vrs = "*"
 matplotlib = "*"
