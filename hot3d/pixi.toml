@@ -1,0 +1,39 @@
+[project]
+name = "hot3d"
+version = "0.1.0"
+description = "Hot3D dataset API"
+authors = ["Pierre Moulon <pierrem@meta.com>"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64"]
+
+[system-requirements]
+libc = "2.32"
+
+[tasks]
+
+setup = """
+    python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d';
+    """
+
+setup_for_hands = """
+    python3 -m pip install 'git+https://github.com/vchoutas/smplx';
+    python3 -m pip install 'git+https://github.com/mattloper/chumpy';
+    """
+
+# Note:
+# Getting chumpy and smplx from git matters to have last update that have not been pushed to pypi
+# See chumpy https://github.com/mattloper/chumpy/issues/55
+
+viewer = "python3 viewer.py"
+
+[dependencies]
+python = "==3.10"
+pip = "*"
+
+[pypi-dependencies]
+torch = "*"
+vrs = "*"
+matplotlib = "*"
+requests = "*"
+projectaria_tools = "~=1.5.1"
+rerun-sdk = "~=0.16.0"

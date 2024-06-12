@@ -1,0 +1,51 @@
+name: Setup and Test - Pixi
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build Hot3D on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./hot3d # default folder for all "run:" commands
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - name : Setup repo
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name : Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.23.0
+          run-install: false
+
+      - name: Python - Prepare environment
+        shell: bash
+        run: |
+          # prepare pixi environment
+          pixi install
+          # call the specific 'setup' task
+          pixi run setup
+
+      - name: Python - Unit test
+        shell: pixi run bash {0}
+        run: |
+          export TEST_FOLDER="./data_loaders/tests/"
+          python3 -m unittest data_loaders/tests/test_AriaDataProvider.py
+          python3 -m unittest data_loaders/tests/test_HandBox2dDataProvider.py
+          python3 -m unittest data_loaders/tests/test_ObjectBox2dDataProvider.py
+
+      - name : Python - Test dataset viewer
+        shell: pixi run bash {0}
+        run: |
+          rerun analytics disable
+          # TODO add viewer running functional test
