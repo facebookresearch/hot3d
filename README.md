@@ -1,15 +1,14 @@
 # HOT3D: A dataset for egocentric 3D hand and object tracking
 
-This repository is hosting the API to download and use the [HOT3D dataset](https://www.projectaria.com/datasets/hot3d/), a new benchmark dataset for vision-based understanding of 3D hand-object interactions.
+This repository is hosting the API to download and use [HOT3D](https://facebookresearch.github.io/hot3d/), a benchmark dataset for vision-based understanding of 3D hand-object interactions.
 
 # Installation and usage
 
-Note:
-- This python repository can be used with pixi and conda environment.
+This python repository can be used with pixi and conda environments.
 
 ## Using Pixi
 
-Pixi is a package management tool for developers. It allows the developer to install libraries and applications in a reproducible way and ease the installation and usage of  a python environment for the hot3d API.
+[Pixi](https://prefix.dev/) is a package management tool for developers. It allows the developer to install libraries and applications in a reproducible way and ease the installation and usage of a python environment for the HOT3D API.
 
 ```
 # 1. Install pixi
@@ -68,7 +67,7 @@ python3 -m pip install 'git+https://github.com/mattloper/chumpy'
 Please read first the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/) and see the various licenses used depending of the data types you want to use (Sequence, Hand annotations, 3D object model).
 
 Required:
-- Agree with the license and download the CDN_download_urls.json files from the "Access HOT3D Dataset and accompanying Tools" section on [projectaria HOT3D website](https://www.projectaria.com/datasets/hot3d)
+- Agree with the license and download the CDN_download_urls.json files from the "Access HOT3D Dataset and accompanying Tools" section on [HOT3D projectaria.com website](https://www.projectaria.com/datasets/hot3d)
 - You will see buttons:
   - "Download the HOT3D Aria Dataset"
   - "Download the HOT3D Quest Dataset"
@@ -97,7 +96,7 @@ python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../d
 ```
 
 
-# Run the dataset viewer
+# Running the dataset viewer
 
 ## Viewing objects and headset pose trajectory
 ```
@@ -109,15 +108,23 @@ If using `pixi` you can directly call the viewer without directly activate the e
 pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
-## Viewing hands (optional)
 
-HOT3D is using [MANO hands](https://mano.is.tue.mpg.de/) that can be downloaded after accepting their license agreement.
+## Using hand annotations
+
+Hand annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats.
+
+### UmeTrack
+
+Instructions coming soon.
+
+### HOT3D
+
+Hand annotations in the MANO format can be downloaded after accepting their [license agreement](https://mano.is.tue.mpg.de/).
 - HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
 
 ```
 python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/
 ```
-
 
 
 # License
