@@ -117,7 +117,7 @@ Hand annotations in HOT3D are provided in the [UmeTrack](https://github.com/face
 
 Instructions coming soon.
 
-### HOT3D
+### MANO
 
 Hand annotations in the MANO format can be downloaded after accepting their [license agreement](https://mano.is.tue.mpg.de/).
 - HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
