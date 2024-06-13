@@ -1,6 +1,6 @@
 # HOT3D: A dataset for egocentric 3D hand and object tracking
 
-This repository is hosting the API to download and use [HOT3D](https://facebookresearch.github.io/hot3d/), a benchmark dataset for vision-based understanding of 3D hand-object interactions.
+This repository hosts the API for downloading and utilizing HOT3D, a benchmark dataset designed for the vision-based understanding of 3D hand-object interactions.
 
 # Installation and usage
 
@@ -27,12 +27,11 @@ pixi run setup_hands
 ```
 
 ### A quick introduction to [PIXI environment](https://prefix.dev/)
-- Pixi environment command are run from the hot3d folder
-- Pixi environment is stored in the `.pixi` folder
-- Activating the pixi hot3d environment can be done by calling `pixi shell`
-- Exiting the pixi hot3d environment can be done by called `exit`
-- Removing the environment can be done by calling `rm -rf .pixi`
-
+- Execute Pixi environment commands from within the `hot3d` folder.
+- The Pixi environment is located in the `.pixi` folder.
+- Activate the Pixi HOT3D environment by using the command `pixi shell`.
+- Exit the Pixi HOT3D environment by typing `exit`.
+- Remove the environment by executing the command `rm -rf .pixi`.
 
 ## Using Conda
 
@@ -58,17 +57,16 @@ python3 -m pip install 'git+https://github.com/mattloper/chumpy'
 
 ### A quick introduction to [CONDA environment](https://docs.conda.io/projects/conda/en/4.6.1/user-guide/tasks/manage-environments.html#managing-environments)
 
-- Activating the conda hot3d environment can be done by calling `conda activate hot3d`
-- Exiting the conda hot3d environment can be done by called `source deactivate`
-- Removing the environment can be done by calling `conda remove --name hot3d --all`
+- Activate the Conda HOT3D environment by executing `conda activate hot3d`.
+- Exit the Conda HOT3D environment using `source deactivate`.
+- Remove the Conda HOT3D environment by executing `conda remove --name hot3d --all`.
 
 # Dataset downloading
 
-Please read first the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/) and see the various licenses used depending of the data types you want to use (Sequence, Hand annotations, 3D object model).
+Please review the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/) first, and then examine the specific licenses applicable to the data types you wish to use, such as Sequence, Hand annotations, and 3D object models.
 
 Required:
-- Agree with the license and download the CDN_download_urls.json files from the "Access HOT3D Dataset and accompanying Tools" section on [HOT3D projectaria.com website](https://www.projectaria.com/datasets/hot3d)
-- You will see buttons:
+- After agreeing to the license, download the cdn url files from the "Access HOT3D Dataset and Accompanying Tools" section on [HOT3D projectaria.com website](https://www.projectaria.com/datasets/hot3d). You should see buttons corresponding to each download data type as follows
   - "Download the HOT3D Aria Dataset"
   - "Download the HOT3D Quest Dataset"
   - "Download the HOT3D Assets Dataset"
@@ -83,14 +81,14 @@ cd hot3d/data_downloader
 mkdir -p ../dataset
 
 # 3. Run the dataset downloader
-# Download Hot3D Object Library data
+# Download HOT3D Object Library data
 python3 dataset_downloader_base_main.py -c Hot3DAssets_download_urls.json -o ../dataset --sequence_name all
 
-# Download Hot3D Aria data (here one sequence)
+# Download HOT3D Aria data (here one sequence)
 python3 dataset_downloader_base_main.py -c Hot3DAria_download_urls.json -o ../dataset --sequence_name P0001_0444739e --data_types all
 # Type answer `y`
 
-# Download Hot3D Quest data (here one sequence)
+# Download HOT3D Quest data (here one sequence)
 python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../dataset --sequence_name P0002_1464cbdc --data_types all
 # Type answer `y`
 ```
@@ -103,7 +101,7 @@ python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../d
 python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
-If using `pixi` you can directly call the viewer without directly activate the environment by calling:
+When using `pixi`, you can directly launch the viewer without explicitly activating the environment by using the following command:
 ```
 pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
@@ -111,7 +109,7 @@ pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0
 
 ## Using hand annotations
 
-Hand annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats.
+Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats.
 
 ### UmeTrack
 
