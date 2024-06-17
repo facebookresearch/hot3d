@@ -18,8 +18,8 @@ curl -fsSL https://pixi.sh/install.sh | bash
 git clone https://github.com/facebookresearch/hot3d.git
 cd hot3d
 
-# 3. Call pixi task to setup the python environment and its dependencies
-pixi run setup
+# 3. Call `pixi install` to setup the environment
+pixi install
 
 # 4. (Optional) Install the third-party dependencies required for hands by reviewing and accepting the licenses provided on the corresponding third-party repositories
 pixi run setup_hands
@@ -46,7 +46,6 @@ conda activate hot3d
 # 2. Install dependencies
 python3 -m ensurepip
 python3 -m pip install projectaria_tools==1.5.1 torch requests rerun-sdk==0.16.0
-python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d.git'
 python3 -m pip install vrs
 python3 -m pip install matplotlib
 

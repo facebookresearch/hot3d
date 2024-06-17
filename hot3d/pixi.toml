@@ -7,13 +7,9 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "osx-64"]
 
 [system-requirements]
-libc = "2.32"
+libc = { family="glibc", version="2.30" }
 
 [tasks]
-
-setup = """
-    python3 -m pip install 'git+https://github.com/facebookresearch/pytorch3d';
-    """
 
 setup_for_hands = """
     python3 -m pip install 'git+https://github.com/vchoutas/smplx';
@@ -27,13 +23,13 @@ setup_for_hands = """
 viewer = "python3 viewer.py"
 
 [dependencies]
-python = "==3.10"
 pip = "*"
+python = "==3.10"
+rerun-sdk = "~=0.16.1"
 
 [pypi-dependencies]
-torch = "*"
-vrs = "*"
+torch = "~=2.1.2"
 matplotlib = "*"
+projectaria_tools = "~=1.5.2"
 requests = "*"
-projectaria_tools = "~=1.5.1"
-rerun-sdk = "~=0.16.0"
+vrs = "*"

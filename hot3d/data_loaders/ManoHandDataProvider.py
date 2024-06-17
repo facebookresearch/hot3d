@@ -26,7 +26,9 @@ from data_loaders.loader_hand_poses import (
     load_mano_shape_params,
 )
 
-from pytorch3d import transforms
+from data_loaders.pytorch3d_rotation.rotation_conversions import (  # @manual
+    matrix_to_axis_angle,
+)
 
 from .mano_layer import MANOHandModel
 
@@ -70,7 +72,7 @@ class MANOHandDataProvider(HandDataProviderBase):
             hand_wrist_pose_matrix = hand_wrist_data.wrist_pose.to_matrix()
             hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
 
-            hand_wrist_rotation_axis_angle = transforms.matrix_to_axis_angle(
+            hand_wrist_rotation_axis_angle = matrix_to_axis_angle(
                 hand_wrist_pose_tensor[:3, :3]
             )
             hand_wrist_pose_tensor = torch.cat(
@@ -121,7 +123,7 @@ class MANOHandDataProvider(HandDataProviderBase):
             hand_wrist_pose_matrix = hand_wrist_data.wrist_pose.to_matrix()
             hand_wrist_pose_tensor = torch.from_numpy(hand_wrist_pose_matrix)
 
-            hand_wrist_rotation_axis_angle = transforms.matrix_to_axis_angle(
+            hand_wrist_rotation_axis_angle = matrix_to_axis_angle(
                 hand_wrist_pose_tensor[:3, :3]
             )
             hand_wrist_pose_tensor = torch.cat(
