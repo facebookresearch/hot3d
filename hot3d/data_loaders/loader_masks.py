@@ -89,7 +89,7 @@ def load_mask_data(mask_filename: str) -> MaskData:
 
         # Read the rest of the rows in the CSV file
         for row in reader:
-            timestamp_int = row[header.index("timestamp[ns]")]
+            timestamp_int = int(row[header.index("timestamp[ns]")])
             stream_id_str = row[header.index("stream_id")]
             value = row[header.index("mask")]
 
