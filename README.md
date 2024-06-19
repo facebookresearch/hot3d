@@ -85,7 +85,7 @@ mkdir -p ../dataset
 python3 dataset_downloader_base_main.py -c Hot3DAssets_download_urls.json -o ../dataset --sequence_name all
 
 # Download HOT3D Aria data (here one sequence)
-python3 dataset_downloader_base_main.py -c Hot3DAria_download_urls.json -o ../dataset --sequence_name P0001_0444739e --data_types all
+python3 dataset_downloader_base_main.py -c Hot3DAria_download_urls.json -o ../dataset --sequence_name P0003_c701bd11 --data_types all
 # Type answer `y`
 
 # Download HOT3D Quest data (here one sequence)
