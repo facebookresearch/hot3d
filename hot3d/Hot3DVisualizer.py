@@ -21,6 +21,7 @@ import rerun as rr  # @manual
 
 from data_loaders.hand_common import LANDMARK_CONNECTIVITY
 from data_loaders.headsets import Headset
+from data_loaders.loader_hand_poses import HandType
 from data_loaders.loader_object_library import ObjectLibrary
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
@@ -66,14 +67,26 @@ from projectaria_tools.utils.rerun_helpers import (  # @manual
 
 class Hot3DVisualizer:
 
-    def __init__(self, hot3d_data_provider: Hot3dDataProvider) -> None:
+    def __init__(
+        self,
+        hot3d_data_provider: Hot3dDataProvider,
+        hand_type: HandType = HandType.Umetrack,
+    ) -> None:
 
         self._hot3d_data_provider = hot3d_data_provider
         # Device calibration and Image stream data
         self._device_data_provider = hot3d_data_provider.device_data_provider
         # Data provider at time T (for device & objects & hand poses)
         self._device_pose_provider = hot3d_data_provider.device_pose_data_provider
-        self._hand_data_provider = hot3d_data_provider.mano_hand_data_provider
+        self._hand_data_provider = (
+            hot3d_data_provider.umetrack_hand_data_provider
+            if hand_type == HandType.Umetrack
+            else hot3d_data_provider.mano_hand_data_provider
+        )
+        if hand_type is HandType.Umetrack:
+            print("Hot3DVisualizer is using UMETRACK hand model")
+        elif hand_type is HandType.Mano:
+            print("Hot3DVisualizer is using MANO hand model")
         self._object_pose_data_provider = hot3d_data_provider.object_pose_data_provider
         self._object_box2d_data_provider = (
             hot3d_data_provider.object_box2d_data_provider

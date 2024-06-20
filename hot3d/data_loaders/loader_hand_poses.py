@@ -14,7 +14,7 @@
 
 import json
 from dataclasses import dataclass
-from enum import Enum
+from enum import auto, Enum
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -27,6 +27,11 @@ RIGHT_HAND_INDEX = 1
 class Handedness(Enum):
     Left = int(LEFT_HAND_INDEX)
     Right = int(RIGHT_HAND_INDEX)
+
+
+class HandType(Enum):
+    Mano = auto()
+    Umetrack = auto()
 
 
 @dataclass
@@ -75,12 +80,12 @@ def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
     return None
 
 
-def _get_mano_joint_angles(
-    handedness: str, hand_poses_json: Dict
-) -> Optional[List[float]]:
+def _get_joint_angles(handedness: str, hand_poses_json: Dict) -> Optional[List[float]]:
     if handedness in hand_poses_json.keys():
-        pose_pca = hand_poses_json[handedness]["pose"]
-        return pose_pca
+        if "pose" in hand_poses_json[handedness].keys():
+            return hand_poses_json[handedness]["pose"]  # MANO pose_pca
+        elif "joint_angles" in hand_poses_json[handedness].keys():
+            return hand_poses_json[handedness]["joint_angles"]  # UMETRACK joint angles
     return None
 
 
@@ -96,12 +101,8 @@ def parse_hand_poses_from_fileobject(fileobject):
         left_hand_pose = _get_hand_pose(str(LEFT_HAND_INDEX), hand_poses_json)
         right_hand_pose = _get_hand_pose(str(RIGHT_HAND_INDEX), hand_poses_json)
 
-        left_joint_angles = _get_mano_joint_angles(
-            str(LEFT_HAND_INDEX), hand_poses_json
-        )
-        right_joint_angles = _get_mano_joint_angles(
-            str(RIGHT_HAND_INDEX), hand_poses_json
-        )
+        left_joint_angles = _get_joint_angles(str(LEFT_HAND_INDEX), hand_poses_json)
+        right_joint_angles = _get_joint_angles(str(RIGHT_HAND_INDEX), hand_poses_json)
 
         # If hand pose data is available, add it to the dictionary
         if (

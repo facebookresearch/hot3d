@@ -39,6 +39,7 @@ from data_loaders.ObjectPose3dProvider import (
 from data_loaders.PathProvider import Hot3dDataPathProvider
 
 from data_loaders.QuestDataProvider import QuestDataProvider
+from data_loaders.UmeTrackHandDataProvider import UmeTrackHandDataProvider
 
 # 3D assets
 # - object_uid
@@ -125,6 +126,15 @@ class Hot3dDataProvider:
                 f"WARN: Cannot find {self.path_provider.mano_hand_pose_trajectory_filepath}"
             )
 
+        self._umetrack_hand_data_provider = None
+        if os.path.exists(
+            self.path_provider.umetrack_hand_pose_trajectory_filepath
+        ) and os.path.exists(self.path_provider.umetrack_hand_user_profile_filepath):
+            self._umetrack_hand_data_provider = UmeTrackHandDataProvider(
+                self.path_provider.umetrack_hand_pose_trajectory_filepath,
+                self.path_provider.umetrack_hand_user_profile_filepath,
+            )
+
         if self.get_device_type() == Headset.Aria:
             self._device_data_provider = AriaDataProvider(
                 self.path_provider.vrs_filepath,
@@ -147,6 +157,11 @@ class Hot3dDataProvider:
         if self._mano_hand_data_provider is not None:
             statistics_dict["mano_hand_poses"] = (
                 self._mano_hand_data_provider.get_data_statistics()
+            )
+
+        if self._umetrack_hand_data_provider is not None:
+            statistics_dict["umetrack_hand_poses"] = (
+                self._umetrack_hand_data_provider.get_data_statistics()
             )
 
         if self._object_box2d_provider is not None:
@@ -180,6 +195,13 @@ class Hot3dDataProvider:
         Return the Mano hand data provider
         """
         return self._mano_hand_data_provider
+
+    @property
+    def umetrack_hand_data_provider(self) -> Optional[UmeTrackHandDataProvider]:
+        """
+        Return the UmeTrack hand data provider
+        """
+        return self._umetrack_hand_data_provider
 
     @property
     def object_box2d_data_provider(self):

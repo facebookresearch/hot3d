@@ -45,6 +45,16 @@ class SequenceDatasetPathsBase:
         return f"{self._recording_instance_folderpath}/mano_hand_pose_trajectory.jsonl"
 
     @property
+    def umetrack_hand_user_profile_filepath(self):
+        return f"{self._recording_instance_folderpath}/umetrack_hand_user_profile.json"
+
+    @property
+    def umetrack_hand_pose_trajectory_filepath(self):
+        return (
+            f"{self._recording_instance_folderpath}/umetrack_hand_pose_trajectory.jsonl"
+        )
+
+    @property
     def vrs_filepath(self):
         return f"{self._recording_instance_folderpath}/recording.vrs"
 

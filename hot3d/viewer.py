@@ -17,6 +17,7 @@ import os
 from typing import Optional, Type
 
 import rerun as rr  # @manual
+from data_loaders.loader_hand_poses import HandType
 from data_loaders.loader_object_library import load_object_library
 from data_loaders.mano_layer import loadManoHandModel
 
@@ -54,6 +55,13 @@ def parse_args():
         help="path to MANO models containing the MANO_RIGHT/LEFT.pkl files",
         required=False,
     )
+    parser.add_argument(
+        "--hand_type",
+        type=str,
+        default="UMETRACK",
+        help="type of HAND (MANO or UMETRACK)",
+        required=False,
+    )
 
     parser.add_argument("--jpeg_quality", type=int, default=75, help=argparse.SUPPRESS)
 
@@ -73,6 +81,7 @@ def execute_rerun(
     jpeg_quality: int,
     timestamps_slice: Type[slice],
     fail_on_missing_data: bool,
+    hand_type: str,
 ):
 
     if not os.path.exists(sequence_folder):
@@ -80,6 +89,12 @@ def execute_rerun(
     if not os.path.exists(object_library_folder):
         raise RuntimeError(
             f"Object Library folder {object_library_folder} does not exist"
+        )
+
+    hand_enum_type = HandType.Umetrack if hand_type == "UMETRACK" else HandType.Mano
+    if hand_type not in ["UMETRACK", "MANO"]:
+        raise RuntimeError(
+            f"Invalid hand type: {hand_type}. hand_type must be either UMETRACK or MANO"
         )
 
     object_library = load_object_library(
@@ -110,7 +125,7 @@ def execute_rerun(
     #
     # Initialize the rerun hot3d visualizer interface
     #
-    rr_visualizer = Hot3DVisualizer(data_provider)
+    rr_visualizer = Hot3DVisualizer(data_provider, hand_enum_type)
 
     # Define which image stream will be shown
     image_stream_ids = data_provider.device_data_provider.get_image_stream_ids()
@@ -145,6 +160,7 @@ def main():
             jpeg_quality=args.jpeg_quality,
             timestamps_slice=slice(None, None, None),
             fail_on_missing_data=False,
+            hand_type=args.hand_type,
         )
     except Exception as error:
         print(f"An exception occurred: {error}")
