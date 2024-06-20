@@ -19,12 +19,7 @@ import torch
 
 from data_loaders.HandDataProviderBase import HandDataProviderBase
 
-from data_loaders.loader_hand_poses import (
-    Handedness,
-    HandPose,
-    load_hand_poses,
-    load_mano_shape_params,
-)
+from data_loaders.loader_hand_poses import Handedness, HandPose, load_mano_shape_params
 
 from data_loaders.pytorch3d_rotation.rotation_conversions import (  # @manual
     matrix_to_axis_angle,
@@ -42,8 +37,7 @@ class MANOHandDataProvider(HandDataProviderBase):
     ) -> None:
 
         super().__init__()
-        self._hand_poses = load_hand_poses(hand_pose_trajectory_filepath)
-        self._sorted_timestamp_ns_list: List[int] = sorted(self._hand_poses.keys())
+        super()._init_hand_poses(hand_pose_trajectory_filepath)
 
         # Hand profile
         self._mano_shape_params = load_mano_shape_params(hand_pose_trajectory_filepath)
@@ -53,10 +47,6 @@ class MANOHandDataProvider(HandDataProviderBase):
             )
 
         self.mano_layer = mano_layer
-
-    @property
-    def timestamp_ns_list(self) -> List[int]:
-        return self._sorted_timestamp_ns_list
 
     def get_hand_mesh_vertices(
         self, hand_wrist_data: HandPose

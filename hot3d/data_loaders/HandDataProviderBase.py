@@ -19,7 +19,12 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import torch
 
-from data_loaders.loader_hand_poses import Handedness, HandPose, HandPose3dCollection
+from data_loaders.loader_hand_poses import (
+    Handedness,
+    HandPose,
+    HandPose3dCollection,
+    load_hand_poses,
+)
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 
 from .pose_utils import lookup_timestamp
@@ -38,13 +43,20 @@ class HandDataProviderBase:
     ) -> None:
 
         self._hand_poses = None
-        self._sorted_timestamp_ns_list: Optional[List[int]] = None
+        self._sorted_timestamp_ns_list: List[int]
+
+    def _init_hand_poses(self, hand_pose_trajectory_filepath: str) -> None:
+        self._hand_poses = load_hand_poses(hand_pose_trajectory_filepath)
+        self._sorted_timestamp_ns_list: List[int] = sorted(self._hand_poses.keys())
+
+    @property
+    def timestamp_ns_list(self) -> List[int]:
+        return self._sorted_timestamp_ns_list
 
     def get_data_statistics(self) -> Dict[str, Any]:
         """
         Returns the stats of the Hand data
         """
-        assert self._sorted_timestamp_ns_list is not None
         assert self._hand_poses is not None
 
         stats = {}
