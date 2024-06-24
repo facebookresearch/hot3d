@@ -99,7 +99,7 @@ class Hot3dDataPathProvider(object):
 
 class Quest3DatasetPaths(SequenceDatasetPathsBase):
     def __init__(self, recording_instance_folderpath):
-        super().__init__(self, recording_instance_folderpath)
+        super().__init__(recording_instance_folderpath)
 
     @property
     def camera_models_filepath(self):
