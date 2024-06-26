@@ -1,14 +1,22 @@
 # HOT3D: A dataset for egocentric 3D hand and object tracking
 
-This repository hosts the API for downloading and utilizing HOT3D, a benchmark dataset designed for the vision-based understanding of 3D hand-object interactions.
+This repository hosts the API for downloading and utilizing [HOT3D](https://www.projectaria.com/datasets/hot3D/), a benchmark dataset for vision-based understanding of 3D hand-object interactions.
 
-# Installation and usage
+# Step 1: Install the downloader
 
-This python repository can be used with pixi and conda environments.
+This Python repository can be used with Pixi and Conda environments and can run on:
+
+* x64 Linux distributions of:
+    * Fedora 36, 37, 38
+    * Ubuntu jammy (22.04 LTS) and focal (20.04 LTS)
+* Mac Intel or Mac ARM-based (M1) with MacOS 11 (Big Sur) or newer
+
+Python 3.9+ (3.10+ if you are on [Apple Silicon](https://support.apple.com/en-us/116943)).
+
 
 ## Using Pixi
 
-[Pixi](https://prefix.dev/) is a package management tool for developers. It allows the developer to install libraries and applications in a reproducible way and ease the installation and usage of a python environment for the HOT3D API.
+[Pixi](https://prefix.dev/) is a package management tool for developers.  Developers can install libraries and applications in a reproducible way, which makes it easier to install and use a Python environment for the HOT3D API.
 
 ```
 # 1. Install pixi
@@ -21,17 +29,18 @@ cd hot3d
 # 3. Call `pixi install` to setup the environment
 pixi install
 
-# 4. (Optional) Install the third-party dependencies required for hands by reviewing and accepting the licenses provided on the corresponding third-party repositories
+# 4. (Optional) Install the third-party dependencies required for hands, by reviewing and accepting the licenses provided on the corresponding third-party repositories
 pixi run setup_hands
 
 ```
 
-### A quick introduction to [PIXI environment](https://prefix.dev/)
+### A quick introduction to the [PIXI environment](https://prefix.dev/)
 - Execute Pixi environment commands from within the `hot3d` folder.
 - The Pixi environment is located in the `.pixi` folder.
 - Activate the Pixi HOT3D environment by using the command `pixi shell`.
 - Exit the Pixi HOT3D environment by typing `exit`.
 - Remove the environment by executing the command `rm -rf .pixi`.
+
 
 ## Using Conda
 
@@ -54,24 +63,36 @@ python3 -m pip install 'git+https://github.com/vchoutas/smplx.git'
 python3 -m pip install 'git+https://github.com/mattloper/chumpy'
 ```
 
-### A quick introduction to [CONDA environment](https://docs.conda.io/projects/conda/en/4.6.1/user-guide/tasks/manage-environments.html#managing-environments)
+### A quick introduction to the [CONDA environment](https://docs.conda.io/projects/conda/en/4.6.1/user-guide/tasks/manage-environments.html#managing-environments)
 
 - Activate the Conda HOT3D environment by executing `conda activate hot3d`.
 - Exit the Conda HOT3D environment using `source deactivate`.
 - Remove the Conda HOT3D environment by executing `conda remove --name hot3d --all`.
 
-# Dataset downloading
 
-Please review the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/) first, and then examine the specific licenses applicable to the data types you wish to use, such as Sequence, Hand annotations, and 3D object models.
+# Step 2: Sign up and get the download links file
 
-Required:
-- After agreeing to the license, download the cdn url files from the "Access HOT3D Dataset and Accompanying Tools" section on [HOT3D projectaria.com website](https://www.projectaria.com/datasets/hot3d). You should see buttons corresponding to each download data type as follows
-  - "Download the HOT3D Aria Dataset"
-  - "Download the HOT3D Quest Dataset"
-  - "Download the HOT3D Assets Dataset"
+1. Review the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/).
+    * Examine the specific licenses applicable to the data types you wish to use, such as Sequence, Hand annotations, and 3D object models.
+2. Go to the [HOT3D website](https://www.projectaria.com/datasets/hot3D/) and sign up.
+    * Scroll down to the bottom of the page.
+    * Enter your email and select **Access the Datasets**.
+3. The HOT3D page will be refreshed to contain instructions and download links
+    * The download view is ephemeral, keep the tab open to access instructions and links
+    * Download links that last for 14 days
+    * Enter your email again on the HOT3D main page to get fresh links
+4. Select the Download button for any of the data types:
+    * “Download the HOT3D Aria Dataset"
+    * "Download the HOT3D Quest Dataset"
+    * "Download the HOT3D Assets Dataset"
+5. These will swiftly download JSON files with urls that the downloader will use
+
+
+# Step 3: Download the data
+Use the HOT3D downloader to download some, or all of the data.
 
 ```
-# 1. Activate your environment (assuming your are in the hot3d folder):
+# 1. Activate your environment (assuming from the hot3d folder):
 # conda: conda activate hot3d
 # pixi: pixi shell
 
@@ -83,17 +104,18 @@ mkdir -p ../dataset
 # Download HOT3D Object Library data
 python3 dataset_downloader_base_main.py -c Hot3DAssets_download_urls.json -o ../dataset --sequence_name all
 
-# Download HOT3D Aria data (here one sequence)
+# Download one HOT3D Aria data sequence
 python3 dataset_downloader_base_main.py -c Hot3DAria_download_urls.json -o ../dataset --sequence_name P0003_c701bd11 --data_types all
 # Type answer `y`
 
-# Download HOT3D Quest data (here one sequence)
+# Download one HOT3D Quest data sequence
 python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../dataset --sequence_name P0002_1464cbdc --data_types all
 # Type answer `y`
 ```
 
+**Tip:** To download all sequences in a download links JSON file (such as the HOT3D Object Library data in step 3), do not include the sequence_name argument.
 
-# Running the dataset viewer
+# Step 4: Run the dataset viewer
 
 ## Viewing objects and headset pose trajectory
 ```
@@ -133,4 +155,4 @@ python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_04
 
 # Contributing
 
-See [contributing](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md).
+Go to [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
