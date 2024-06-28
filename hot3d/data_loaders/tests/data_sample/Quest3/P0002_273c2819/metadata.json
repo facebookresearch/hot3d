@@ -1,0 +1,10 @@
+{
+    "gt_available_status": {
+        "mano_hand_pose_gt": true,
+        "umetrack_hand_pose_gt": true,
+        "object_pose_gt": true
+    },
+    "headset": "Quest3",
+    "participant_id": "P0002",
+    "recording_name": "P0002_273c2819"
+}

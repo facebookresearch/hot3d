@@ -38,9 +38,8 @@ jobs:
         shell: pixi run bash {0}
         run: |
           export TEST_FOLDER="./data_loaders/tests/"
-          python3 -m unittest data_loaders/tests/test_AriaDataProvider.py
-          python3 -m unittest data_loaders/tests/test_HandBox2dDataProvider.py
-          python3 -m unittest data_loaders/tests/test_ObjectBox2dDataProvider.py
+          # Run all unit test in this folder
+          find data_loaders/tests -type f -name "*.py"  -exec python3 -m unittest {} \;
 
       - name : Python - Test dataset viewer
         shell: pixi run bash {0}

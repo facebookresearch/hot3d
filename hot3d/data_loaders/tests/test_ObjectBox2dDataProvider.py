@@ -14,24 +14,22 @@
 
 import os
 import unittest
+from pathlib import Path
 
 from data_loaders.ObjectBox2dDataProvider import load_box2d_trajectory_from_csv
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
-box2d_objects_resource = "aria_sample_recording/box2d_objects.csv"
 
 try:
     from libfb.py import parutil
 
-    box2d_objects_filepath = parutil.get_file_path(
-        "test_data/" + box2d_objects_resource, pkg=__package__
-    )
+    data_path = Path(parutil.get_file_path("test_data/", pkg=__package__))
 except ImportError:
-    from pathlib import Path
+    data_path = Path(__file__).parent
 
-    THIS_DIR = Path(__file__)
-    box2d_objects_filepath = str(THIS_DIR.parent / box2d_objects_resource)
+sequence_path = data_path / "data_sample/Aria/P0003_c701bd11"
+box2d_objects_filepath = str(sequence_path / "box2d_objects.csv")
 
 
 class TestObjectBox2dDataProvider(unittest.TestCase):
