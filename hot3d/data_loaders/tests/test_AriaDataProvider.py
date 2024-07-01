@@ -14,29 +14,56 @@
 
 import os
 import unittest
+from pathlib import Path
 
 from data_loaders.AriaDataProvider import AriaDataProvider
+from data_loaders.PathProvider import Hot3dDataPathProvider
 from projectaria_tools.core.calibration import FISHEYE624, LINEAR
 from projectaria_tools.core.stream_id import StreamId
 
-aria_vrs_resource = "aria_sample_recording/sequence.vrs"
 
 try:
     from libfb.py import parutil
 
-    vrs_file_filepath = parutil.get_file_path(
-        "test_data/" + aria_vrs_resource, pkg=__package__
-    )
+    data_path = Path(parutil.get_file_path("test_data/", pkg=__package__))
 except ImportError:
-    from pathlib import Path
 
-    THIS_DIR = Path(__file__)
-    vrs_file_filepath = str(THIS_DIR.parent / aria_vrs_resource)
+    data_path = Path(__file__).parent
+
+sequence_path = data_path / "data_sample/Aria/P0003_c701bd11"
+vrs_file_filepath = str(sequence_path / "recording.vrs")
 
 
 class TestAriaDataProvider(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+    def test_provider_aria_recording_with_mps(self) -> None:
+        path_provider = Hot3dDataPathProvider.fromRecordingFolder(
+            recording_instance_folderpath=sequence_path
+        )
+        self.assertTrue(os.path.exists(path_provider.vrs_filepath))
+        self.assertTrue(os.path.exists(path_provider.mps_folderpath))
+        provider = AriaDataProvider(
+            path_provider.vrs_filepath,
+            path_provider.mps_folderpath,
+        )
+
+        #
+        # Test MPS data retrieval
+        #
+
+        # Global point cloud
+        point_cloud = provider.get_point_cloud()
+        self.assertIsNotNone(point_cloud)
+        self.assertGreater(len(point_cloud), 0)
+
+        # Eye Gaze (that is temporal data)
+        timestamps = provider.get_sequence_timestamps()
+        self.assertTrue(len(timestamps) > 0)
+
+        eye_gaze = provider.get_eye_gaze(timestamps[0])
+        self.assertIsNotNone(eye_gaze)
 
     def test_provider_aria_recording(self) -> None:
         self.assertTrue(os.path.exists(vrs_file_filepath))

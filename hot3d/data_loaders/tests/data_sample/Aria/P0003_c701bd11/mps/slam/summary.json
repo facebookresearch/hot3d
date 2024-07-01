@@ -1,0 +1,67 @@
+{
+  "Temple3": {
+    "status": "SUCCESS",
+    "info": [
+      "Recording total time: 0:02:00.623767; Trajectory total length: 7.23m",
+      "Total Vision Translational Correction (mm): p50: 0.072; p99: 0.303",
+      "Rotational Correction (deg): p50: 0.002; p99: 0.020"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "Aligner": {
+    "status": "SUCCESS",
+    "info": [
+      "componentsAfter: [1]",
+      "componentsBefore: [1]",
+      "connected: {'accepted': 0, 'candidates': 0, 'componentsAfter': 1, 'componentsBefore': 1, 'durationMs': 0, 'matches': 0, 'rejected': 0}",
+      "disconnected: {'accepted': 0, 'candidates': 0, 'componentsAfter': 1, 'componentsBefore': 1, 'durationMs': 0, 'matches': 0, 'rejected': 0}"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "Optimization": {
+    "status": "SUCCESS",
+    "info": [
+      "Largest nullity over windows of 100 rigs: 0",
+      "Max variation speed of bias of accel: 0, of gyro: 0 (5+ unconstrained dofs)",
+      "Max variation speed of bias of accel: 0, of gyro: 0 (15+ unconstrained dofs)",
+      "Max variation speed of bias of accel: 0, of gyro: 0 (50+ unconstrained dofs)"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "Recompute Trajectory": {
+    "status": "SUCCESS",
+    "info": [
+      "Total Translational Correction (mm): p50: 0.073; p90: 0.152, p99: 0.406",
+      "Total Rotational Correction (deg): p50: 0.003; p90: 0.007, p99: 0.026"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "VI-PGO": {
+    "status": "SUCCESS",
+    "info": [],
+    "warnings": [],
+    "errors": []
+  },
+  "SemiDense Tracker": {
+    "status": "SUCCESS",
+    "info": [
+      "percentage_linesearch_success p50: 75.86013",
+      "percentage_linesearch_fail_depth_limits p50: 11.62006",
+      "median_track_length_us p50: 1466640.0",
+      "median_inv_dist_std p50: 0.001",
+      "median_dist_std p50: 0.002"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "Compute Global Pointcloud": {
+    "status": "SUCCESS",
+    "info": [],
+    "warnings": [],
+    "errors": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "gt_available_status": {
+        "mano_hand_pose_gt": true,
+        "umetrack_hand_pose_gt": true,
+        "object_pose_gt": true
+    },
+    "headset": "Aria",
+    "participant_id": "P0003",
+    "recording_name": "P0003_c701bd11"
+}
