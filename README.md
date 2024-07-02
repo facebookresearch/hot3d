@@ -128,13 +128,28 @@ pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0
 ```
 
 
+# Step 5: Run the python notebook tutorial
+
+```
+# Assuming you have downloaded the Aria `P0003_c701bd11` sequence and the object library above.
+#
+# Install Jupyter Notebook for your environment:
+python3 -m pip install Jupyter
+# Run Jupyter and open the notebook (conda)
+jupyter notebook ./HOT3D_Tutorial.ipynb
+# Run Jupyter and open the notebook (pixi, use a direct path to ensure jupyter will take the right python path)
+.pixi/envs/default/bin/jupyter notebook ./HOT3D_Tutorial.ipynb
+```
+
 ## Using hand annotations
 
-Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats.
+Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats. Both hand poses annotation are accessible in the API by using either the `mano_hand_data_provider`, `umetrack_hand_data_provider` property once the `Hot3dDataProvider` is initialized. In order to choose the representation for the viewer, use the following:
 
 ### UmeTrack
 
-Instructions coming soon.
+```
+python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
+```
 
 ### MANO
 
@@ -142,7 +157,7 @@ Hand annotations in the MANO format can be downloaded after accepting their [lic
 - HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
 
 ```
-python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/
+python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
 ```
 
 
