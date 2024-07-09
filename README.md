@@ -165,9 +165,9 @@ python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_04
 
 - [HOT3D Dataset API](https://github.com/facebookresearch/hot3d) (aka. this repository) is released by Meta under the [Apache 2.0 license](LICENSE)
 - [HOT3D dataset](https://www.projectaria.com/datasets/hot3d/) is released under the [HOT3D license agreement](https://www.projectaria.com/datasets/hot3d/license/)
-  - Using hands annotation requires installation of  [SMPLX/MANO](https://github.com/vchoutas/smplx) third-party dependencies, please review and agree to their license listed on their website.
+  - Using hands annotation requires installation of [SMPLX/MANO](https://github.com/vchoutas/smplx) third-party dependencies, please review and agree to their license listed on their website.
 
 
 # Contributing
 
-Go to [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Go to [Contributing](.github/CONTRIBUTING.md) and the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
