@@ -1,0 +1,50 @@
+{
+    "228358276546933": {
+        "instance_bop_id": "7",
+        "instance_id": "228358276546933",
+        "instance_name": "coffee_pot",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    },
+    "265826671143948": {
+        "instance_bop_id": "31",
+        "instance_id": "265826671143948",
+        "instance_name": "mouse",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    },
+    "223371871635142": {
+        "instance_bop_id": "9",
+        "instance_id": "223371871635142",
+        "instance_name": "mug_white",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    },
+    "106957734975303": {
+        "instance_bop_id": "30",
+        "instance_id": "106957734975303",
+        "instance_name": "puzzle_toy",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    },
+    "37787722328019": {
+        "instance_bop_id": "28",
+        "instance_id": "37787722328019",
+        "instance_name": "keyboard",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    },
+    "5462893327580": {
+        "instance_bop_id": "24",
+        "instance_id": "5462893327580",
+        "instance_name": "cellphone",
+        "instance_type": "object",
+        "motion_type": "dynamic",
+        "rigidity": "rigid"
+    }
+}
