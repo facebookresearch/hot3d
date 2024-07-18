@@ -72,7 +72,11 @@ class UmeTrackHandDataProvider(HandDataProviderBase):
         super()._init_hand_poses(hand_pose_trajectory_filepath)
 
         # Hand profile
-        self._hand_model = load_hand_model_from_file(hand_profile_filepath)
+        self._hand_model = (
+            None
+            if len(self._hand_poses) == 0
+            else load_hand_model_from_file(hand_profile_filepath)
+        )
 
     def get_hand_mesh_vertices(
         self, hand_wrist_data: HandPose
