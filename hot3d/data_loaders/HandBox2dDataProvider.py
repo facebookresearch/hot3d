@@ -172,10 +172,10 @@ def parse_box2ds_from_csv_reader(csv_reader) -> HandBox2dTrajectoryCollection:
 
 
 def load_box2d_trajectory_from_csv(filename: str) -> Optional[HandBox2dProvider]:
-    """Load Dynamic Objects meta data from a CSV file.
+    """Load Hand 2D bounding box meta data from a CSV file.
 
     Keyword arguments:
-    filename -- the csv file i.e. sequence_folder + "/dynamic_objects.csv"
+    filename -- the csv file i.e. sequence_folder + "/box2d_hands.csv"
     """
     if not os.path.exists(filename):
         logger.warn(f"filename: {filename} does not exist.")
