@@ -12,7 +12,7 @@ Resources:
 - [Download HOT3D-Clips from Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d)
 - [Read HOT3D whitepaper](https://arxiv.org/pdf/2406.09598)
 
-Note: The following instructions are relevant if you want to use the full HOT3D dataset in the VRS-based format. For HOT3D-Clips, please refer to the [dedicated subfolder](https://github.com/facebookresearch/hot3d/tree/main/hot3d/clips).
+The following instructions are relevant if you want to use the full HOT3D dataset in the VRS-based format. For HOT3D-Clips, please refer to the [dedicated page](https://github.com/facebookresearch/hot3d/tree/main/hot3d/clips).
 
 ## Step 1: Install the downloader
 
