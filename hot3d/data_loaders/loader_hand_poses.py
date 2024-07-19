@@ -136,6 +136,21 @@ def load_hand_poses(filename: str) -> TimestampHandPoses3d:
     return hand_poses_per_timestamp
 
 
+def load_hand_pose_as_json_lines(filename: str) -> Dict[int, Dict]:
+    """
+    Load Hand Poses as JSON payload (Dict) per timestamp from a json line file
+    """
+    timestamp_jsons = {}
+    with open(filename, "r") as f:
+        for line in f:
+            # Parse the JSON file line
+            hand_pose_instance = json.loads(line)
+            timestamp_ns = hand_pose_instance["timestamp_ns"]
+            hand_poses_json = hand_pose_instance["hand_poses"]
+            timestamp_jsons[timestamp_ns] = hand_poses_json
+    return timestamp_jsons
+
+
 def load_mano_shape_params(filename: str) -> Optional[List[float]]:
     betas = None
     with open(filename, "rb") as f:
