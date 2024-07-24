@@ -131,14 +131,32 @@ python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../d
 
 ### Viewing objects and headset pose trajectory
 ```
-python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets/
+python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
 When using `pixi`, you can directly launch the viewer without explicitly activating the environment by using the following command:
 ```
-pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets/
+pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
+### Using hand annotations
+
+Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats. Both hand poses annotation are accessible in the API by using either the `mano_hand_data_provider`, `umetrack_hand_data_provider` property once the `Hot3dDataProvider` is initialized. In order to choose the representation for the viewer, use the following:
+
+#### UmeTrack
+
+```
+python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11--object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
+```
+
+#### MANO
+
+Hand annotations in the MANO format can be downloaded after accepting their [license agreement](https://mano.is.tue.mpg.de/).
+- HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
+
+```
+python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
+```
 
 ## Step 5: Run the python notebook tutorial
 
@@ -153,25 +171,93 @@ jupyter notebook ./HOT3D_Tutorial.ipynb
 .pixi/envs/default/bin/jupyter notebook ./HOT3D_Tutorial.ipynb
 ```
 
-### Using hand annotations
 
-Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com/facebookresearch/UmeTrack) and [MANO](https://mano.is.tue.mpg.de/) formats. Both hand poses annotation are accessible in the API by using either the `mano_hand_data_provider`, `umetrack_hand_data_provider` property once the `Hot3dDataProvider` is initialized. In order to choose the representation for the viewer, use the following:
+## Step6: Mastering the dataset and its API
 
-#### UmeTrack
+### Using the HOT3D dataset API
+
+- Please refer to our notebook [tutorial](./hot3d/HOT3D_Tutorial.ipynb). The notebook explains how to instantiate a `Hot3dDataProvider` from a HOT3D sequence folder and how to use its API to retrieve each data modality (images, GT hand & object poses, ...).
+
+
+### Using "mask files"
+
+HOT3D utilizes mask files to identify and flag specific timestamps based on a particular property. For instance, we can use masks to mark specific timestamps in a camera stream as having inaccurate object pose (as determined through manual QA) or as having an over-saturated image. These masks can be combined using logical AND/OR operations to create a custom mask that meets the end user's requirements.
+
+Here is a list of the exported mask files:
+
+| File | Description |
+| -- | -- |
+| mask_object_pose_available.csv  | True if all dynamic objects in the scene have a valid pose, and false if even one object is missing a pose. The accuracy of the poses is not evaluated. |
+| mask_hand_pose_available.csv | True if both right and left hands have a valid pose, and false if even one hand is missing a pose. The accuracy of the poses is not evaluated. |
+| mask_headset_pose_available.csv | True if the headset has a valid pose, and false otherwise. The accuracy of the poses is not evaluated. |
+| mask_object_visibility.csv | True if at least one object is visible in the camera frame, false otherwise. Visibility is computed based on the pose, and accuracy of the pose is not evaluated. |
+| mask_hand_visible.csv | True if at least one hand is visible in the camera frame, false otherwise. Visibility is computed based on the pose, and accuracy of the pose is not evaluated. |
+| mask_good_exposure.csv | True if sufficient pixels on the hand and dynamic objects visible in the frame are not over-exposed, false otherwise. Visibility is computed based on the pose, and accuracy of the pose is not evaluated. |
+| mask_qa_pass.csv | True if manual QA indicated no issues with the pose of the objects and hands visible in a camera stream, false otherwise. |
+
+The masks are saved in csv format, with each row indicating the validity of the mask for a given timestamp and camera stream_id:
+```
+timestamp[ns],stream_id,mask
+43986008190448,214-1,True
+43986008283010,1201-2,True
+43986008283023,1201-1,True
+43986041551363,214-1,True
+43986041643100,1201-2,True
+43986041643113,1201-1,True
+43986074878771,214-1,False
+43986074971171,1201-2,False
+43986074971184,1201-1,False
+43986108202591,214-1,True
+```
+
+Here is how to load the mask files and combine them with a logical operator:
 
 ```
-python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
+# Mask API example:
+# Let's check that we have at least a hand and an object that is visible in a given stream
+#
+
+import os
+from projectaria_tools.core.stream_id import StreamId
+from data_loaders.loader_masks import combine_mask_data, load_mask_data, MaskData
+
+sequence_folder = "<PATH>/hot3d_dataset/P0003_c701bd11/"
+
+# Select the desired masks
+example_mask_list = [
+    # Use the masks that depicting the visibility status
+    "masks/mask_hand_visible.csv",
+    "masks/mask_object_visible.csv",
+]
+
+# Load the referred masks
+mask_data_list = []
+for it in example_mask_list:
+    if os.path.exists(os.path.join(sequence_folder, it)):
+        ret = load_mask_data(os.path.join(sequence_folder, it))
+        mask_data_list.append(ret)
+
+# Combine the masks (you can choose logical "and"/"or")
+output = combine_mask_data(mask_data_list, "and")
+
+# Get the number of frames where we can see at least a hand and an object
+num_timestamps_with_at_least_a_hand_and_object_visible = output.num_true(StreamId("214-1"))
+print(f"Number of frames containing at least a hand and object visible: {num_timestamps_with_at_least_a_hand_and_object_visible}")
+
+total_frame_count = output.length(StreamId("214-1"))
+print(f"Total sequence frames: {total_frame_count}")
 ```
 
-#### MANO
+## Test/Train split
 
-Hand annotations in the MANO format can be downloaded after accepting their [license agreement](https://mano.is.tue.mpg.de/).
-- HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
+The sequences corresponding to the following participant ids are defining the TEST set, and so does not have any GT information
+`TEST_SET_PARTICIPANT_ID = ["P0004", "P0005", "P0006", "P0008", "P0016", "P0020"]`
 
-```
-python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0001_0444739e> --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
-```
+i.e:
+- sequence `P0003_c701bd11` belong to the TRAIN set
+- sequence `P0004_a59ab32e` belong to the TEST set
 
+Note that the information is also shared in the `metadata.json` file under the field `gt_available_status` or can be accessed directly via the `Hot3dDataProvider -> get_sequence_metadata` API call.
 
 ## License
 
