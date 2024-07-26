@@ -31,5 +31,5 @@ outlined on that page and do not file a public issue.
 
 ## License
 
-By contributing to "hot3d", you agree that your contributions will be licensed under
-the [LICENSE](./LICENSE) file in the root directory of this source tree.
+By contributing to "hot3d", you agree that your contributions will be licensed
+under the [LICENSE](../LICENSE) file in the root directory of this source tree.
