@@ -310,7 +310,7 @@ class Hot3DVisualizer:
                 and stream_id in self._object_box2d_data_provider.stream_ids
             ):
                 box2d_collection_with_dt = (
-                    self._object_box2d_data_provider.get_box2d_at_timestamp(
+                    self._object_box2d_data_provider.get_bbox_at_timestamp(
                         stream_id=stream_id,
                         timestamp_ns=timestamp_ns,
                         time_query_options=TimeQueryOptions.CLOSEST,

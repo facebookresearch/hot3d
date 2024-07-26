@@ -56,7 +56,7 @@ class TestObjectBox2dDataProvider(unittest.TestCase):
 
             query_timestamp_ns = timestamp_ns_list[len(timestamp_ns_list) // 2]
 
-            box2d_collection_with_dt = provider.get_box2d_at_timestamp(
+            box2d_collection_with_dt = provider.get_bbox_at_timestamp(
                 stream_id=stream_id,
                 timestamp_ns=query_timestamp_ns,
                 time_query_options=TimeQueryOptions.CLOSEST,

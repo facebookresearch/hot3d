@@ -110,7 +110,7 @@ class ObjectBox2dProvider:
         stats["object_uids"] = [str(x) for x in self.object_uids]
         return stats
 
-    def get_box2d_at_timestamp(
+    def get_bbox_at_timestamp(
         self,
         stream_id: StreamId,
         timestamp_ns: int,
