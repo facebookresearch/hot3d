@@ -10,6 +10,7 @@ import numpy as np
 import tarfile
 from typing import Any, Dict, List, Optional
 import trimesh
+from tqdm import tqdm
 from scipy.spatial.transform import Rotation as R
 
 import clip_util
@@ -74,16 +75,18 @@ def main():
         os.makedirs(mask_visib_dir, exist_ok=True)
 
         scene_gt_json_path = os.path.join(scene_output_dir, "scene_gt.json")
+        scene_gt_info_json_path = os.path.join(scene_output_dir, "scene_gt_info.json")
         scene_camera_json_path = os.path.join(scene_output_dir, "scene_camera.json")
         #scene_gt_info_json_path = os.path.join(args.dataset_path, args.split, "scene_gt_info.json")  # TODO if cannot be generated with BOP toolkit create it in this script.
 
         # create scene_gt_info.json
         scene_gt_data = {}
+        scene_gt_info_data = {}
         scene_camera_data = {}
         #"scene_gt_info" = {}  # TODO if cannot be generated with BOP toolkit create it in this script.
         
         # loop over all frames
-        for frame_id in range(clip_util.get_number_of_frames(tar)):
+        for frame_id in tqdm(range(clip_util.get_number_of_frames(tar))):
             frame_key = f"{frame_id:06d}"
 
             # get rgb image from the clip tar file
@@ -141,7 +144,8 @@ def main():
             # Camera parameters of the current image.
             camera_model = frame_camera[RGB_STREAM]
 
-            frame_objects_data = []
+            frame_scene_gt_data = []
+            frame_scene_gt_info_data = []
             # loop with enumerate over all objects in the frame
             for anno_id, obj_key in enumerate(frame_objects):
                 obj_data = frame_objects[obj_key][0]
@@ -158,7 +162,7 @@ def main():
                     "cam_R_m2c": T_camera_to_object[:3, :3].tolist(),
                     "cam_t_m2c": T_camera_to_object[:3, 3].tolist(),
                 }
-                frame_objects_data.append(object_bop_anno)
+                frame_scene_gt_data.append(object_bop_anno)
 
                 # Transformation from the model to the world space.
                 T = clip_util.se3_from_dict(obj_data["T_world_from_object"])
@@ -194,11 +198,33 @@ def main():
                 # save mask_visib
                 cv2.imwrite(mask_visib_path, mask)
 
-            scene_gt_data[int(frame_id)] = frame_objects_data
+                # add scene_gt_info data
+                ## calculate bbox from mask with cv2 (x, y, width, height
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                x, y, w, h = cv2.boundingRect(contours[0])
+                bbox_obj = [x, y, w, h]
+                bbox_visib = bbox_obj  # TODO change to visib mask after getting it for Hot3D
+                px_count_all = cv2.countNonZero(mask)
+                px_count_visib = px_count_all  # TODO change to visib mask after getting it for Hot3D
+                visib_fract = px_count_visib / px_count_all
+                frame_scene_gt_info_data.append({
+                    "bbox_obj": bbox_obj,
+                    "bbox_visib": bbox_visib,
+                    "px_count_all": px_count_all,
+                    "px_count_valid": px_count_all,  # excluded as Hot3D is RGB only
+                    "px_count_visib": px_count_visib,
+                    "visib_fract": visib_fract
+                })
+
+            scene_gt_data[int(frame_id)] = frame_scene_gt_data
+            scene_gt_info_data[int(frame_id)] = frame_scene_gt_info_data
 
         # save scene_gt.json
         with open(scene_gt_json_path, "w") as f:
             json.dump(scene_gt_data, f)
+        # save scene_gt_info.json
+        with open(scene_gt_info_json_path, "w") as f:
+            json.dump(scene_gt_info_data, f)
         # save scene_camera.json
         with open(scene_camera_json_path, "w") as f:
             json.dump(scene_camera_data, f)
