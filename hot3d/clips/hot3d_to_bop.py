@@ -155,14 +155,13 @@ def main():
                 T_object_to_world = clip_util.se3_from_dict(obj_data["T_world_from_object"])
 
                 # get object pose in camera frame
-                T_camera_to_object = T_camera_to_world @ np.linalg.inv(T_object_to_world)
+                T_camera_to_object = T_world_to_camera @ T_object_to_world
 
-                object_bop_anno = {
+                object_frame_scene_gt_anno = {
                     "obj_id": obj_key,
                     "cam_R_m2c": T_camera_to_object[:3, :3].tolist(),
                     "cam_t_m2c": T_camera_to_object[:3, 3].tolist(),
                 }
-                frame_scene_gt_data.append(object_bop_anno)
 
                 # Transformation from the model to the world space.
                 T = clip_util.se3_from_dict(obj_data["T_world_from_object"])
@@ -181,6 +180,10 @@ def main():
                     vert_normals=object_models[bop_id].vertex_normals,
                     camera=camera_model,
                 )
+
+                # if no pixel is one in the mask, skip this object
+                if np.count_nonzero(mask) == 0:
+                    continue
 
                 mask *= 255
                 # rotate the mask 90 degrees
@@ -207,14 +210,17 @@ def main():
                 px_count_all = cv2.countNonZero(mask)
                 px_count_visib = px_count_all  # TODO change to visib mask after getting it for Hot3D
                 visib_fract = px_count_visib / px_count_all
-                frame_scene_gt_info_data.append({
+                object_frame_scene_gt_info_anno = {
                     "bbox_obj": bbox_obj,
                     "bbox_visib": bbox_visib,
                     "px_count_all": px_count_all,
                     "px_count_valid": px_count_all,  # excluded as Hot3D is RGB only
                     "px_count_visib": px_count_visib,
-                    "visib_fract": visib_fract
-                })
+                    "visib_fract": visib_fract,
+                }
+
+                frame_scene_gt_data.append(object_frame_scene_gt_anno)
+                frame_scene_gt_info_data.append(object_frame_scene_gt_info_anno)
 
             scene_gt_data[int(frame_id)] = frame_scene_gt_data
             scene_gt_info_data[int(frame_id)] = frame_scene_gt_info_data
