@@ -25,9 +25,9 @@ def main():
     parser.add_argument("--input-dataset_path", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/")
     #parser.add_argument("--dataset_path", type=str, required=True)
     # BOP dataset split name
-    parser.add_argument("--split", type=str, default="train_aria_one")
+    parser.add_argument("--split", type=str, default="train_aria_subsample")
     # output directory
-    parser.add_argument("--output_dataset_path", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/train_aria_one_bop")
+    parser.add_argument("--output_dataset_path", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/train_aria_subsample_bop")
     # object models directory
     parser.add_argument("--object_models_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_eval")
 
@@ -121,24 +121,16 @@ def main():
             camera_json_file = tar.extractfile(camera_json_file_name)
             frame_camera_data = json.load(camera_json_file)
             # get camera parameters
-            image_height = frame_camera_data[RGB_STREAM]["calibration"]["image_height"]
-            image_width = frame_camera_data[RGB_STREAM]["calibration"]["image_width"]
-            max_solid_angle = frame_camera_data[RGB_STREAM]["calibration"]["max_solid_angle"]
-            projection_params = frame_camera_data[RGB_STREAM]["calibration"]["projection_params"]
+            calibration = frame_camera_data[RGB_STREAM]["calibration"]
 
             # add frame scene_camera data
             scene_camera_data[int(frame_id)] = {
                 # TODO change this after we agree on the final format
-                "cam_model": {
-                    "image_height": image_height,
-                    "image_width": image_width,
-                    "max_solid_angle": max_solid_angle,
-                    "projection_params": projection_params,
-                },
+                "cam_model": calibration,
                 #"cam_K":  # not used as cam_model exists
                 #"depth_scale": 1.0,  # also not used
-                "cam_t_w2c": T_world_to_camera[:3, 3].tolist(),
-                "cam_R_w2c": T_world_to_camera[:3, :3].tolist()
+                "cam_t_w2c": T_world_to_camera[:3, 3].flatten().tolist(),
+                "cam_R_w2c": T_world_to_camera[:3, :3].flatten().tolist(),
             }
 
             # Camera parameters of the current image.
@@ -159,8 +151,8 @@ def main():
 
                 object_frame_scene_gt_anno = {
                     "obj_id": obj_key,
-                    "cam_R_m2c": T_camera_to_object[:3, :3].tolist(),
-                    "cam_t_m2c": T_camera_to_object[:3, 3].tolist(),
+                    "cam_R_m2c": T_camera_to_object[:3, :3].flatten().tolist(),
+                    "cam_t_m2c": T_camera_to_object[:3, 3].flatten().tolist(),
                 }
 
                 # Transformation from the model to the world space.
@@ -227,13 +219,13 @@ def main():
 
         # save scene_gt.json
         with open(scene_gt_json_path, "w") as f:
-            json.dump(scene_gt_data, f)
+            json.dump(scene_gt_data, f, indent=2)
         # save scene_gt_info.json
         with open(scene_gt_info_json_path, "w") as f:
-            json.dump(scene_gt_info_data, f)
+            json.dump(scene_gt_info_data, f, indent=2)
         # save scene_camera.json
         with open(scene_camera_json_path, "w") as f:
-            json.dump(scene_camera_data, f)
+            json.dump(scene_camera_data, f, indent=2)
 
         # debug - check world to camera transformation
         # plot the camera pose in the world frame
