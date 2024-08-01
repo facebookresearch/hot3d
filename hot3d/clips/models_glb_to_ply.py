@@ -61,22 +61,25 @@ end_header
 
     print(f"Mesh saved as {ply_filepath}")
 
-    mesh.visual.material = mesh.visual.material.to_simple()
-
     # Save the texture as a PNG image
-    if mesh.visual.material.image is not None:
+    if mesh.visual.material.to_simple().image is not None:
+        mesh.visual.material = mesh.visual.material.to_simple()
         texture_image = mesh.visual.material.image
 
-        # Convert the texture to a PIL Image and save as PNG
-        image = Image.fromarray(np.array(texture_image))
-        image.save(texture_filepath)
-        print(f"Texture saved as {texture_filepath}")
     else:
-        print("No texture found in the mesh.")
+        print("No texture found in the GLTF file, using the main_color instead.")
+        # make an image 2048x2048 with the main color
+        main_color = mesh.visual.material.main_color[0:3]
+        texture_image = np.ones((2048, 2048, 3), dtype=np.uint8) * main_color.astype(np.uint8)
+
+    # Convert the texture to a PIL Image and save as PNG
+    image = Image.fromarray(np.array(texture_image))
+    image.save(texture_filepath)
+    print(f"Texture saved as {texture_filepath}")
 
 
 if __name__ == "__main__":
-    gltf_dir = "/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models/"
+    gltf_dir = "/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models"
     output_dir = "/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_ply"
 
     # make the output directory if it doesn't exist
