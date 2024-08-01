@@ -4,11 +4,122 @@ HOT3D-Clips is a set of curated sub-sequences of the [HOT3D dataset](https://fac
 Each clip has 150 frames (5 seconds) which are all annotated with ground-truth poses of all modeled objects and hands and which passed our visual inspection.
 There are 4117 clips in total, 2969 clips extracted from the training split and 1148 from the test split of HOT3D.
 
-The clips are provided to facilitate benchmarking of 3D hand/object tracking methods and are used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation).
+HOT3D-Clips are hosted on [Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation). The full HOT3D dataset is provided in a [VRS](https://github.com/facebookresearch/vrs)-based format on [projectaria.com](https://www.projectaria.com/datasets/hot3D/) (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
 
-- [Download HOT3D-Clips from Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) (provided in the [Webdataset format](https://github.com/webdataset/webdataset))
-- [Download full HOT3D dataset from projectaria.com](https://www.projectaria.com/datasets/hot3D/) (provided in a [VRS](https://github.com/facebookresearch/vrs)-based format; see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb))
-- [Read HOT3D whitepaper](https://arxiv.org/pdf/2406.09598)
+More details can be found in the [HOT3D whitepaper](https://arxiv.org/pdf/2406.09598).
+
+
+## Data format
+
+HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) which include:
+
+- `object_models` - 3D object models in GLB format with PBR materials.
+- `object_models_eval` - Simplified 3D object models in GLB format without PBR materials (used for [BOP evaluation](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/)).
+- `object_ref_quest3_dynamic` - Dynamic object onboarding sequences from Quest 3. GT object pose is available only in the first frame.
+- `object_ref_quest3_dynamic_vis` - Visualizations of dynamic onboarding sequences from Quest 3.
+- `object_ref_quest3_static` - Static object onboarding sequences from Quest 3. GT object poses are available in all frames.
+- `object_ref_quest3_static_vis` - Visualizations of static onboarding sequences from Quest 3.
+- `test_aria` - Test Aria clips with some GT annotations removed (see the below description of splits for details).
+- `test_quest3` - Test Quest3 clips with some GT annotations removed (see the below description of splits for details).
+- `train_aria` - Training Aria clips with all GT annotations.
+- `train_quest3` - Training Quest3 clips with all GT annotations.
+- `vis_mano` - Visualizations of GT object annotations and GT MANO hand annotations.
+- `vis_umetrack` - Visualizations of GT object annotations and GT UmeTrack hand annotations.
+- `clip_definitions.json` - Includes the source HOT3D sequence, device and timestamps for each clip.
+- `clip_splits.json` - Defines the following clip splits:
+    - `train`
+        - Training clips which include all GT annotations. Extracted from sequences of 13 participants that are not seen in any other split.
+    - `test_ht_pose`
+        - Test split for the Pose Estimation track of the [Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation).
+        - Files `hands.json` with GT hand poses and `objects.json` with GT object poses are not publicly available.
+        - Extracted from sequences of 3 participants that are not seen in any other split.
+    - `test_ht_shape`
+        - Test split for the Shape Estimation track of the [Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation).
+        - Files `hands.json` with GT hand poses, `__hand_shapes.json__` with GT hand shapes, and `objects.json` with GT object poses are not publicly available.
+        - Extracted from sequences of 3 participants that are not seen in any other split.
+    - `test_bop`
+        - Test split for [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/). Union of `test_ht_pose` and `test_ht_shape`.
+
+
+Folders `train_aria`, `train_quest3`, `test_aria`, and `test_quest3` include one `tar` archive per clip. A clip from Aria contains one RGB image stream (`214-1`) and two monochrome image streams (`1201-1` and `1201-2`), while a clip from Quest 3 contains two monochrome image streams (`1201-1` and `1201-2`).
+
+A clip has the following structure:
+
+```
+├─ clip-<CLIP-ID>.tar
+│  ├─ <FRAME-ID>.image_214-1.jpg
+│  ├─ <FRAME-ID>.image_1201-1.jpg
+│  ├─ <FRAME-ID>.image_1201-2.jpg
+│  ├─ <FRAME-ID>.cameras.json
+│  ├─ <FRAME-ID>.hands.json
+│  ├─ <FRAME-ID>.hand_crops.json
+│  ├─ <FRAME-ID>.objects.json
+│  ├─ <FRAME-ID>.info.json
+│  ├─ ...
+│  ├─ __hand_shapes.json__
+```
+
+Files `<FRAME-ID>.cameras.json` provide camera parameters for each image stream:
+
+- `calibration`:
+    - `label`: Label of the camera stream (e.g. `camera-slam-left`).
+    - `stream_id`: Stream id (e.g. `214-1`).
+    - `serial_number`: Serial number of the camera.
+    - `image_width`: Image width.
+    - `image_height`: Image height.
+    - `projection_model_type`: Projection model type (e.g. `CameraModelType.FISHEYE624`).
+    - `projection_params`: Projection parameters.
+    - `T_device_from_camera`:
+        - `translation_xyz`: Translation from device to the camera.
+        - `quaternion_wxyz`: Rotation from device to the camera.
+    - `max_solid_angle`: Max solid angle of the camera.
+- `T_world_from_camera`:
+    - `translation_xyz`: Translation from world to the camera.
+    - `quaternion_wxyz`: Rotation from world to the camera.
+
+Files `<FRAME-ID>.objects.json` provide for each annotated object the following:
+
+- `T_world_from_object`:
+    - `translation_xyz`: Translation from world to the object.
+    - `quaternion_wxyz`: Rotation from world to the object.
+- `boxes_amodal`: A map from a stream ID to an amodal 2D bounding box.
+- `masks_modal` [currently not available]: A map from a stream ID to an modal binary mask.
+- `visibilities_modeled`: A map from a stream ID to the fraction of the projected surface area that is visibile.
+        (reflecting only occlusions by modeled scene elements).
+- `visibilities_full` [currently not available]: A map from a stream ID to the fraction of the projected surface area that is visibile
+    (reflecting occlusions by modeled and unmodeled, such as arms, scene elements).
+
+Files `<FRAME-ID>.hands.json` provide hand parameters:
+
+- `left`: Parameters of the left hand (may be missing).
+    - `mano_pose`:
+        - `thetas`: MANO pose parameters.
+        - `wrist_xform`: 3D rigid transformation from world to wrist, in the axis-angle + translation format expected by the smplx library
+            (`wrist_xform[0:3]` is the axis-angle orientation and `wrist_xform[3:6]` is the 3D translation).
+    - `umetrack_pose`:
+        - `joint_angles`: 20 floats.
+        - `wrist_xform`: 4x4 3D rigid transformation matrix.
+    - `boxes_amodal`: A map from a stream ID to an amodal 2D bounding box.
+    - `masks_modal` [currently not available]: A map from a stream ID to an modal binary mask.
+    - `visibilities_modeled`: A map from a stream ID to the fraction of the projected surface area that is visibile.
+        (reflecting only occlusions by modeled scene elements).
+    - `visibilities_full` [currently not available]: A map from a stream ID to the fraction of the projected surface area that is visibile
+        (reflecting occlusions by modeled and unmodeled, such as arms, scene elements).
+- `right`: As for `left`.
+
+Files `<FRAME-ID>.hand_crops.json` provide hand crop parameters (used in [Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation); a crop camera is saved only if the hand visibility > 0.1):
+
+- `left`: A map from a stream ID to a dictionary with these items:
+    - `T_world_from_crop_camera`:
+        - `translation_xyz`: Translation from world to the crop camera.
+        - `quaternion_wxyz`: Rotation from world to the crop camera.
+    - `crop_camera_fov`: Field of view of the crop camera in degrees.
+- `right`: As for `left`.
+
+File `__hand_shapes.json__` provides hand shape parameters (shared by all frames in a clip):
+
+- `mano`: MANO shape (beta) parameters shared by the left and right hands.
+- `umetrack`: Serialized UmeTrack UserProfile.
 
 
 ## Loading and visualizing HOT3D-Clips
@@ -46,6 +157,7 @@ An example command to visualize Quest3 training clips (`$HOT3DC` is assumed to b
 ```
 python vis_clips.py --clips_dir $HOT3DC/train_quest3 --object_models_dir $HOT3DC/object_models_eval --output_dir $HOT3DC/output
 ```
+
 
 ## License
 
