@@ -17,8 +17,6 @@ import clip_util
 from hand_tracking_toolkit import rasterizer
 
 
-RGB_STREAM = "214-1"
-
 def main():
     # setup args
     parser = argparse.ArgumentParser()
@@ -123,6 +121,11 @@ def main():
             camera_json_file = tar.extractfile(camera_json_file_name)
             frame_camera_data = json.load(camera_json_file)
 
+            # read FRAME_ID.info.json
+            frame_info_file_name = f"{frame_id:06d}.info.json"
+            frame_info_file = tar.extractfile(frame_info_file_name)
+            frame_info_data = json.load(frame_info_file)
+
             # loop over all camera streams
             for stream_index, stream_name in enumerate(args.camera_streams_names):
                 stream_id = args.camera_streams_id[stream_index]
@@ -152,14 +155,15 @@ def main():
 
                 # add frame scene_camera data
                 scene_camera_data[stream_name][int(frame_id)] = {
-                    "scene_camera": {
-                        # TODO change this after we agree on the final format
-                        "cam_model": calibration,
-                        #"cam_K":  # not used as cam_model exists
-                        #"depth_scale":  # also not used
-                        "cam_t_w2c": T_world_to_camera[:3, 3].flatten().tolist(),
-                        "cam_R_w2c": T_world_to_camera[:3, :3].flatten().tolist(),
-                    }
+                    # TODO change this after we agree on the final format
+                    "cam_model": calibration,
+                    "device": frame_info_data["device"],
+                    "image_timestamps_ns": frame_info_data["image_timestamps_ns"][stream_id],
+                    #"cam_K":  # not used as cam_model exists
+                    #"depth_scale":  # also not used
+                    # convert translation from meter to mm
+                    "cam_R_w2c": T_world_to_camera[:3, :3].flatten().tolist(),
+                    "cam_t_w2c": (T_world_to_camera[:3, 3] * 1000).tolist(),
                 }
 
                 # Camera parameters of the current image.
@@ -181,7 +185,7 @@ def main():
                     object_frame_scene_gt_anno = {
                         "obj_id": obj_key,
                         "cam_R_m2c": T_camera_to_object[:3, :3].flatten().tolist(),
-                        "cam_t_m2c": T_camera_to_object[:3, 3].flatten().tolist(),
+                        "cam_t_m2c": (T_camera_to_object[:3, 3] * 1000).tolist(),
                     }
 
                     # Transformation from the model to the world space.
