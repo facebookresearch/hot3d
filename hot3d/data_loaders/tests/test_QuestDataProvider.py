@@ -75,3 +75,32 @@ class TestQuestDataProvider(unittest.TestCase):
                 provider.get_camera_calibration(stream_id, LINEAR)[1].model_name(),
                 LINEAR,
             )
+
+        # check the frameset grouping logic
+        frameset_acceptable_time_diff_ns = 1e6
+        reference_timestamps = provider.get_sequence_timestamps()
+        expected_streamid_strs = sorted(str(x) for x in provider.get_image_stream_ids())
+        for ref_tsns in reference_timestamps:
+            for tsns in [ref_tsns, ref_tsns + 100, ref_tsns - 200]:
+                out_frameset_a = provider.get_frameset_from_timestamp(
+                    timestamp_ns=tsns,
+                    frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
+                )
+                self.assertIsNotNone(out_frameset_a)
+                self.assertEqual(sorted(out_frameset_a.keys()), expected_streamid_strs)
+
+                # For Quest, timestamps for all streams should be the same
+                self.assertEqual(len(set(out_frameset_a.values())), 1)
+
+                ## check the timestamps are within the acceptable time difference
+                for _, frameset_tsns in out_frameset_a.items():
+                    self.assertTrue(
+                        abs(frameset_tsns - tsns) < frameset_acceptable_time_diff_ns,
+                    )
+        # sanity check that an out of bounds timestamp returns None values inside the frameset
+        outofbounds_frameset = provider.get_frameset_from_timestamp(
+            timestamp_ns=-2 * 1e9,
+            frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
+        )
+        self.assertIsNotNone(outofbounds_frameset)
+        self.assertTrue(all(x is None for x in outofbounds_frameset.values()))

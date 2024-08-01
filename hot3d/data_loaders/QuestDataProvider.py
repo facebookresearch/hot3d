@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
+from data_loaders.frameset import compute_frameset_for_timestamp
 from data_loaders.io_utils import load_json
 from PIL import Image
-
 from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
     DeviceCadExtrinsics,
@@ -27,6 +27,7 @@ from projectaria_tools.core.calibration import (  # @manual
     get_linear_camera_calibration,
     LINEAR,
 )
+from projectaria_tools.core.sensor_data import TimeDomain  # @manual
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
@@ -47,7 +48,7 @@ class QuestDataProvider:
             8010, ImageConversion.NORMALIZE_GREY8
         )
 
-        # Keep the two last stream ids (the one with largest resolution)
+        # extract the streamids corresponding to the image streams
         image_stream_ids = []
         for stream_id in self._vrs_reader.stream_ids:
             if self._vrs_reader.might_contain_images(stream_id):
@@ -98,6 +99,13 @@ class QuestDataProvider:
         self._device_calibration = DeviceCalibration(
             camera_calibration, {}, {}, {}, {}, DeviceCadExtrinsics(), "", ""
         )
+
+        # Pre-compute the sorted timestamps for each image stream
+        self._stream_timestamps_sorted: Dict[str, List[int]] = {}
+        for stream_id in self.get_image_stream_ids():
+            self._stream_timestamps_sorted[str(stream_id)] = sorted(
+                self.get_sequence_timestamps()
+            )
 
     def get_device_calibration(self) -> DeviceCalibration:
         """
@@ -163,6 +171,29 @@ class QuestDataProvider:
         timestamps = self._vrs_reader.get_timestamp_list()
         # convert timestamp from float to int in ns
         return sorted({int(x * 1e9) for x in timestamps})
+
+    def get_frameset_from_timestamp(
+        self,
+        timestamp_ns: int,
+        frameset_acceptable_time_diff_ns: int,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+    ) -> Dict[str, Optional[int]]:
+        """
+        Computes a frameset from a given timestamp within an acceptable time difference.
+        The frameset consists of the closest timestamps for each stream that are within the acceptable time difference.
+        For Quest3, the recommended acceptable time difference is 1e6 ns (or 1ms).
+        Returns a dictionary mapping each str(StreamId) to its closest timestamp.
+        """
+        if time_domain is not TimeDomain.TIME_CODE:
+            raise ValueError(
+                f"{time_domain} is not supported. Only TIME_CODE is supported"
+            )
+        out_frameset = compute_frameset_for_timestamp(
+            stream_timestamps_sorted=self._stream_timestamps_sorted,
+            target_timestamp=timestamp_ns,
+            frameset_acceptable_time_diff=frameset_acceptable_time_diff_ns,
+        )
+        return out_frameset
 
     def get_image_stream_label(self, stream_id: StreamId) -> str:
         return str(stream_id)
