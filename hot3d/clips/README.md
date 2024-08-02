@@ -11,7 +11,7 @@ More details can be found in the [HOT3D whitepaper](https://arxiv.org/pdf/2406.0
 
 ## Data format
 
-HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) which include:
+HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) which includes:
 
 - `object_models` - 3D object models in GLB format with PBR materials.
 - `object_models_eval` - Simplified 3D object models in GLB format without PBR materials (used for [BOP evaluation](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/)).
@@ -23,8 +23,8 @@ HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.c
 - `test_quest3` - Test Quest3 clips with some GT annotations removed (see the below description of splits for details).
 - `train_aria` - Training Aria clips with all GT annotations.
 - `train_quest3` - Training Quest3 clips with all GT annotations.
-- `vis_mano` - Visualizations of GT object annotations and GT MANO hand annotations.
-- `vis_umetrack` - Visualizations of GT object annotations and GT UmeTrack hand annotations.
+- `vis_mano` - Visualizations of GT object annotations and GT [MANO](https://github.com/facebookresearch/hot3d?tab=readme-ov-file#mano) hand annotations.
+- `vis_umetrack` - Visualizations of GT object annotations and GT [UmeTrack](https://dl.acm.org/doi/pdf/10.1145/3550469.3555378) hand annotations.
 - `clip_definitions.json` - Includes the source HOT3D sequence, device and timestamps for each clip.
 - `clip_splits.json` - Defines the following clip splits:
     - `train`
