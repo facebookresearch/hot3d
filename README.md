@@ -136,7 +136,7 @@ python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_li
 
 When using `pixi`, you can directly launch the viewer without explicitly activating the environment by using the following command:
 ```
-pixi run viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
+pixi run viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
 ### Using hand annotations
@@ -146,7 +146,7 @@ Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com
 #### UmeTrack
 
 ```
-python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11--object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
+python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11--object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
 ```
 
 #### MANO
@@ -155,7 +155,7 @@ Hand annotations in the MANO format can be downloaded after accepting their [lic
 - HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
 
 ```
-python3 viewer --sequence_folder --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
+python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
 ```
 
 ## Step 5: Run the python notebook tutorial
