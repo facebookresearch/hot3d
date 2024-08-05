@@ -36,7 +36,7 @@ curl -fsSL https://pixi.sh/install.sh | bash
 
 # 2. Checkout this repository
 git clone https://github.com/facebookresearch/hot3d.git
-cd hot3d
+cd hot3d/hot3d
 
 # 3. Call `pixi install` to setup the environment
 pixi install
@@ -78,7 +78,7 @@ python3 -m pip install 'git+https://github.com/mattloper/chumpy'
 #### A quick introduction to the [CONDA environment](https://docs.conda.io/projects/conda/en/4.6.1/user-guide/tasks/manage-environments.html#managing-environments)
 
 - Activate the Conda HOT3D environment by executing `conda activate hot3d`.
-- Exit the Conda HOT3D environment using `source deactivate`.
+- Exit the Conda HOT3D environment using `conda deactivate`.
 - Remove the Conda HOT3D environment by executing `conda remove --name hot3d --all`.
 
 
@@ -125,13 +125,13 @@ python3 dataset_downloader_base_main.py -c Hot3DQuest_download_urls.json -o ../d
 # Type answer `y`
 ```
 
-**Tip:** To download all sequences in a download links JSON file (such as the HOT3D Object Library data in step 3), do not include the sequence_name argument.
+**Tip:** To download all sequences in a download links JSON file (such as the HOT3D Object Library data in step 3), pass sequence_name as 'all'.
 
 ## Step 4: Run the dataset viewer
 
 ### Viewing objects and headset pose trajectory
 ```
-python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
+python3 viewer.py --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets/
 ```
 
 When using `pixi`, you can directly launch the viewer without explicitly activating the environment by using the following command:
@@ -146,7 +146,7 @@ Hand pose annotations in HOT3D are provided in the [UmeTrack](https://github.com
 #### UmeTrack
 
 ```
-python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11--object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
+python3 viewer.py --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11--object_library_folder <PATH>/hot3d_dataset/assets --hand_type UMETRACK
 ```
 
 #### MANO
@@ -155,7 +155,7 @@ Hand annotations in the MANO format can be downloaded after accepting their [lic
 - HOT3D only requires the `MANO_RIGHT.pkl` and `MANO_LEFT.pkl` files for loading and rendering of hand poses. These files can be obtained from the `mano_v1_2.zip` file located in the "Models & Code" section of the `MANO` website. After downloading, extract the zip file to your local disk, and the `*.pkl` files can be found at the following path: `mano_v1_2/models/`.
 
 ```
-python3 viewer --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
+python3 viewer.py --sequence_folder <PATH>/hot3d_dataset/P0003_c701bd11 --object_library_folder <PATH>/hot3d_dataset/assets --mano_model_folder <PATH>/mano_v1_2/models/  --hand_type MANO
 ```
 
 ## Step 5: Run the python notebook tutorial
