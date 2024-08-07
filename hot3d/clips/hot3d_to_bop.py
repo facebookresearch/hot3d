@@ -183,7 +183,7 @@ def main():
                     T_camera_to_object = T_world_to_camera @ T_object_to_world
 
                     object_frame_scene_gt_anno = {
-                        "obj_id": obj_key,
+                        "obj_id": int(obj_key),
                         "cam_R_m2c": T_camera_to_object[:3, :3].flatten().tolist(),
                         "cam_t_m2c": (T_camera_to_object[:3, 3] * 1000).tolist(),
                     }

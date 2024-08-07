@@ -22,16 +22,17 @@ def load_mesh(
     # Load the scene.
     scene = trimesh.load_mesh(
         path,
-        process=True,
+        process=False,
         merge_primitives=True,
         skip_materials=True,
+        maintain_order=True,
     )
 
     # Represent the scene by a single mesh.
     mesh = scene.dump(concatenate=True)
 
-    # Clean the mesh.
-    mesh.process(validate=True)
+    # Clean the mesh.  # don't use it as it will change indices and normals
+    #mesh.process(validate=True)
 
     return mesh
 

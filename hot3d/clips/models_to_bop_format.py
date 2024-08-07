@@ -10,7 +10,7 @@ import os
 
 def save_mesh_as_ply_with_uv_and_texture(gltf_filepath, ply_filepath, texture_filepath):
     # Load the GLTF/GLB file using trimesh
-    scene = trimesh.load(gltf_filepath)
+    scene = trimesh.load(gltf_filepath, process=False, maintain_order=True)
 
     # Dump the scene to a single mesh
     mesh = scene.dump(concatenate=True)
