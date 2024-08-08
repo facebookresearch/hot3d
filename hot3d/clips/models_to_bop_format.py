@@ -6,6 +6,28 @@ import trimesh
 import numpy as np
 from PIL import Image
 import os
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    # add arg gltf dir and output dir
+    parser.add_argument("--gltf_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models")
+    parser.add_argument("--output_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_bop")
+
+    args = parser.parse_args()
+
+    # make the output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    for gltf_filename in os.listdir(args.gltf_dir):
+        if gltf_filename.endswith(".glb"):
+            gltf_filepath = os.path.join(args.gltf_dir, gltf_filename)
+            ply_filepath = os.path.join(args.output_dir , gltf_filename.replace(".glb", ".ply"))
+            texture_filepath = os.path.join(args.output_dir , gltf_filename.replace(".glb", ".png"))
+
+            # Save mesh as PLY and texture as PNG
+            save_mesh_as_ply_with_uv_and_texture(gltf_filepath, ply_filepath, texture_filepath)
 
 
 def save_mesh_as_ply_with_uv_and_texture(gltf_filepath, ply_filepath, texture_filepath):
@@ -79,18 +101,4 @@ end_header
 
 
 if __name__ == "__main__":
-    gltf_dir = "/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models"
-    output_dir = "/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_ply"
-
-    # make the output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-
-    for gltf_filename in os.listdir(gltf_dir):
-        if gltf_filename.endswith(".glb"):
-            gltf_filepath = os.path.join(gltf_dir, gltf_filename)
-            ply_filepath = os.path.join(output_dir , gltf_filename.replace(".glb", ".ply"))
-            texture_filepath = os.path.join(output_dir , gltf_filename.replace(".glb", ".png"))
-
-            # Save mesh as PLY and texture as PNG
-            save_mesh_as_ply_with_uv_and_texture(gltf_filepath, ply_filepath, texture_filepath)
-
+    main()
