@@ -199,8 +199,12 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
                 # Transformation from the model to the world space.
                 T_object_to_world = clip_util.se3_from_dict(obj_data["T_world_from_object"])
 
+                T_world_to_object = np.linalg.inv(T_object_to_world)
+
                 # get object pose in camera frame
-                T_camera_to_object = T_world_to_camera @ T_object_to_world
+                #T_camera_to_object = T_world_to_camera @ T_object_to_world
+                T_camera_to_object = T_world_to_object @ T_world_to_camera
+                T_camera_to_object = np.linalg.inv(T_camera_to_object)
 
                 object_frame_scene_gt_anno = {
                     "obj_id": int(obj_key),
