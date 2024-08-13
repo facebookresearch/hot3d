@@ -110,3 +110,32 @@ class TestAriaDataProvider(unittest.TestCase):
 
         # MPS resources are empty since not initialized
         self.assertIsNone(provider.get_point_cloud())
+
+        # check the frameset grouping logic
+        frameset_acceptable_time_diff_ns = 1e6
+        reference_timestamps = provider.get_sequence_timestamps(StreamId("214-1"))
+        expected_stream_id_strs = sorted(
+            str(x) for x in provider.get_image_stream_ids()
+        )
+        for ref_tsns in reference_timestamps:
+            for tsns in [ref_tsns, ref_tsns + 100, ref_tsns - 200]:
+                out_frameset = provider.get_frameset_from_timestamp(
+                    timestamp_ns=tsns,
+                    frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
+                )
+                self.assertIsNotNone(out_frameset)
+                self.assertEqual(sorted(out_frameset.keys()), expected_stream_id_strs)
+
+                ## check the timestamps are within the acceptable time difference
+                for _, frameset_tsns in out_frameset.items():
+                    self.assertTrue(
+                        abs(frameset_tsns - tsns) < frameset_acceptable_time_diff_ns,
+                    )
+
+        # sanity check that an out of bounds timestamp returns None values inside the frameset
+        out_of_bounds_frameset = provider.get_frameset_from_timestamp(
+            timestamp_ns=-2000,
+            frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
+        )
+        self.assertIsNotNone(out_of_bounds_frameset)
+        self.assertTrue(all(x is None for x in out_of_bounds_frameset.values()))

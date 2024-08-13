@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
+from data_loaders.frameset import compute_frameset_for_timestamp
 
 from projectaria_tools.core import data_provider  # @manual
 from projectaria_tools.core.calibration import (  # @manual
@@ -53,6 +54,13 @@ class AriaDataProvider:
         else:
             self._mps_data_provider = None
 
+        # Pre-compute the sorted timestamps for each stream
+        self._stream_timestamps_sorted: Dict[str, List[int]] = {}
+        for stream_id in self.get_image_stream_ids():
+            self._stream_timestamps_sorted[str(stream_id)] = sorted(
+                self.get_sequence_timestamps(stream_id, TimeDomain.TIME_CODE)
+            )
+
     def get_image_stream_ids(self) -> List[StreamId]:
         # retrieve all streams ids and filter the one that are image based
         stream_ids = self._vrs_data_provider.get_all_streams()
@@ -72,6 +80,29 @@ class AriaDataProvider:
         Returns the list of "time code" timestamp for the sequence
         """
         return self._vrs_data_provider.get_timestamps_ns(stream_id, time_domain)
+
+    def get_frameset_from_timestamp(
+        self,
+        timestamp_ns: int,
+        frameset_acceptable_time_diff_ns: int,
+        time_domain: TimeDomain = TimeDomain.TIME_CODE,
+    ) -> Dict[str, Optional[int]]:
+        """
+        Computes a frameset from a given timestamp within an acceptable time difference.
+        The frameset consists of the closest timestamps for each stream that are within the acceptable time difference.
+        For Aria, the recommended acceptable time difference is 1e6 ns (or 1ms).
+        Returns a dictionary mapping each str(StreamId) to its closest timestamp.
+        """
+        if time_domain is not TimeDomain.TIME_CODE:
+            raise ValueError(
+                f"{time_domain} is not supported. Only TIME_CODE is supported"
+            )
+        out_frameset = compute_frameset_for_timestamp(
+            stream_timestamps_sorted=self._stream_timestamps_sorted,
+            target_timestamp=timestamp_ns,
+            frameset_acceptable_time_diff=frameset_acceptable_time_diff_ns,
+        )
+        return out_frameset
 
     def get_image_stream_label(self, stream_id: StreamId) -> str:
         return self._vrs_data_provider.get_label_from_stream_id(stream_id)
