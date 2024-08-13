@@ -162,13 +162,10 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
             # filling scene_camera.json
 
             # get T_world_from_camera
-            T_camera_to_world = frame_camera[stream_id].T_world_from_eye
+            T_world_from_camera = frame_camera[stream_id].T_world_from_eye
 
             # TODO check that inverting this homogenous transformation is correct
-            # get T_world_2_camera as in the BOP format
-            T_world_to_camera = np.eye(4)
-            T_world_to_camera[:3, :3] = T_camera_to_world[:3, :3]
-            T_world_to_camera[:3, 3] = -T_camera_to_world[:3, :3].T @ T_camera_to_world[:3, 3]
+            T_world_to_camera = np.linalg.inv(T_world_from_camera)
 
             # get camera parameters
             calibration = frame_camera_data[stream_id]["calibration"]
@@ -197,19 +194,15 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
                 bop_id = int(obj_data["object_bop_id"])
 
                 # Transformation from the model to the world space.
-                T_object_to_world = clip_util.se3_from_dict(obj_data["T_world_from_object"])
-
-                T_world_to_object = np.linalg.inv(T_object_to_world)
+                T_world_from_model = clip_util.se3_from_dict(obj_data["T_world_from_object"])
 
                 # get object pose in camera frame
-                #T_camera_to_object = T_world_to_camera @ T_object_to_world
-                T_camera_to_object = T_world_to_object @ T_world_to_camera
-                T_camera_to_object = np.linalg.inv(T_camera_to_object)
+                T_camera_from_model = np.linalg.inv(T_world_from_camera) @ T_world_from_model
 
                 object_frame_scene_gt_anno = {
                     "obj_id": int(obj_key),
-                    "cam_R_m2c": T_camera_to_object[:3, :3].flatten().tolist(),
-                    "cam_t_m2c": (T_camera_to_object[:3, 3] * 1000).tolist(),
+                    "cam_R_m2c": T_camera_from_model[:3, :3].flatten().tolist(),
+                    "cam_t_m2c": (T_camera_from_model[:3, 3] * 1000).tolist(),
                 }
 
                 # Transformation from the model to the world space.
