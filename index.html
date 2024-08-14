@@ -1,20 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=https://www.projectaria.com/datasets/hot3d/">
-    <title>Redirecting...</title>
-</head>
-<body>
-    If you are not redirected automatically, please follow <a href="https://www.projectaria.com/datasets/hot3d/">this link</a>.
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>HOT3D: An Egocentric Dataset for 3D Hand and Object Tracking</title>
+        <!-- Favicon-->
+        <!-- <link rel="icon" type="image/x-icon" href="assets/favicon.ico" /> -->
+        <!-- Bootstrap icons-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="css/styles.css" rel="stylesheet" />
+    </head>
+    <body>
 
-<p>
-  <small>Copyright © Meta Platforms, Inc
-     <a href="https://opensource.fb.com/legal/privacy/">Privacy</a>
-     <a href="https://opensource.fb.com/legal/terms/">Terms</a>
-     <a href="https://opensource.fb.com/legal/data-policy/">Data Policy</a>
-     <a href="https://opensource.fb.com/legal/cookie-policy/">Cookie Policy</a>
-  </small>
-  </p>
+        <header class="bg-dark pt-0 pb-4">
+            <div class="container px-5">
+                <div class="row gx-5 justify-content-center">
+                    <div class="col-lg-12">
+                        <div class="text-center mt-4 mb-4">
+                            <h1 class="display-3 fw-bold text-white mb-2">HOT3D</h1>
+                            <p class="lead text-white">An egocentric dataset for 3D hand and object tracking, from <span class="meta-logo-inline"/></p>
+                            <p class="authors text-white-60">
+                                <a href="https://www.linkedin.com/in/prithvirajb/">Prithviraj Banerjee</a>,
+                                <a href="https://www.linkedin.com/in/sindi-shkodrani">Sindi Shkodrani</a>,
+                                <a href="https://scholar.google.fr/citations?user=8u1nmVUAAAAJ&hl=fr">Pierre Moulon</a>,
+                                <a href="https://shreyashampali.github.io/">Shreyas Hampali</a>,
+                                <a href="https://scholar.google.com/citations?user=VOOnoVcAAAAJ&hl=en">Fan Zhang</a>,
+                                <a href="https://www.linkedin.com/in/jade-fountain/">Jade Fountain</a>,
+                                <a href="https://www.linkedin.com/in/edwardrichardmiller/">Edward Miller</a>,
+                                <a href="https://www.linkedin.com/in/selen-basol-240a602b">Selen Basol</a>,
+                                <a href="https://scholar.google.co.uk/citations?user=MhowvPkAAAAJ&hl=en">Richard Newcombe</a>,
+                                <a href="https://people.csail.mit.edu/rywang/">Robert Wang</a>,
+                                <a href="https://scholar.google.com/citations?user=ndOMZXMAAAAJ&hl=en">Jakob Julian Engel</a>,
+                                <a href="http://hodan.xyz/">Tomas Hodan</a>
+                            </p>
+                        </div>
+                        <div class="mb-2 quick-links">
+
+                            <a class="btn btn-secondary btn-sm px-8 me-sm-1" href="#news">News</a>
+                            <a class="btn btn-secondary btn-sm px-8 me-sm-1" href="#properties">Properties</a>
+                            <a class="btn btn-secondary btn-sm px-8 me-sm-1" href="#hot3d-clips">HOT3D-Clips</a>
+                            <a class="btn btn-secondary btn-sm px-8 me-sm-1" href="#challenges">Challenges</a>
+                            <!-- <a class="btn btn-secondary btn-sm px-8 me-sm-1" href="#toolkit">Toolkit</a> -->
+                            <a class="btn btn-primary btn-sm px-8 me-sm-1" href="#download">Download</a>
+                            <a class="btn btn-primary btn-sm px-8 me-sm-1" href="https://arxiv.org/pdf/2406.09598">Whitepaper</a>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="py-3 border-bottom">
+            <div class="container px-5 mt-3 mb-3">
+                <div class="teaser"><img src="assets/hot3d_teaser.jpg"></div>
+                <br/>
+                <!-- <h2 class="fw-bolder">Introduction</h2> -->
+                <p>
+                    HOT3D is a dataset for benchmarking egocentric tracking of hands and objects in 3D. The dataset includes 833 minutes of multi-view image streams, which show 19 subjects interacting with 33 diverse rigid objects and are annotated with accurate 3D poses and shapes of hands and objects. HOT3D is recorded with two head-mounted devices from Meta: <a href="https://www.projectaria.com/glasses">Project Aria</a>, a research prototype of light-weight AR/AI glasses, and <a href="https://www.meta.com/quest/quest-3/">Quest 3</a>, a&nbsp;production VR headset sold in millions of units. We aim to support research on egocentric hand-object interaction by making HOT3D publicly available and by co-organizing <a href="#challenges">public challenges</a> on the dataset.
+                </p>
+                <!-- <p>
+                Ground-truth annotations include 3D poses of objects, hands, and cameras, and 3D models of hands and objects.
+                Poses of hands and objects were obtained by a professional motion-capture system using small optical markers. Hand annotations are provided in the <a href="https://dl.acm.org/doi/pdf/10.1145/3550469.3555378">UmeTrack</a> and <a href="https://github.com/facebookresearch/hot3d?tab=readme-ov-file#mano">MANO</a> formats, while objects are represented by 3D meshes with PBR materials obtained by an in-house scanner. Recordings from Aria additionally include 3D scene point clouds from SLAM and eye gaze information.
+                </p> -->
+                </p>
+            </div>
+        </section>
+
+        <section class="bg-light py-3 border-bottom" id="news">
+            <div class="container px-5 mt-2 mb-3">
+                <h2 class="fw-bolder">News</h2>
+                <ul>
+                    <li><b>July 1, 2024</b> - <a href="#hot3d-clips">HOT3D-Clips</a> used in two ECCV 2024 challenges: <a href="https://bop.felk.cvut.cz/challenges/bop-challenge-2024">BOP Challenge 2024</a> on object detection and pose estimation, and <a href="https://eval.ai/web/challenges/challenge-page/2333/overview">Egocentric Hand Tracking Challenge</a> on hand pose and shape estimation.</li>
+                    <li><b>June 17, 2024</b> - HOT3D publicly announced at <a href="https://egovis.github.io/cvpr24/">EgoVis CVPR 2024 workshop</a> in Seattle.</li>
+                    <li><b>June 13, 2024</b> - <a href="https://arxiv.org/pdf/2406.09598">HOT3D whitepaper</a> is now available on arXiv.org.
+                </ul>
+            </div>
+        </section>
+
+        <section class="py-3 border-bottom" id="properties">
+            <div class="container px-5 mt-2 mb-3">
+                <h2 class="fw-bolder">Dataset properties</h2>
+
+<!--                 <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_devices.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>Recorded with Project Aria and Quest 3</h4>
+                        <p>
+                            HOT3D is recorded with two recent head-mounted devices from Meta: <a href="https://www.projectaria.com/glasses/">Project Aria</a>, a research prototype built to emulate future AR- or smart-glasses, and <a href="https://www.meta.com/quest/quest-3/">Quest 3</a>, a popular production VR headset sold in millions of units.
+                        </p>
+                    </div>
+                </div> -->
+
+                <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_multiview.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>833 minutes of egocentric, multi-view, synchronized recordings</h4>
+                        <p>
+                            HOT3D offers 1.5M multi-view frames (3.7M+ images) recorded at 30 FPS with <a href="https://www.projectaria.com/glasses/">Project Aria</a> and <a href="https://www.meta.com/quest/quest-3/">Quest 3</a>. Each Aria frame includes one RGB 1408×1408 and two monochrome 640×480 images. Each Quest 3 frame includes two monochrome 1280×1024 images. 
+                            Aria recordings also include 3D scene point clouds from SLAM and eye gaze signal.
+                            <!-- Intrinsic and extrinsic camera parameters are available. -->
+                            <!-- Intrinsic camera parameters and camera-to-world transformations are available for all images. -->
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_zurich_lab.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>19 subjects, 4 everyday scenarios</h4>
+                        <p>
+                            To ensure diversity, we recruited 19 participants with different hand shapes and nationalities. 
+                            In addition to simple pick-up/observe/put-down actions, recordings show scenarios resembling typical actions in a kitchen, office, and living room. All scenarios were captured in the same lab with scenario-specific furniture and regularly randomized decorative elements and lighting. In each ~2 minute recording, a participant interacts with up to 6 objects.
+                            <!-- The end result is a dataset comprising of 425 recordings, with 199 from Aria and 226 from Quest 3. Each recording has around 2 minutes. -->
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_gt_annotations.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>Accurate 3D ground-truth annotations of&nbsp;hands and objects</h4>
+                        <p>
+                            Hands and objects are annotated with ground-truth 3D poses and models. Models were scanned by in-house 3D scanners and poses obtained by a professional motion-capture system using small optical markers. Hand annotations are provided in the <a href="https://dl.acm.org/doi/pdf/10.1145/3550469.3555378">UmeTrack</a> and <a href="https://github.com/facebookresearch/hot3d?tab=readme-ov-file#mano">MANO</a> formats.
+                            <!-- The training split of HOT3D includes recordings of 13 subjects (1M multi-view frames), and the test split includes recordings of the remaining 6 subjects (0.5 multi-view frames). Ground-truth pose annotations are publicly released only for the training split. Ground-truth annotations for the test split are accessible only by dedicated evaluation servers. -->
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_objects.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>High-fidelity 3D object models</h4>
+                        <p>
+                            HOT3D includes high-fidelity 3D models of 33 rigid objects. Each model is captured with high-resolution geometry and PBR materials, using an in-house 3D scanner.
+                            The collection includes household and office objects of diverse appearance, size, and affordances.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 property_image">
+                        <img src="assets/hot3d_onboarding_quest3_1.jpg" />
+                    </div>
+                    <div class="col-md-7 property_info">
+                        <h4>Sequences for object onboarding</h4>
+                        <p>
+                            To support research on <a href="https://bop.felk.cvut.cz/challenges/bop-challenge-2024/">model-free 3D object tracking</a> and 3D object reconstruction, HOT3D offers two types of reference sequences which show all possible views at each object: (1)&nbsp;sequences showing a static object on a desk, when the object is standing upright and upside-down, and (2)&nbsp;sequences showing an object manipulated by hands.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="bg-light py-3 border-bottom" id="hot3d-clips">
+            <div class="container px-5 mt-2 mb-3">
+                <h2 class="fw-bolder">HOT3D-Clips</h2>
+                <p>
+                HOT3D-Clips is a set of curated sub-sequences of the HOT3D dataset, provided to enable straightforward comparison of various tracking and pose estimation methods. Each clip has 150 frames (5 seconds) with ground-truth annotations available for all modeled objects and hands and passing our visual inspection.
+                There are 4117 clips in total, with 1983 extracted from Aria recordings and 1849 extracted from Quest3 recordings.
+                <!-- 2969 clips extracted from the training split and 1148 from the test split of HOT3D. -->
+                Documentation of HOT3D-Clips and Python utilities for working with the clips are in the <a href="https://github.com/facebookresearch/hot3d/blob/main/hot3d/clips/README.md">HOT3D Toolkit</a>.
+                </p>
+
+                <div class="ratio ratio-4x3 video_wall"><iframe src="https://www.youtube.com/embed/V4luyrOhKfA?si=RCvmuhikos0H7S9d" title="HOT3D-Clips | Aria" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+                <p class="caption"><b>Clips extracted from Aria recordings.</b> Only the RGB image stream is shown (Aria recordings additionally include two monochrome image streams). Contours of 3D models of hands and objects in the ground-truth poses are shown in white and green, respectively.
+                </p>
+
+                <div class="ratio ratio-4x3 video_wall"><iframe src="https://www.youtube.com/embed/EeM_WBVd4BE?si=Le78F3WM7d1sfqZQ" title="HOT3D-Clips | Quest 3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+                <p class="caption"><b>Clips extracted from Quest 3 recordings.</b> Only one of the monochrome image streams available in Quest 3 recordings is shown. Contours of 3D models are shown in white and green as in Aria clips.</i>
+                </p>
+
+            </div>
+        </section>
+
+
+        <section class="py-3 border-bottom" id="challenges">
+            <div class="container px-5 mt-2 mb-3">
+                <h2 class="fw-bolder">Public challenges on HOT3D</h2>
+                <p>    
+                    We co-organize two public challenges on HOT3D at ECCV 2024: <a href="https://bop.felk.cvut.cz/challenges/bop-challenge-2024">BOP Challenge 2024</a>, focused on model-based and model-free 2D object detection and 6DoF pose estimation, and <a href="https://eval.ai/web/challenges/challenge-page/2333/overview">Multiview Egocentric Hand Tracking Challenge</a>, focused on hand pose and shape estimation. To enable benchmarking methods for joint hand and object tracking, the two challenges use the same training and test splits of HOT3D-Clips. We invite authors of relevant methods to participate in the challenges.
+                </p>
+            </div>
+        </section>
+
+
+        <section class="bg-light py-3 border-bottom" id="download">
+            <div class="container px-5 mt-2 mb-3">
+                <h2 class="fw-bolder">Download</h2>
+
+                <ul>
+                <li><b><a href="https://www.projectaria.com/datasets/hot3D/">Download full HOT3D dataset from projectaria.com</a></b>
+                    <ul>
+                        <li><a href="https://github.com/facebookresearch/hot3d/tree/main?tab=readme-ov-file#step-1-install-the-downloader">Download instructions</a></li>
+                        <li><a href="https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb">Documentation of data format</a> (based on <a href="https://github.com/facebookresearch/vrs">VRS</a>)</li>
+                    </ul>
+                </li>
+                <li><b><a href="https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d">Download HOT3D-Clips from Hugging Face</a></b>
+                    <ul>
+                        <li><a href="https://github.com/nv-nguyen/bop-benchmark">Download instructions</a></li>
+                        <li><a href="https://github.com/facebookresearch/hot3d/blob/main/hot3d/clips/README.md">Documentation of data format</a> (based on <a href="https://github.com/webdataset/webdataset">Webdataset</a>)</li>
+                        <li>Used in <a href="https://bop.felk.cvut.cz/challenges/bop-challenge-2024">BOP Challenge 2024</a> and <a href="https://eval.ai/web/challenges/challenge-page/2333/overview">Multiview Egocentric Hand Tracking Challenge</a></li>
+                    </ul>
+                </li>
+                </ul>
+
+                <h4 id="toolkit">HOT3D Toolkit</h4>
+
+                <p>
+                <a href="https://github.com/facebookresearch/hot3d">HOT3D Toolkit</a> is available on GitHub and provides Python API for <a href="https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb">downloading and using</a> the full HOT3D dataset, and for <a href="https://github.com/facebookresearch/hot3d/tree/main/hot3d/clips#loading-and-visualizing-hot3d-clips">loading and visualizing</a> HOT3D-Clips.
+                </p>
+
+                <h4>License</h4>
+                <p>
+                    By using the dataset, you acknowledge and agree to comply with the <a href="https://www.projectaria.com/datasets/hot3d/license/">HOT3D license agreement</a>.
+                </p>
+            </div>
+
+        </section>
+
+        
+        <!-- Footer-->
+        <footer class="py-3 text-light bg-dark">
+            <div class="container px-5 mt-2 mb-3">
+            <p>
+              <small>Copyright © Meta Platforms, Inc |
+                 <a href="https://opensource.fb.com/legal/privacy/">Privacy</a> |
+                 <a href="https://opensource.fb.com/legal/terms/">Terms</a> |
+                 <a href="https://opensource.fb.com/legal/data-policy/">Data Policy</a> |
+                 <a href="https://opensource.fb.com/legal/cookie-policy/">Cookie Policy</a>
+              </small>
+            </p>
+            </div>
+        </footer>
+
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="js/scripts.js"></script>
+
+<!--         <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+          
+            ga('create', 'UA-84629802-2', 'auto');
+            ga('send', 'pageview');
+        </script> -->
+          
+    </body>
 </html>
