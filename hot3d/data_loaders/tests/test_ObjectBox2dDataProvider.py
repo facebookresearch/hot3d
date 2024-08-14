@@ -69,3 +69,11 @@ class TestObjectBox2dDataProvider(unittest.TestCase):
                 box2d_collection_with_dt.box2d_collection.object_uid_list
             )
             self.assertGreater(len(object_uids_at_query_timestamp), 0)
+
+            data_statistics = provider.get_data_statistics()
+            print(f"data_statistics: {data_statistics}")
+            self.assertEquals(len(data_statistics["num_frames"]), 3)
+            self.assertEquals(data_statistics["num_frames"]["214-1"], 34)
+            self.assertEquals(data_statistics["num_objects"], 6)
+            self.assertEquals(len(data_statistics["stream_ids"]), 3)
+            self.assertEquals(len(data_statistics["object_uids"]), 6)

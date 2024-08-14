@@ -99,11 +99,11 @@ class ObjectBox2dProvider:
 
     def get_data_statistics(self) -> Dict[str, Any]:
         """
-        Returns the stats of the trajectory
+        Returns the stats for Object 2D bounding boxes
         """
         stats = {}
         stats["num_frames"] = {
-            k: sum(v) for k, v in self._sorted_timestamp_ns_list.items()
+            k: len(v) for k, v in self._sorted_timestamp_ns_list.items()
         }
         stats["stream_ids"] = [str(x) for x in self.stream_ids]
         stats["num_objects"] = len(self.object_uids)
