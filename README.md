@@ -1,13 +1,14 @@
 # HOT3D Toolkit
 
-This repository hosts an official toolkit for [HOT3D](https://arxiv.org/pdf/2406.09598), an egocentric dataset for 3D hand and object tracking.
+This repository hosts an official toolkit for [HOT3D](https://facebookresearch.github.io/hot3d/), an egocentric dataset for 3D hand and object tracking.
 
 The toolkit offers:
 
-- An API for downloading and using the [full HOT3D dataset](https://www.projectaria.com/datasets/hot3D/) provided in a [VRS](https://github.com/facebookresearch/vrs)-based format (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
+- An API for downloading and using the full HOT3D dataset provided in a [VRS](https://github.com/facebookresearch/vrs)-based format (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
 - An API for [HOT3D-Clips](https://github.com/facebookresearch/hot3d/tree/main/hot3d/clips) which is a curated HOT3D subset provided in the [Webdataset](https://github.com/webdataset/webdataset) format and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation).
 
 Resources:
+- [HOT3D homepage](https://facebookresearch.github.io/hot3d/)
 - [Download full HOT3D dataset from projectaria.com](https://www.projectaria.com/datasets/hot3D/)
 - [Download HOT3D-Clips from Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d)
 - [Read HOT3D whitepaper](https://arxiv.org/pdf/2406.09598)
