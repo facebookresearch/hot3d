@@ -2,7 +2,7 @@
 
 HOT3D-Clips is a set of curated sub-sequences of the [HOT3D dataset](https://facebookresearch.github.io/hot3d/).
 Each clip has 150 frames (5 seconds) which are all annotated with ground-truth poses of all modeled objects and hands and which passed our visual inspection.
-There are 4117 clips in total, 2969 clips extracted from the training split and 1148 from the test split of HOT3D.
+There are 3832 clips in total, 2804 clips extracted from the training split and 1028 from the test split of HOT3D.
 
 HOT3D-Clips are hosted on [Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation). The full HOT3D dataset is provided in a [VRS](https://github.com/facebookresearch/vrs)-based format on [projectaria.com](https://www.projectaria.com/datasets/hot3D/) (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
 
