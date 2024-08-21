@@ -66,7 +66,7 @@ def vis_clip(
         frame_key = f"{frame_id:06d}"
 
         # Load camera parameters.
-        cameras = clip_util.load_cameras(tar, frame_key)
+        cameras, _ = clip_util.load_cameras(tar, frame_key)
 
         # Available image streams.
         image_streams = sorted(cameras.keys(), key=lambda x: int(x.split("-")[0]))

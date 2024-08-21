@@ -71,10 +71,23 @@ def load_image(
     return imageio.imread(file).astype(dtype)
 
 
+def load_info(tar: Any, frame_key: str) -> Dict[str, Any]:
+    """Loads meta info of the specified frame.
+
+    Args:
+        tar: File handler of an open tar file with clip data.
+        frame_key: Key of the frame from which to load the image.
+    Returns:
+        Dictionary with meta info of the frame.
+    """
+
+    return json.load(tar.extractfile(f"{frame_key}.info.json"))
+
+
 def load_cameras(
     tar: Any,
     frame_key: str,
-) -> Dict[str, camera.CameraModel]:
+) -> Tuple[Dict[str, camera.CameraModel], Dict[str, np.ndarray]]:
     """Loads cameras for all image streams in a specified frame of a clip.
 
     Args:
@@ -87,10 +100,14 @@ def load_cameras(
     cameras_raw = json.load(tar.extractfile(f"{frame_key}.cameras.json"))
 
     cameras = {}
+    Ts_device_from_camera = {}
     for stream_key, camera_raw in cameras_raw.items():
         cameras[stream_key] = camera.from_json(camera_raw)
+        Ts_device_from_camera[stream_key] = se3_from_dict(
+            camera_raw["calibration"]["T_device_from_camera"]
+        )
 
-    return cameras
+    return cameras, Ts_device_from_camera
 
 
 def load_object_annotations(
