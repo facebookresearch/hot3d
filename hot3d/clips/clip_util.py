@@ -179,7 +179,7 @@ def get_hand_meshes(
     hand_shape: HandShapeCollection,
     hand_type: str = "umetrack",
     mano_model: Optional[MANOHandModel] = None,
-) -> Dict[str, trimesh.Trimesh]:
+) -> Dict[HandSide, trimesh.Trimesh]:
     """Provides hand meshes of specified shape and poses.
 
     Args:
@@ -199,6 +199,7 @@ def get_hand_meshes(
 
     meshes: Dict[HandSide, trimesh.Trimesh] = {}
     for hand_side, hand_pose in hand_poses.items():
+        assert mano_model is not None
         _, hand_verts, hand_faces = visualization.get_keypoints_and_mesh(
             hand_pose=hand_pose,
             hand_shape=hand_shape,
@@ -374,3 +375,40 @@ def vis_mask_contours(
     )[0]
 
     return cv2.drawContours(image, contours, -1, color, thickness, cv2.LINE_AA)
+
+
+def encode_binary_mask_rle(mask: np.ndarray) -> Dict[str, Any]:
+    """Encodes a binary mask using Run-Length Encoding (RLE).
+
+    Args:
+        mask: An np.ndarray with the binary mask.
+    Returns:
+        The encoded mask.
+    """
+
+    if mask.dtype != np.uint8:
+        mask = mask.astype(np.uint8)
+
+    pixels = np.concatenate([[0], mask.flatten(), [0]])
+    runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
+    runs[1::2] -= runs[::2]
+
+    return {"height": mask.shape[0], "width": mask.shape[1], "rle": runs}
+
+
+def decode_binary_mask_rle(data: Dict[str, Any]) -> np.ndarray:
+    """Decodes a binary mask that was encoded using `encode_binary_mask_rle`.
+
+    Args:
+        data: RLE-encoded mask (output of `encode_binary_mask_rle`).
+    Returns:
+        The decoded mask represented as an np.ndarray.
+    """
+
+    starts = np.asarray(data["rle"][0:][::2]) - 1
+    ends = starts + np.asarray(data["rle"][1:][::2])
+    mask = np.zeros(data["height"] * data["width"], dtype=np.bool)
+    for lo, hi in zip(starts, ends):
+        mask[lo:hi] = True
+
+    return mask.reshape((data["height"], data["width"]))

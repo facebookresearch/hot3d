@@ -35,6 +35,8 @@ def vis_clip(
     hand_type: str,
     mano_model: Optional[MANOHandModel],
     undistort: bool,
+    vis_amodal_masks: bool,
+    vis_modal_masks: bool,
     output_dir: str,
 ) -> None:
     """Visualizes hand and object models in GT poses for each frame of a clip.
@@ -115,6 +117,11 @@ def vis_clip(
 
             # Visualize object contours.
             if objects is not None:
+
+                masks_vis = None
+                if len(objects) and (vis_amodal_masks or vis_modal_masks):
+                    masks_vis = np.zeros_like(image)
+
                 for instance_list in objects.values():
                     for instance in instance_list:
                         bop_id = int(instance["object_bop_id"])
@@ -139,6 +146,27 @@ def vis_clip(
 
                         # Visualize the object contour on top of the image.
                         image = clip_util.vis_mask_contours(image, mask, (0, 255, 0))
+
+                        # Potentially load object mask.
+                        if vis_amodal_masks or vis_modal_masks:
+                            mask_key = (
+                                "masks_amodal" if vis_amodal_masks else "masks_modal"
+                            )
+                            if stream_key in instance[mask_key]:
+                                mask = clip_util.decode_binary_mask_rle(
+                                    instance[mask_key][stream_key]
+                                )
+                                masks_vis[mask] = 255
+
+                # Potentially visualize object masks.
+                if masks_vis is not None:
+                    image_weight = 0.5
+                    masks_vis = masks_vis.astype(np.float32)
+                    image = (  # pyre-ignore
+                        image_weight * image.astype(np.float32)
+                        + (1.0 - image_weight) * masks_vis
+                    )
+                    image = image.astype(np.uint8)
 
             # Visualize hand contours.
             for hand_mesh in hand_meshes.values():
@@ -196,6 +224,16 @@ def main() -> None:
         help="Type of hand annotations to visualize ('umetrack' or 'mano').",
     )
     parser.add_argument(
+        "--vis_amodal_masks",
+        action="store_true",
+        help="Whether to visualize amodal masks of objects.",
+    )
+    parser.add_argument(
+        "--vis_modal_masks",
+        action="store_true",
+        help="Whether to visualize modal masks of objects.",
+    )
+    parser.add_argument(
         "--clip_start",
         type=int,
         help="ID of the first clip to visualize.",
@@ -214,6 +252,11 @@ def main() -> None:
         required=True,
     )
     args = parser.parse_args()
+
+    if args.vis_amodal_masks and args.vis_modal_masks:
+        raise ValueError(
+            "Only either amodal or modal masks can be visualized at a time."
+        )
 
     # Make sure the output directory exists.
     os.makedirs(args.output_dir, exist_ok=True)
@@ -253,6 +296,8 @@ def main() -> None:
             hand_type=args.hand_type,
             mano_model=mano_model,
             undistort=args.undistort,
+            vis_amodal_masks=args.vis_amodal_masks,
+            vis_modal_masks=args.vis_modal_masks,
             output_dir=args.output_dir,
         )
 

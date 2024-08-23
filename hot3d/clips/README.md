@@ -83,11 +83,10 @@ Files `<FRAME-ID>.objects.json` provide for each annotated object the following:
     - `translation_xyz`: Translation from world to the object.
     - `quaternion_wxyz`: Rotation from world to the object.
 - `boxes_amodal`: A map from a stream ID to an amodal 2D bounding box.
-- `masks_modal` [currently not available]: A map from a stream ID to an modal binary mask.
-- `visibilities_modeled`: A map from a stream ID to the fraction of the projected surface area that is visibile.
-        (reflecting only occlusions by modeled scene elements).
-- `visibilities_full` [currently not available]: A map from a stream ID to the fraction of the projected surface area that is visibile
-    (reflecting occlusions by modeled and unmodeled, such as arms, scene elements).
+- `masks_amodal`: A map from a stream ID to an modal binary mask. These masks were obtained by rendering the 3D object models in the ground-truth poses and removing parts of the masks that are overlapping with the vignette mask, which covers heavily distroted corners of the fisheye images.
+- `masks_modal`: A map from a stream ID to an modal binary mask. These masks were obtained using the SAM2-based approach from Taeyeop Lee (https://github.com/taeyeopl/bop_toolkit_sam2).
+- `visibilities_modeled`: A map from a stream ID to the fraction of the projected surface area that is visibile. These visibility scores reflect only occlusions by modeled scene elements and the vignette mask.
+- `visibilities_predicted`: A map from a stream ID to the fraction of the projected surface area that is visibile. These visibility scores reflect occlusions by modeled and unmodeled (e.g., arms, furniture) scene elements and were obtained using the SAM2-based approach from Taeyeop Lee (https://github.com/taeyeopl/bop_toolkit_sam2).
 
 Files `<FRAME-ID>.hands.json` provide hand parameters:
 
@@ -100,11 +99,8 @@ Files `<FRAME-ID>.hands.json` provide hand parameters:
         - `joint_angles`: 20 floats.
         - `wrist_xform`: 4x4 3D rigid transformation matrix.
     - `boxes_amodal`: A map from a stream ID to an amodal 2D bounding box.
-    - `masks_modal` [currently not available]: A map from a stream ID to an modal binary mask.
     - `visibilities_modeled`: A map from a stream ID to the fraction of the projected surface area that is visibile.
         (reflecting only occlusions by modeled scene elements).
-    - `visibilities_full` [currently not available]: A map from a stream ID to the fraction of the projected surface area that is visibile
-        (reflecting occlusions by modeled and unmodeled, such as arms, scene elements).
 - `right`: As for `left`.
 
 Files `<FRAME-ID>.hand_crops.json` provide hand crop parameters (used in [Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation); a crop camera is saved only if the hand visibility > 0.1):
@@ -152,6 +148,8 @@ Optional arguments:
 - `--mano_model_dir` is a folder with the MANO hand model (needs to be specified if `--hand_type mano`).
 - `--clip_start` and `--clip_end` can be used to specify a range of clips to consider.
 - `--undistort` is a binary flag indicating whether the images should be undistorted (warped from the original fisheye cameras to pinhole cameras; disabled by default).
+- `--vis_amodal_masks` is a binary flag indicating whether to visualize amodal object masks.
+- `--vis_modal_masks` is a binary flag indicating whether to visualize modal object masks.
 
 An example command to visualize Quest3 training clips (`$HOT3DC` is assumed to be a path to [HOT3D-Clips](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d)):
 ```
