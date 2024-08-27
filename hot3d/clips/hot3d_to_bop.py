@@ -7,6 +7,7 @@ import argparse
 import json
 import cv2
 import numpy as np
+from PIL import Image
 import tarfile
 from typing import Any, Dict, List, Optional
 import trimesh
@@ -47,18 +48,6 @@ def main():
     clips_input_dir = os.path.join(args.input_dataset_path, args.split)
     scenes_output_dir = os.path.join(args.output_dataset_path, args.split)
 
-    # Load object models.
-    object_models: Dict[int, trimesh.Trimesh] = {}
-    object_model_filenames = sorted(
-        [p for p in os.listdir(args.object_models_dir) if p.endswith(".glb")]
-    )
-    #for model_filename in object_model_filenames[0:2]:  # TODO delete debug - load all models
-    for model_filename in object_model_filenames:
-        model_path = os.path.join(args.object_models_dir, model_filename)
-        print(f"Loading model: {model_path}")
-        object_id = int(model_filename.split(".glb")[0].split("obj_")[1])
-        object_models[object_id] = clip_util.load_mesh(model_path)
-
     # list all clips names in the dataset
     split_clips = sorted([p for p in os.listdir(clips_input_dir) if p.endswith(".tar")])
 
@@ -70,16 +59,16 @@ def main():
         # Use a Pool of 8 processes
         with multiprocessing.Pool(processes=args.num_threads) as pool:
             # Use imap_unordered to get results as soon as they're ready
-            for _ in pool.imap_unordered(worker, ((clip, clips_input_dir, scenes_output_dir, object_models, args) for clip in split_clips)):
+            for _ in pool.imap_unordered(worker, ((clip, clips_input_dir, scenes_output_dir, args) for clip in split_clips)):
                 pbar.update(1)
 
 
 def worker(args):
-    clip, clips_input_dir, scenes_output_dir, object_models, args = args
-    process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args)
+    clip, clips_input_dir, scenes_output_dir, args = args
+    process_clip(clip, clips_input_dir, scenes_output_dir, args)
 
 
-def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
+def process_clip(clip, clips_input_dir, scenes_output_dir, args):
     # get clip id
     clip_name = clip.split(".")[0].split("-")[1]
 
@@ -191,7 +180,12 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
             # loop with enumerate over all objects in the frame
             for anno_id, obj_key in enumerate(frame_objects):
                 obj_data = frame_objects[obj_key][0]
-                bop_id = int(obj_data["object_bop_id"])
+
+                # check if the object is visible in the current stream - stream id in keys of visibilities_modeled
+                if stream_id not in obj_data["visibilities_modeled"]:
+                    continue
+
+                #bop_id = int(obj_data["object_bop_id"])  # same as obj_key
 
                 # Transformation from the model to the world space.
                 T_world_from_model = clip_util.se3_from_dict(obj_data["T_world_from_object"])
@@ -205,51 +199,54 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
                     "cam_t_m2c": (T_camera_from_model[:3, 3] * 1000).tolist(),
                 }
 
-                # Transformation from the model to the world space.
-                T = clip_util.se3_from_dict(obj_data["T_world_from_object"])
+                #print('frame_id', frame_id, 'anno_id', anno_id, 'stream_id', stream_id, 'obj_key', obj_key)
+                #if frame_id == 8 and anno_id == 1 and stream_id == '1201-2':
+                #    print('break')
 
-                # Vertices in the model space.
-                verts_in_m = object_models[bop_id].vertices
-
-                # Vertices in the world space (can be brought to the camera
-                # space by the inverse of camera_model.T_world_from_eye).
-                verts_in_w = (T[:3, :3] @ verts_in_m.T + T[:3, 3:]).T
-
-                # Render the object model (outputs: rgb, mask, depth).
-                _, mask, _ = rasterizer.rasterize_mesh(
-                    verts=verts_in_w,
-                    faces=object_models[bop_id].faces,
-                    vert_normals=object_models[bop_id].vertex_normals,
-                    camera=camera_model,
-                )
-
-                # if no pixel is one in the mask, skip this object
-                if np.count_nonzero(mask) == 0:
+                # read amodal masks
+                rle_dict = obj_data['masks_amodal'][stream_id]
+                if not rle_dict['rle']:
+                    # if 'rle' is an empty list, continue to the next object
                     continue
+                else:
+                    mask = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
+                    mask = Image.fromarray(mask * 255)
+                    mask = mask.convert("L")
 
-                mask *= 255
+                # read modal mask
+                rle_dict = obj_data['masks_modal'][stream_id]
+                # if 'rle' is an empty list, make an empty mask
+                if not rle_dict['rle']:
+                    mask_visib = Image.new("L", (rle_dict['width'], rle_dict['height']), 0)
+                else:
+                    mask_visib = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
+                    mask_visib = Image.fromarray(mask_visib * 255)
+                    mask_visib = mask_visib.convert("L")
 
                 anno_id = f"{anno_id:06d}"
 
                 # save mask FRAME-ID_ANNO-ID.png
                 mask_path = os.path.join(clip_stream_paths[f"mask_{stream_name}"], frame_key+"_"+anno_id+".png")
                 # save mask
-                cv2.imwrite(mask_path, mask)
-                # TODO for now save mask as mask_visib - change it later after generating the correct mask_visib
+                mask.save(mask_path)
                 # save mask_visib FRAME-ID_ANNO-ID.png
                 mask_visib_path = os.path.join(clip_stream_paths[f"mask_visib_{stream_name}"], frame_key+"_"+anno_id+".png")
                 # save mask_visib
-                cv2.imwrite(mask_visib_path, mask)
+                mask_visib.save(mask_visib_path)
 
                 # add scene_gt_info data
-                ## calculate bbox from mask with cv2 (x, y, width, height
-                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                x, y, w, h = cv2.boundingRect(contours[0])
-                bbox_obj = [x, y, w, h]
-                bbox_visib = bbox_obj  # TODO change to visib mask after getting it for Hot3D
-                px_count_all = cv2.countNonZero(mask)
-                px_count_visib = px_count_all  # TODO change to visib mask after getting it for Hot3D
-                visib_fract = px_count_visib / px_count_all
+                # calculate bbox from mask with cv2 (x, y, width, height)
+                bbox_obj = obj_data['boxes_amodal'][stream_id]
+                bbox_obj = [int(val) for val in bbox_obj]
+                # bbox_visib
+                x_min, y_min, x_max, y_max = mask.getbbox()
+                bbox_visib = [x_min, y_min, x_max - x_min, y_max - y_min]
+                px_count_all = cv2.countNonZero(np.array(mask))
+                px_count_visib = cv2.countNonZero(np.array(mask_visib))
+                # visibile fraction
+                visibilities_modeled = obj_data['visibilities_modeled'][stream_id]
+                visibilities_predicted = obj_data['visibilities_predicted'][stream_id]
+                visib_fract = min(visibilities_modeled, visibilities_predicted)
                 object_frame_scene_gt_info_anno = {
                     "bbox_obj": bbox_obj,
                     "bbox_visib": bbox_visib,
@@ -273,6 +270,36 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, object_models, args):
             json.dump(scene_gt_data[stream_name], f, indent=4)
         with open(clip_stream_paths[f"scene_gt_info_{stream_name}"], "w") as f:
             json.dump(scene_gt_info_data[stream_name], f, indent=4)
+
+
+def custom_rle_to_mask(height, width, rle):
+    """
+    Convert custom RLE (Run-Length Encoding) to a binary mask using vectorized operations.
+
+    Parameters:
+    - height (int): The height of the mask.
+    - width (int): The width of the mask.
+    - rle (list): The custom RLE list [start, length, start, length, ...].
+
+    Returns:
+    - np.ndarray: The binary mask.
+    """
+    # Create an empty mask
+    mask = np.zeros(height * width, dtype=np.uint8)
+
+    # Convert RLE pairs into start and end indices
+    starts = np.array(rle[0::2])
+    lengths = np.array(rle[1::2])
+    ends = starts + lengths
+
+    # Create an array of indices corresponding to the runs
+    run_lengths = np.concatenate([np.arange(start, end) for start, end in zip(starts, ends)])
+
+    # Set those indices in the mask to 1
+    mask[run_lengths] = 1
+
+    # Reshape the flat array into a 2D mask
+    return mask.reshape((height, width))
 
 
 if __name__ == "__main__":
