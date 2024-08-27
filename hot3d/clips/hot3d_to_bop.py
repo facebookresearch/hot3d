@@ -181,80 +181,93 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
 
                 # check if the object is visible in the current stream - stream id in keys of visibilities_modeled
                 if stream_id not in obj_data["visibilities_modeled"]:
-                    continue
-
-                #bop_id = int(obj_data["object_bop_id"])  # same as obj_key
-
-                # Transformation from the model to the world space.
-                T_world_from_model = clip_util.se3_from_dict(obj_data["T_world_from_object"])
-
-                # get object pose in camera frame
-                T_camera_from_model = np.linalg.inv(T_world_from_camera) @ T_world_from_model
-
-                object_frame_scene_gt_anno = {
-                    "obj_id": int(obj_key),
-                    "cam_R_m2c": T_camera_from_model[:3, :3].flatten().tolist(),
-                    "cam_t_m2c": (T_camera_from_model[:3, 3] * 1000).tolist(),
-                }
-
-                # read amodal masks
-                rle_dict = obj_data['masks_amodal'][stream_id]
-                if not rle_dict['rle']:
-                    # if 'rle' is an empty list, continue to the next object
-                    continue
+                    # make dummy translation and rotation of -1 for all values
+                    object_frame_scene_gt_anno = {
+                        "obj_id": int(obj_key),
+                        "cam_R_m2c": [-1, -1, -1, -1, -1, -1, -1, -1, -1],
+                        "cam_t_m2c": [-1, -1, -1],
+                    }
+                    object_frame_scene_gt_info_anno = {
+                        "bbox_obj": [-1, -1, -1, -1],
+                        "bbox_visib": [-1, -1, -1, -1],
+                        "px_count_all": 0,
+                        #"px_count_valid": px_count_all,  # excluded as Hot3D is RGB only - TODO check
+                        "px_count_visib": 0,
+                        "visib_fract": 0,
+                    }
                 else:
-                    mask = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
-                    mask = Image.fromarray(mask * 255)
-                    mask = mask.convert("L")
+                    #bop_id = int(obj_data["object_bop_id"])  # same as obj_key
 
-                # read modal mask
-                rle_dict = obj_data['masks_modal'][stream_id]
-                # if 'rle' is an empty list, make an empty mask
-                if not rle_dict['rle']:
-                    mask_visib = Image.new("L", (rle_dict['width'], rle_dict['height']), 0)
-                else:
-                    mask_visib = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
-                    mask_visib = Image.fromarray(mask_visib * 255)
-                    mask_visib = mask_visib.convert("L")
+                    # Transformation from the model to the world space.
+                    T_world_from_model = clip_util.se3_from_dict(obj_data["T_world_from_object"])
 
-                anno_id = f"{anno_id:06d}"
+                    # get object pose in camera frame
+                    T_camera_from_model = np.linalg.inv(T_world_from_camera) @ T_world_from_model
 
-                # save mask FRAME-ID_ANNO-ID.png
-                mask_path = os.path.join(clip_stream_paths[f"mask_{stream_name}"], frame_key+"_"+anno_id+".png")
-                # save mask
-                mask.save(mask_path)
-                # save mask_visib FRAME-ID_ANNO-ID.png
-                mask_visib_path = os.path.join(clip_stream_paths[f"mask_visib_{stream_name}"], frame_key+"_"+anno_id+".png")
-                # save mask_visib
-                mask_visib.save(mask_visib_path)
+                    object_frame_scene_gt_anno = {
+                        "obj_id": int(obj_key),
+                        "cam_R_m2c": T_camera_from_model[:3, :3].flatten().tolist(),
+                        "cam_t_m2c": (T_camera_from_model[:3, 3] * 1000).tolist(),
+                    }
 
-                # bbox_visib
-                x_min, y_min, x_max, y_max = mask.getbbox()
-                bbox_visib = [x_min, y_min, x_max - x_min, y_max - y_min]
-                px_count_all = cv2.countNonZero(np.array(mask))
-                px_count_visib = cv2.countNonZero(np.array(mask_visib))
-                # visibile fraction
-                visibilities_modeled = obj_data['visibilities_modeled'][stream_id]
-                visibilities_predicted = obj_data['visibilities_predicted'][stream_id]
-                visib_fract = min(visibilities_modeled, visibilities_predicted)
+                    # read amodal masks
+                    rle_dict = obj_data['masks_amodal'][stream_id]
+                    if not rle_dict['rle']:
+                        # if 'rle' is an empty list, continue to the next object
+                        continue
+                    else:
+                        mask = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
+                        mask = Image.fromarray(mask * 255)
+                        mask = mask.convert("L")
 
-                # add scene_gt_info data
-                # calculate bbox from mask with cv2 (x, y, width, height)
-                bbox_obj = [-1, -1, -1, -1]
-                if px_count_visib > 0:
-                    ys, xs = np.asarray(mask_visib).nonzero()
-                    im_size = mask_visib.size
-                    bbox_obj = misc.calc_2d_bbox(xs, ys, im_size)
-                    bbox_obj = [int(x) for x in bbox_obj]
+                    # read modal mask
+                    rle_dict = obj_data['masks_modal'][stream_id]
+                    # if 'rle' is an empty list, make an empty mask
+                    if not rle_dict['rle']:
+                        mask_visib = Image.new("L", (rle_dict['width'], rle_dict['height']), 0)
+                    else:
+                        mask_visib = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
+                        mask_visib = Image.fromarray(mask_visib * 255)
+                        mask_visib = mask_visib.convert("L")
 
-                object_frame_scene_gt_info_anno = {
-                    "bbox_obj": bbox_obj,
-                    "bbox_visib": bbox_visib,
-                    "px_count_all": px_count_all,
-                    #"px_count_valid": px_count_all,  # excluded as Hot3D is RGB only - TODO check
-                    "px_count_visib": px_count_visib,
-                    "visib_fract": visib_fract,
-                }
+                    anno_id = f"{anno_id:06d}"
+
+                    # save mask FRAME-ID_ANNO-ID.png
+                    mask_path = os.path.join(clip_stream_paths[f"mask_{stream_name}"], frame_key+"_"+anno_id+".png")
+                    # save mask
+                    mask.save(mask_path)
+                    # save mask_visib FRAME-ID_ANNO-ID.png
+                    mask_visib_path = os.path.join(clip_stream_paths[f"mask_visib_{stream_name}"], frame_key+"_"+anno_id+".png")
+                    # save mask_visib
+                    mask_visib.save(mask_visib_path)
+
+                    # bbox_visib
+                    x_min, y_min, x_max, y_max = mask.getbbox()
+                    bbox_visib = [x_min, y_min, x_max - x_min, y_max - y_min]
+                    px_count_all = cv2.countNonZero(np.array(mask))
+                    px_count_visib = cv2.countNonZero(np.array(mask_visib))
+                    # visibile fraction
+                    visibilities_modeled = obj_data['visibilities_modeled'][stream_id]
+                    visibilities_predicted = obj_data['visibilities_predicted'][stream_id]
+                    visib_fract = min(visibilities_modeled, visibilities_predicted)
+
+                    # add scene_gt_info data
+                    # calculate bbox from mask with cv2 (x, y, width, height)
+                    bbox_obj = [-1, -1, -1, -1]
+                    if px_count_visib > 0:
+                        ys, xs = np.asarray(mask_visib).nonzero()
+                        im_size = mask_visib.size
+                        bbox_obj = misc.calc_2d_bbox(xs, ys, im_size)
+                        bbox_obj = [int(x) for x in bbox_obj]
+
+                    object_frame_scene_gt_info_anno = {
+                        "bbox_obj": bbox_obj,
+                        "bbox_visib": bbox_visib,
+                        "px_count_all": px_count_all,
+                        #"px_count_valid": px_count_all,  # excluded as Hot3D is RGB only - TODO check
+                        "px_count_visib": px_count_visib,
+                        "visib_fract": visib_fract,
+                    }
 
                 frame_scene_gt_data.append(object_frame_scene_gt_anno)
                 frame_scene_gt_info_data.append(object_frame_scene_gt_info_anno)
