@@ -52,7 +52,7 @@ def main():
     split_clips = sorted([p for p in os.listdir(clips_input_dir) if p.endswith(".tar")])
 
     # create output directory
-    os.makedirs(scenes_output_dir, exist_ok=True)  # TODO change exist_ok to False
+    os.makedirs(scenes_output_dir, exist_ok=False)
 
     # Progress bar setup
     with tqdm(total=len(split_clips), desc="Processing clips") as pbar:
@@ -124,7 +124,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
         ## read FRAME_ID.objects.json
         frame_objects = clip_util.load_object_annotations(tar, frame_key)
 
-        # TODO can i read this from the camera model?
         # read calibration json as it is
         camera_json_file_name = f"{frame_id:06d}.cameras.json"
         camera_json_file = tar.extractfile(camera_json_file_name)
@@ -153,7 +152,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
             # get T_world_from_camera
             T_world_from_camera = frame_camera[stream_id].T_world_from_eye
 
-            # TODO check that inverting this homogenous transformation is correct
             T_world_to_camera = np.linalg.inv(T_world_from_camera)
 
             # get camera parameters
@@ -161,7 +159,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
 
             # add frame scene_camera data
             scene_camera_data[stream_name][int(frame_id)] = {
-                # TODO change this after we agree on the final format
                 "cam_model": calibration,
                 "device": frame_info_data["device"],
                 "image_timestamps_ns": frame_info_data["image_timestamps_ns"][stream_id],
@@ -173,7 +170,7 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
             }
 
             # Camera parameters of the current image.
-            camera_model = frame_camera[stream_id]
+            #camera_model = frame_camera[stream_id]
 
             frame_scene_gt_data = []
             frame_scene_gt_info_data = []
@@ -198,10 +195,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                     "cam_R_m2c": T_camera_from_model[:3, :3].flatten().tolist(),
                     "cam_t_m2c": (T_camera_from_model[:3, 3] * 1000).tolist(),
                 }
-
-                #print('frame_id', frame_id, 'anno_id', anno_id, 'stream_id', stream_id, 'obj_key', obj_key)
-                #if frame_id == 8 and anno_id == 1 and stream_id == '1201-2':
-                #    print('break')
 
                 # read amodal masks
                 rle_dict = obj_data['masks_amodal'][stream_id]
@@ -251,7 +244,7 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                     "bbox_obj": bbox_obj,
                     "bbox_visib": bbox_visib,
                     "px_count_all": px_count_all,
-                    "px_count_valid": px_count_all,  # excluded as Hot3D is RGB only
+                    #"px_count_valid": px_count_all,  # excluded as Hot3D is RGB only - TODO check
                     "px_count_visib": px_count_visib,
                     "visib_fract": visib_fract,
                 }
