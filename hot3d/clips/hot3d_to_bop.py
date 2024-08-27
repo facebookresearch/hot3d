@@ -14,6 +14,7 @@ import trimesh
 from tqdm import tqdm
 from scipy.spatial.transform import Rotation as R
 import multiprocessing
+from bop_toolkit_lib import misc
 
 import clip_util
 from hand_tracking_toolkit import rasterizer
@@ -227,10 +228,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                 # save mask_visib
                 mask_visib.save(mask_visib_path)
 
-                # add scene_gt_info data
-                # calculate bbox from mask with cv2 (x, y, width, height)
-                bbox_obj = obj_data['boxes_amodal'][stream_id]
-                bbox_obj = [int(val) for val in bbox_obj]
                 # bbox_visib
                 x_min, y_min, x_max, y_max = mask.getbbox()
                 bbox_visib = [x_min, y_min, x_max - x_min, y_max - y_min]
@@ -240,6 +237,16 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                 visibilities_modeled = obj_data['visibilities_modeled'][stream_id]
                 visibilities_predicted = obj_data['visibilities_predicted'][stream_id]
                 visib_fract = min(visibilities_modeled, visibilities_predicted)
+
+                # add scene_gt_info data
+                # calculate bbox from mask with cv2 (x, y, width, height)
+                bbox_obj = [-1, -1, -1, -1]
+                if px_count_visib > 0:
+                    ys, xs = np.asarray(mask_visib).nonzero()
+                    im_size = mask_visib.size
+                    bbox_obj = misc.calc_2d_bbox(xs, ys, im_size)
+                    bbox_obj = [int(x) for x in bbox_obj]
+
                 object_frame_scene_gt_info_anno = {
                     "bbox_obj": bbox_obj,
                     "bbox_visib": bbox_visib,
