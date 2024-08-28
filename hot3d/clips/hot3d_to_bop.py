@@ -195,6 +195,11 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                         "px_count_visib": 0,
                         "visib_fract": 0,
                     }
+                    # make an empty mask and mask_visib
+                    width = frame_camera_data[stream_id]["calibration"]["image_width"]
+                    height = frame_camera_data[stream_id]["calibration"]["image_height"]
+                    mask = Image.new("L", (width, height), 0)
+                    mask_visib = Image.new("L", (width, height), 0)
                 else:
                     #bop_id = int(obj_data["object_bop_id"])  # same as obj_key
 
@@ -230,18 +235,6 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                         mask_visib = Image.fromarray(mask_visib * 255)
                         mask_visib = mask_visib.convert("L")
 
-                    anno_id = f"{anno_id:06d}"
-
-                    # save mask FRAME-ID_ANNO-ID.png
-                    mask_path = os.path.join(clip_stream_paths[f"mask_{stream_name}"], frame_key+"_"+anno_id+".png")
-                    # save mask
-                    mask.save(mask_path)
-                    # save mask_visib FRAME-ID_ANNO-ID.png
-                    mask_visib_path = os.path.join(clip_stream_paths[f"mask_visib_{stream_name}"], frame_key+"_"+anno_id+".png")
-                    # save mask_visib
-                    mask_visib.save(mask_visib_path)
-
-
                     px_count_all = cv2.countNonZero(np.array(mask))
                     px_count_visib = cv2.countNonZero(np.array(mask_visib))
                     # visibile fraction
@@ -269,6 +262,16 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                         "px_count_visib": px_count_visib,
                         "visib_fract": visib_fract,
                     }
+
+                anno_id = f"{anno_id:06d}"
+                # save mask FRAME-ID_ANNO-ID.png
+                mask_path = os.path.join(clip_stream_paths[f"mask_{stream_name}"], frame_key+"_"+anno_id+".png")
+                # save mask
+                mask.save(mask_path)
+                # save mask_visib FRAME-ID_ANNO-ID.png
+                mask_visib_path = os.path.join(clip_stream_paths[f"mask_visib_{stream_name}"], frame_key+"_"+anno_id+".png")
+                # save mask_visib
+                mask_visib.save(mask_visib_path)
 
                 frame_scene_gt_data.append(object_frame_scene_gt_anno)
                 frame_scene_gt_info_data.append(object_frame_scene_gt_info_anno)
