@@ -241,9 +241,7 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                     # save mask_visib
                     mask_visib.save(mask_visib_path)
 
-                    # bbox_visib
-                    x_min, y_min, x_max, y_max = mask.getbbox()
-                    bbox_visib = [x_min, y_min, x_max - x_min, y_max - y_min]
+
                     px_count_all = cv2.countNonZero(np.array(mask))
                     px_count_visib = cv2.countNonZero(np.array(mask_visib))
                     # visibile fraction
@@ -251,15 +249,18 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                     visibilities_predicted = obj_data['visibilities_predicted'][stream_id]
                     visib_fract = min(visibilities_modeled, visibilities_predicted)
 
-                    # add scene_gt_info data
-                    # calculate bbox from mask with cv2 (x, y, width, height)
-                    bbox_obj = [-1, -1, -1, -1]
+                    bbox_obj = obj_data['boxes_amodal'][stream_id]
+                    # change bbox fro xyxy to xywh
+                    bbox_obj = [bbox_obj[0], bbox_obj[1], bbox_obj[2]-bbox_obj[0], bbox_obj[3]-bbox_obj[1]]
+                    bbox_obj = [int(val) for val in bbox_obj]
+                    # bbox_visib
                     if px_count_visib > 0:
                         ys, xs = np.asarray(mask_visib).nonzero()
                         im_size = mask_visib.size
-                        bbox_obj = misc.calc_2d_bbox(xs, ys, im_size)
-                        bbox_obj = [int(x) for x in bbox_obj]
+                        bbox_visib = misc.calc_2d_bbox(xs, ys, im_size)
+                        bbox_visib = [int(x) for x in bbox_visib]
 
+                    # add scene_gt_info data
                     object_frame_scene_gt_info_anno = {
                         "bbox_obj": bbox_obj,
                         "bbox_visib": bbox_visib,
