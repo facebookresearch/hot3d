@@ -41,8 +41,30 @@ def is_float(x: Any) -> bool:
         return False
 
 
+def is_int(x: Any) -> bool:
+    """
+    Function checks if the input is convertible to int
+    """
+    if x is None:
+        return False
+    if len(x) == 0:
+        return False
+    try:
+        int(x)
+        return True
+    except ValueError:
+        return False
+
+
 def float_or_none(x: Any) -> Optional[float]:
     """
     Function returns a float if x is convertible to float, otherwise None
     """
     return float(x) if is_float(x) else None
+
+
+def int_or_none(x: Any) -> Optional[int]:
+    """
+    Function returns a int if x is convertible to int, otherwise None
+    """
+    return int(x) if is_int(x) else None
