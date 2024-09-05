@@ -23,20 +23,14 @@ import torch
 import trimesh
 
 # HT toolkit (https://github.com/facebookresearch/hand_tracking_toolkit)
-from nimble.opensource.hand_tracking_toolkit.hand_tracking_toolkit import (
-    camera,
-    math_utils,
-    visualization,
-)
-from nimble.opensource.hand_tracking_toolkit.hand_tracking_toolkit.dataset import (
+from hand_tracking_toolkit import camera, math_utils, visualization
+from hand_tracking_toolkit.dataset import (
     decode_hand_pose,
     HandShapeCollection,
     HandSide,
 )
-from nimble.opensource.hand_tracking_toolkit.hand_tracking_toolkit.hand_models.mano_hand_model import (
-    MANOHandModel,
-)
-from nimble.opensource.hand_tracking_toolkit.hand_tracking_toolkit.hand_models.umetrack_hand_model import (
+from hand_tracking_toolkit.hand_models.mano_hand_model import MANOHandModel
+from hand_tracking_toolkit.hand_models.umetrack_hand_model import (
     from_json as from_umetrack_hand_model_json,
 )
 
