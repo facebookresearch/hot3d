@@ -1,3 +1,6 @@
+"""
+This script converts the object's eval models from the original GLT format used in Hot3D to the PLY format as in the standard BOP format.
+"""
 
 import glob
 import os
@@ -7,13 +10,13 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gltf_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_eval")
-    parser.add_argument("--output_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_eval_bop")
+    parser.add_argument("--input-gltf-dir", required=True, type=str)
+    parser.add_argument("--output-bop-dir", required=True, type=str)
     args = parser.parse_args()
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(args.output_bop_dir, exist_ok=True)
 
-    mesh_in_paths = sorted(glob.glob(f"{args.gltf_dir}/*.glb"))
+    mesh_in_paths = sorted(glob.glob(f"{args.input_gltf_dir}/*.glb"))
 
     for mesh_in_path in mesh_in_paths:
         print(f"src: {mesh_in_path}")
@@ -23,7 +26,7 @@ def main():
         mesh.vertices *= 1000.0
 
         # save the mesh as a PLY file ascii format
-        mesh_out_path = os.path.join(args.output_dir, os.path.basename(mesh_in_path).replace(".glb", ".ply"))
+        mesh_out_path = os.path.join(args.output_bop_dir, os.path.basename(mesh_in_path).replace(".glb", ".ply"))
         print(f"dst: {mesh_out_path}")
         ply_file = trimesh.exchange.ply.export_ply(mesh, encoding="ascii")
         with open(mesh_out_path, "wb") as f:

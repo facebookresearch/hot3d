@@ -1,5 +1,5 @@
 """
-This script converts the model from the original GLT format used in Hot3D to the PLY format as in the standard BOP format.
+This script converts the object's models from the original GLTF format used in Hot3D to the PLY format as in the standard BOP format.
 """
 
 import trimesh
@@ -12,19 +12,19 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     # add arg gltf dir and output dir
-    parser.add_argument("--gltf_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models")
-    parser.add_argument("--output_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_bop")
+    parser.add_argument("--input-gltf-dir", required=True, type=str)
+    parser.add_argument("--output-bop-dir", required=True, type=str)
 
     args = parser.parse_args()
 
-    # make the output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=True)
+    # make the output directory
+    os.makedirs(args.output_bop_dir, exist_ok=False)
 
-    for gltf_filename in os.listdir(args.gltf_dir):
+    for gltf_filename in os.listdir(args.input_gltf_dir):
         if gltf_filename.endswith(".glb"):
-            gltf_filepath = os.path.join(args.gltf_dir, gltf_filename)
-            ply_filepath = os.path.join(args.output_dir , gltf_filename.replace(".glb", ".ply"))
-            texture_filepath = os.path.join(args.output_dir , gltf_filename.replace(".glb", ".png"))
+            gltf_filepath = os.path.join(args.input_gltf_dir, gltf_filename)
+            ply_filepath = os.path.join(args.output_bop_dir , gltf_filename.replace(".glb", ".ply"))
+            texture_filepath = os.path.join(args.output_bop_dir , gltf_filename.replace(".glb", ".png"))
 
             # Save mesh as PLY and texture as PNG
             save_mesh_as_ply_with_uv_and_texture(gltf_filepath, ply_filepath, texture_filepath)

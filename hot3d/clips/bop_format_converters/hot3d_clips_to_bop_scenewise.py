@@ -1,5 +1,8 @@
 """
-This script converts the Hot3D-Clips dataset used for the BOP challenge 2024 to the standard BOP format
+This script converts the Hot3D-Clips dataset used for the BOP challenge to the BOP format.
+NOTE: the BOP format was updated from its classical format to a new format.
+      The classical format had one main modality (rgb or gray) and depth.
+      The new format can have multiple modalities (rgb, gray1, gray2) and no depth.
 """
 
 import os
@@ -16,38 +19,40 @@ from scipy.spatial.transform import Rotation as R
 import multiprocessing
 from bop_toolkit_lib import misc
 
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
 import clip_util
-from hand_tracking_toolkit import rasterizer
 
 
 def main():
     # setup args
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-dataset_path", type=str)
+    parser.add_argument("--hot3d-dataset-path", required=True ,type=str)
     #parser.add_argument("--dataset_path", type=str, required=True)
     # BOP dataset split name
-    parser.add_argument("--split", type=str)
+    parser.add_argument("--split", required=True, type=str)
     # Quest3 or Aria
-    parser.add_argument("--dataset", type=str)
+    parser.add_argument("--dataset-type", required=True, type=str, help="quest3 or aria")
     # output directory
-    parser.add_argument("--output_dataset_path", type=str)
+    parser.add_argument("--output-bop-path", required=True, type=str)
     # object models directory
-    parser.add_argument("--object_models_dir", type=str)
+    parser.add_argument("--object-models-dir", required=True, type=str)
     # number of threads
-    parser.add_argument("--num_threads", type=int, default=4)
+    parser.add_argument("--num-threads", type=int, default=4)
 
     args = parser.parse_args()
 
-    if args.dataset == "quest3":
+    if args.dataset_type == "quest3":
         args.camera_streams_id = ["1201-1", "1201-2"]
         args.camera_streams_names = ["gray1", "gray2"]
-    elif args.dataset == "aria":
+    elif args.dataset_type == "aria":
         args.camera_streams_id = ["214-1", "1201-1", "1201-2"]
         args.camera_streams_names = ["rgb", "gray1", "gray2"]
 
     # paths
-    clips_input_dir = os.path.join(args.input_dataset_path, args.split)
-    scenes_output_dir = os.path.join(args.output_dataset_path, args.split)
+    clips_input_dir = os.path.join(args.hot3d_dataset_path, args.split)
+    scenes_output_dir = os.path.join(args.output_bop_path, args.split)
 
     # list all clips names in the dataset
     split_clips = sorted([p for p in os.listdir(clips_input_dir) if p.endswith(".tar")])
