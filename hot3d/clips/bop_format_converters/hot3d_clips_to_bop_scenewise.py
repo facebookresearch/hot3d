@@ -23,16 +23,16 @@ from hand_tracking_toolkit import rasterizer
 def main():
     # setup args
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-dataset_path", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/")
+    parser.add_argument("--input-dataset_path", type=str)
     #parser.add_argument("--dataset_path", type=str, required=True)
     # BOP dataset split name
-    parser.add_argument("--split", type=str, default="train_aria_subsample")
+    parser.add_argument("--split", type=str)
     # Quest3 or Aria
-    parser.add_argument("--dataset", type=str, default="aria")
+    parser.add_argument("--dataset", type=str)
     # output directory
-    parser.add_argument("--output_dataset_path", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/train_aria_subsample_bop")
+    parser.add_argument("--output_dataset_path", type=str)
     # object models directory
-    parser.add_argument("--object_models_dir", type=str, default="/media/gouda/ssd_data/datasets/hot3d/hot3d/object_models_eval")
+    parser.add_argument("--object_models_dir", type=str)
     # number of threads
     parser.add_argument("--num_threads", type=int, default=4)
 

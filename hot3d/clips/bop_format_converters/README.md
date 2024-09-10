@@ -1,0 +1,1 @@
+# Scripts to convert HOT3D dataset from its native format to the BOP format.
