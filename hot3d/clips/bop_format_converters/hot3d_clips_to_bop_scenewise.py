@@ -1,3 +1,17 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 This script converts the Hot3D-Clips dataset used for the BOP challenge to the BOP format.
 NOTE: the BOP format was updated from its classical format to a new format.
@@ -29,26 +43,26 @@ def main():
     # setup args
     parser = argparse.ArgumentParser()
     parser.add_argument("--hot3d-dataset-path", required=True ,type=str)
-    #parser.add_argument("--dataset_path", type=str, required=True)
     # BOP dataset split name
     parser.add_argument("--split", required=True, type=str)
-    # Quest3 or Aria
-    parser.add_argument("--dataset-type", required=True, type=str, help="quest3 or aria")
     # output directory
     parser.add_argument("--output-bop-path", required=True, type=str)
-    # object models directory
-    parser.add_argument("--object-models-dir", required=True, type=str)
     # number of threads
     parser.add_argument("--num-threads", type=int, default=4)
 
     args = parser.parse_args()
 
-    if args.dataset_type == "quest3":
+    # if split contains "quest3"
+    if "quest3" in args.split:
         args.camera_streams_id = ["1201-1", "1201-2"]
         args.camera_streams_names = ["gray1", "gray2"]
-    elif args.dataset_type == "aria":
+    elif "aria" in args.split:
         args.camera_streams_id = ["214-1", "1201-1", "1201-2"]
         args.camera_streams_names = ["rgb", "gray1", "gray2"]
+    else:
+        print("Split is neither quest3 nor aria.\n"
+              "There are only 4 split type in Hot3D: quest3_train, quest3_test, aria_train, aria_test")
+        exit()
 
     # paths
     clips_input_dir = os.path.join(args.hot3d_dataset_path, args.split)
@@ -184,8 +198,12 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
             for anno_id, obj_key in enumerate(frame_objects):
                 obj_data = frame_objects[obj_key][0]
 
-                # check if the object is visible in the current stream - stream id in keys of visibilities_modeled
-                if stream_id not in obj_data["visibilities_modeled"]:
+                # set objects that are not in the current frame scope to -1 (they probably are visible in other frames)
+                # check this by 2 cases
+                # 1) check if the object is visible in the current stream - stream id in keys of visibilities_modeled
+                # 2) if the RLE mask (list) is empty - this happens with objects with very low visibility (< 0.001)
+                if stream_id not in obj_data["visibilities_modeled"] \
+                        or not obj_data["masks_amodal"][stream_id]["rle"]:
                     # make dummy translation and rotation of -1 for all values
                     object_frame_scene_gt_anno = {
                         "obj_id": int(obj_key),
@@ -224,7 +242,11 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
                     rle_dict = obj_data['masks_amodal'][stream_id]
                     if not rle_dict['rle']:
                         # if 'rle' is an empty list, continue to the next object
-                        continue
+                        print("RLE mask is empty!",
+                              "For scene_id:{}, frame_id: {}, obj_id: {}.".format(clip_name, frame_id, obj_key),
+                              "This case shouldn't happen. Maybe that is an edge case That is not covered here.",
+                              "The process will exit.")
+                        exit()
                     else:
                         mask = custom_rle_to_mask(rle_dict['height'], rle_dict['width'], rle_dict['rle'])
                         mask = Image.fromarray(mask * 255)

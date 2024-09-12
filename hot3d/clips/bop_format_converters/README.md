@@ -40,14 +40,12 @@ To convert HOT3D clips to BOP format, run the following command:
 
 Parameters:
 - --split: Options are "train_aria", "train_quest3", "test_aria", or "test_quest3"
-- --dataset-type: Specify either "quest3" or "aria"
 - --num-threads: Optional, with a default of 4. You can use 4 or 8 threads for better performance.
 
 ```bash
-python hot3d_clips_to_bop_scenewise.py --hot3d-dataset-path $HOT3D_DIR \
+python hot3d_clips_to_bop_scenewise.py \
+  --hot3d-dataset-path $HOT3D_DIR \
   --split <SPLIT_NAME> \
-  --dataset-type <DATASET_TYPE> \
   --output-bop-path $BOP_DIR \
-  --object-models-dir $BOP_DIR/models_eval \
   --num-threads <NUM_THREADS>
 ```
