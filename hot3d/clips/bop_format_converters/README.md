@@ -28,8 +28,8 @@ python hot3d_models_eval_to_bop.py --input-gltf-dir $HOT3D_DIR/object_models_eva
 Copy the models info from both models and models_eval to the same directory:
 
 ```bash
-cp $HOT3D_DIR/object_models/models_info.json $BOP_DIR/models/models_info.json
-cp $HOT3D_DIR/object_models_eval/models_info.json $BOP_DIR/models_eval/models_info.json
+cp $HOT3D_DIR/object_models/models_info.json $HOT3D_DIR/models/models_info.json
+cp $HOT3D_DIR/object_models_eval/models_info.json $HOT3D_DIR/models_eval/models_info.json
 ```
 
 ### Convert HOT3D clips to BOP format
