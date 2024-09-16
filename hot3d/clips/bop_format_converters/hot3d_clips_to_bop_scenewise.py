@@ -45,8 +45,6 @@ def main():
     parser.add_argument("--hot3d-dataset-path", required=True ,type=str)
     # BOP dataset split name
     parser.add_argument("--split", required=True, type=str)
-    # output directory
-    parser.add_argument("--output-bop-path", required=True, type=str)
     # number of threads
     parser.add_argument("--num-threads", type=int, default=4)
 
@@ -61,12 +59,12 @@ def main():
         args.camera_streams_names = ["rgb", "gray1", "gray2"]
     else:
         print("Split is neither quest3 nor aria.\n"
-              "There are only 4 split type in Hot3D: quest3_train, quest3_test, aria_train, aria_test")
+              "There are only 4 split type in Hot3D: train_quest3, test_quest3, train_aria, test_aria.")
         exit()
 
     # paths
     clips_input_dir = os.path.join(args.hot3d_dataset_path, args.split)
-    scenes_output_dir = os.path.join(args.output_bop_path, args.split)
+    scenes_output_dir = os.path.join(args.hot3d_dataset_path, args.split+"_scenewise")
 
     # list all clips names in the dataset
     split_clips = sorted([p for p in os.listdir(clips_input_dir) if p.endswith(".tar")])

@@ -5,12 +5,10 @@
 
 Before running the scripts, set the following environment variables:
 
-- `HOT3D_DIR`: Path to the HOT3D dataset directory
-- `BOP_DIR`: Path to the output BOP directory
+- `HOT3D_DIR`: Path to the HOT3D dataset directory. Converted data will be saved to the same folder.
 
 ```bash
 export HOT3D_DIR=<PATH_TO_HOT3D_DATASET>
-export BOP_DIR=<PATH_TO_OUTPUT_BOP>
 ```
 
 ### Convert the object models from HOT3D format to BOP format
@@ -18,13 +16,13 @@ export BOP_DIR=<PATH_TO_OUTPUT_BOP>
 To convert (full) models:
 
 ```bash
-python hot3d_models_to_bop.py --input-gltf-dir $HOT3D_DIR/object_models --output-bop-dir $BOP_DIR/models
+python hot3d_models_to_bop.py --input-gltf-dir $HOT3D_DIR/object_models --output-bop-dir $HOT3D_DIR/models
 ```
 
 To convert eval models:
 
 ```bash
-python hot3d_models_eval_to_bop.py --input-gltf-dir $HOT3D_DIR/object_models_eval --output-bop-dir $BOP_DIR/models_eval
+python hot3d_models_eval_to_bop.py --input-gltf-dir $HOT3D_DIR/object_models_eval --output-bop-dir $HOT3D_DIR/models_eval
 ```
 
 Copy the models info from both models and models_eval to the same directory:
@@ -43,9 +41,9 @@ Parameters:
 - --num-threads: Optional, with a default of 4. You can use 4 or 8 threads for better performance.
 
 ```bash
+# converted data to be saved to $HOT3D_DIR/<SPLIT_NAME>_scenewise
 python hot3d_clips_to_bop_scenewise.py \
   --hot3d-dataset-path $HOT3D_DIR \
   --split <SPLIT_NAME> \
-  --output-bop-path $BOP_DIR \
   --num-threads <NUM_THREADS>
 ```
