@@ -71,6 +71,6 @@ class TestHandBox2dDataProvider(unittest.TestCase):
 
             data_statistics = provider.get_data_statistics()
             print(f"data_statistics: {data_statistics}")
-            self.assertEquals(len(data_statistics["num_frames"]), 3)
-            self.assertEquals(data_statistics["num_frames"]["214-1"], 34)
-            self.assertEquals(len(data_statistics["stream_ids"]), 3)
+            self.assertEqual(len(data_statistics["num_frames"]), 3)
+            self.assertEqual(data_statistics["num_frames"]["214-1"], 34)
+            self.assertEqual(len(data_statistics["stream_ids"]), 3)
