@@ -83,7 +83,6 @@ def execute_rerun(
     fail_on_missing_data: bool,
     hand_type: str,
 ):
-
     if not os.path.exists(sequence_folder):
         raise RuntimeError(f"Sequence folder {sequence_folder} does not exist")
     if not os.path.exists(object_library_folder):
@@ -140,7 +139,6 @@ def execute_rerun(
     #
     # Loop over the timestamps of the sequence and visualize corresponding data
     for timestamp in tqdm(timestamps[timestamps_slice]):
-
         rr.set_time_nanos("synchronization_time", int(timestamp))
         rr.set_time_sequence("timestamp", timestamp)
 

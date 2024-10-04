@@ -23,7 +23,6 @@ from projectaria_tools.core.stream_id import StreamId  # @manual
 
 
 try:
-
     data_path = Path(
         importlib.resources.files(__package__).joinpath(
             "test_data/",

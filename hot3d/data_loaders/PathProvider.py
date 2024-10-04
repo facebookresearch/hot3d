@@ -80,7 +80,6 @@ class SequenceDatasetPathsBase:
 class Hot3dDataPathProvider(object):
     @staticmethod
     def fromRecordingFolder(recording_instance_folderpath) -> SequenceDatasetPathsBase:
-
         metadata_filepath = os.path.join(recording_instance_folderpath, "metadata.json")
         metadata_json = load_json(metadata_filepath)
         headset = Headset[metadata_json["headset"]]

@@ -66,13 +66,11 @@ from projectaria_tools.utils.rerun_helpers import (  # @manual
 
 
 class Hot3DVisualizer:
-
     def __init__(
         self,
         hot3d_data_provider: Hot3dDataProvider,
         hand_type: HandType = HandType.Umetrack,
     ) -> None:
-
         self._hot3d_data_provider = hot3d_data_provider
         # Device calibration and Image stream data
         self._device_data_provider = hot3d_data_provider.device_data_provider
@@ -329,7 +327,6 @@ class Hot3DVisualizer:
             ## Eye Gaze image reprojection
             #
             if self._hot3d_data_provider.get_device_type() is Headset.Aria:
-
                 # We are showing EyeGaze reprojection only on the RGB image stream
                 if stream_id != StreamId("214-1"):
                     continue
@@ -337,7 +334,6 @@ class Hot3DVisualizer:
                 # Reproject EyeGaze for raw and pinhole images
                 camera_configurations = [FISHEYE624, LINEAR]
                 for camera_model in camera_configurations:
-
                     eye_gaze_reprojection_data = (
                         self._device_data_provider.get_eye_gaze_in_camera(
                             stream_id, timestamp_ns, camera_model=camera_model
@@ -365,9 +361,7 @@ class Hot3DVisualizer:
 
         # Log 3D eye gaze
         if aria_eye_gaze_data is not None:
-            T_device_CPF = (
-                self._device_data_provider.get_device_calibration().get_transform_device_cpf()
-            )
+            T_device_CPF = self._device_data_provider.get_device_calibration().get_transform_device_cpf()
             # Compute eye_gaze vector at depth_m (30cm for a proxy 3D vector to display)
             gaze_vector_in_cpf = get_eyegaze_point_at_depth(
                 aria_eye_gaze_data.yaw, aria_eye_gaze_data.pitch, depth_m=0.3
@@ -431,7 +425,6 @@ class Hot3DVisualizer:
         hand_pose_collection = hand_poses_with_dt.pose3d_collection
 
         for hand_pose_data in hand_pose_collection.poses.values():
-
             if hand_pose_data.is_left_hand():
                 logged_left_hand_data = True
             elif hand_pose_data.is_right_hand():
@@ -510,7 +503,6 @@ class Hot3DVisualizer:
             object_uid,
             object_pose3d,
         ) in objects_pose3d_collection.poses.items():
-
             object_name = object_library.object_id_to_name_dict[object_uid]
             object_name = object_name + "_" + str(object_uid)
             object_cad_asset_filepath = ObjectLibrary.get_cad_asset_path(

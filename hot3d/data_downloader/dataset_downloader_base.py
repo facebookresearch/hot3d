@@ -71,7 +71,6 @@ class DatasetDownloaderBase:
         sequences: Optional[List[str]] = None,
         overwrite: bool = False,
     ):
-
         # add slam summary if any slam data is requested
         if "mps_slam_summary" not in data_types:
             if (

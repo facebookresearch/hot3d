@@ -63,11 +63,9 @@ def load_hand_model_from_file(filename: str) -> Optional[UmeTrackHandModelData]:
 
 
 class UmeTrackHandDataProvider(HandDataProviderBase):
-
     def __init__(
         self, hand_pose_trajectory_filepath: str, hand_profile_filepath: str
     ) -> None:
-
         super().__init__()
         super()._init_hand_poses(hand_pose_trajectory_filepath)
 

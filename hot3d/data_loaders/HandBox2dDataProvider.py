@@ -60,11 +60,9 @@ class HandBox2dCollectionWithDt:
 
 
 class HandBox2dProvider:
-
     def __init__(
         self, box2d_trajectory_collection: HandBox2dTrajectoryCollection
     ) -> None:
-
         self._box2d_trajectory_collection = box2d_trajectory_collection
 
         self._sorted_timestamp_ns_list: Dict[str, List[int]] = {}
@@ -123,7 +121,6 @@ class HandBox2dProvider:
 
 
 def parse_box2ds_from_csv_reader(csv_reader) -> HandBox2dTrajectoryCollection:
-
     box2d_trajectory_collection: HandBox2dTrajectoryCollection = {}
 
     # Read the header row
@@ -134,7 +131,6 @@ def parse_box2ds_from_csv_reader(csv_reader) -> HandBox2dTrajectoryCollection:
 
     # Read the rest of the rows in the CSV file
     for row in csv_reader:
-
         stream_id = str(StreamId(row[header.index("stream_id")]))
         timestamp_ns = int(row[header.index("timestamp[ns]")])
         hand_index = int(row[header.index("hand_index")])
@@ -165,9 +161,9 @@ def parse_box2ds_from_csv_reader(csv_reader) -> HandBox2dTrajectoryCollection:
                 timestamp_ns=timestamp_ns, box2ds={}
             )
 
-        box2d_trajectory_collection[stream_id][timestamp_ns].box2ds[
-            hand_index
-        ] = object_box2d
+        box2d_trajectory_collection[stream_id][timestamp_ns].box2ds[hand_index] = (
+            object_box2d
+        )
     return box2d_trajectory_collection
 
 

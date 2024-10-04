@@ -37,11 +37,9 @@ class HandPose3dCollectionWithDt:
 
 
 class HandDataProviderBase:
-
     def __init__(
         self,
     ) -> None:
-
         self._hand_poses = None
         self._sorted_timestamp_ns_list: List[int]
 

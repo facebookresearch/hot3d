@@ -127,7 +127,6 @@ def combine_timestamped_mask_data(
     mask_list: List[TimestampedMask],
     operator: str = "and",  # i.e 'and' or 'or'
 ) -> TimestampedMask:
-
     if len(mask_list) > 0:
         if not all(len(d) == len(mask_list[0]) for d in mask_list):
             raise ValueError("Mask data must have the same length")

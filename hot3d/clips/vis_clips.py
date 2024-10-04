@@ -117,7 +117,6 @@ def vis_clip(
 
             # Visualize object contours.
             if objects is not None:
-
                 masks_vis = None
                 if len(objects) and (vis_amodal_masks or vis_modal_masks):
                     masks_vis = np.zeros_like(image)
@@ -170,7 +169,6 @@ def vis_clip(
 
             # Visualize hand contours.
             for hand_mesh in hand_meshes.values():
-
                 # Render the hand model (outputs: rgb, mask, depth).
                 _, mask, _ = rasterizer.rasterize_mesh(
                     verts=hand_mesh.vertices,
@@ -194,7 +192,6 @@ def vis_clip(
 
 
 def main() -> None:
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clips_dir",

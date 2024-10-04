@@ -39,7 +39,6 @@ from projectaria_tools.core.stream_id import StreamId  # @manual
 
 
 class AriaDataProvider:
-
     def __init__(
         self, vrs_filepath: str, mps_folder_path: Optional[str] = None
     ) -> None:

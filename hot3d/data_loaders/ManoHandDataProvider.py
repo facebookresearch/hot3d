@@ -29,13 +29,11 @@ from .mano_layer import MANOHandModel
 
 
 class MANOHandDataProvider(HandDataProviderBase):
-
     def __init__(
         self,
         hand_pose_trajectory_filepath: str,
         mano_layer: MANOHandModel,
     ) -> None:
-
         super().__init__()
         super()._init_hand_poses(hand_pose_trajectory_filepath)
 

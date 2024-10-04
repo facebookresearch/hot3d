@@ -66,11 +66,9 @@ class ObjectBox2dCollectionWithDt:
 
 
 class ObjectBox2dProvider:
-
     def __init__(
         self, box2d_trajectory_collection: ObjectBox2dTrajectoryCollection
     ) -> None:
-
         self._box2d_trajectory_collection = box2d_trajectory_collection
 
         self._sorted_timestamp_ns_list: Dict[str, List[int]] = {}
@@ -150,7 +148,6 @@ class ObjectBox2dProvider:
 
 
 def parse_box2ds_from_csv_reader(csv_reader) -> ObjectBox2dTrajectoryCollection:
-
     box2d_trajectory_collection: ObjectBox2dTrajectoryCollection = {}
 
     # Read the header row
@@ -161,7 +158,6 @@ def parse_box2ds_from_csv_reader(csv_reader) -> ObjectBox2dTrajectoryCollection:
 
     # Read the rest of the rows in the CSV file
     for row in csv_reader:
-
         stream_id = str(StreamId(row[header.index("stream_id")]))
         timestamp_ns = int(row[header.index("timestamp[ns]")])
         object_uid = str(row[header.index("object_uid")])
@@ -192,9 +188,9 @@ def parse_box2ds_from_csv_reader(csv_reader) -> ObjectBox2dTrajectoryCollection:
                 ObjectBox2dCollection(timestamp_ns=timestamp_ns, box2ds={})
             )
 
-        box2d_trajectory_collection[stream_id][timestamp_ns].box2ds[
-            object_uid
-        ] = object_box2d
+        box2d_trajectory_collection[stream_id][timestamp_ns].box2ds[object_uid] = (
+            object_box2d
+        )
     return box2d_trajectory_collection
 
 

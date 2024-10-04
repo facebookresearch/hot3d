@@ -62,7 +62,6 @@ class ObjectLibrary(object):
         return self._asset_folder
 
     def _get_object_id_name_mappings(self, object_info_json):
-
         object_id_to_name_dict = {
             k: v["instance_name"]
             for k, v in object_info_json.items()

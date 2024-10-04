@@ -22,7 +22,6 @@ class TestFrameSet(unittest.TestCase):
         super().setUp()
 
     def test_compute_framesets(self) -> None:
-
         stream_timestamps = {
             "s0": sorted([100, 200, 300, 400, 500, 600, 702]),
             "s1": sorted([103, 202, 298, 400, 450, 604, 710]),

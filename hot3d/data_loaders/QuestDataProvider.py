@@ -39,7 +39,6 @@ except ImportError:
 
 
 class QuestDataProvider:
-
     def __init__(self, vrs_filepath: str, device_calibration_filepath: str) -> None:
         self._vrs_reader = SyncVRSReader(vrs_filepath)
         # Configure Image conversion

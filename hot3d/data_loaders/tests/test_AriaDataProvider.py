@@ -24,11 +24,9 @@ from projectaria_tools.core.stream_id import StreamId
 
 
 try:
-
     data_path = Path(str(importlib.resources.files(__package__).joinpath("test_data/")))
 
 except ImportError:
-
     data_path = Path(__file__).parent
 
 sequence_path = data_path / "data_sample/Aria/P0003_c701bd11"
