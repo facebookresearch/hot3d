@@ -27,6 +27,7 @@ import trimesh
 from hand_tracking_toolkit import rasterizer
 from hand_tracking_toolkit.dataset import HandShapeCollection, warp_image
 from hand_tracking_toolkit.hand_models.mano_hand_model import MANOHandModel
+from tqdm import tqdm
 
 
 def vis_clip(
@@ -63,8 +64,8 @@ def vis_clip(
     hand_shape: Optional[HandShapeCollection] = clip_util.load_hand_shape(tar)
 
     # Per-frame visualization.
-    for frame_id in range(clip_util.get_number_of_frames(tar)):
-        print(f"Visualizing frame {frame_id}...")
+    print(f"Exporting clip {clip_name}")
+    for frame_id in tqdm(range(clip_util.get_number_of_frames(tar))):
         frame_key = f"{frame_id:06d}"
 
         # Load camera parameters.
@@ -263,9 +264,9 @@ def main() -> None:
     object_model_filenames = sorted(
         [p for p in os.listdir(args.object_models_dir) if p.endswith(".glb")]
     )
-    for model_filename in object_model_filenames:
+    print("Loading models...")
+    for model_filename in tqdm(object_model_filenames):
         model_path = os.path.join(args.object_models_dir, model_filename)
-        print(f"Loading model: {model_path}")
         object_id = int(model_filename.split(".glb")[0].split("obj_")[1])
         object_models[object_id] = clip_util.load_mesh(model_path)
 
@@ -278,7 +279,8 @@ def main() -> None:
     clips = sorted([p for p in os.listdir(args.clips_dir) if p.endswith(".tar")])
 
     # Visualize the clips.
-    for clip in clips:
+    print("Visualizing clips...")
+    for clip in tqdm(clips):
         clip_id = int(clip.split(".tar")[0].split("clip-")[1])
 
         # Skip the clip if it is not in the specified range.

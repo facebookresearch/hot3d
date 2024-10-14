@@ -194,12 +194,13 @@ def get_hand_meshes(
 
     if hand_type == "mano" and mano_model is None:
         raise ValueError("MANO hand model is missing.")
+    if hand_type == "umetrack" and hand_shape is None:
+        raise ValueError("UmeTrack hand shape is missing.")
 
     hand_poses = decode_hand_pose(hands)
 
     meshes: Dict[HandSide, trimesh.Trimesh] = {}
     for hand_side, hand_pose in hand_poses.items():
-        assert mano_model is not None
         _, hand_verts, hand_faces = visualization.get_keypoints_and_mesh(
             hand_pose=hand_pose,
             hand_shape=hand_shape,
@@ -287,7 +288,7 @@ def convert_to_pinhole_camera(
 
     Args:
         camera_model: Input camera model.
-        focal_scale: Focal scaling factor (can be used to contol
+        focal_scale: Focal scaling factor (can be used to control
             the portion of an original fisheye image that is seen in
             the resulting pinhole camera).
     Returns:
