@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib.resources
 import os
 import unittest
 from pathlib import Path
@@ -21,9 +22,13 @@ from data_loaders.PathProvider import Hot3dDataPathProvider
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
 
 try:
-    from libfb.py import parutil
-
-    data_path = Path(parutil.get_file_path("test_data/", pkg=__package__))
+    data_path = Path(
+        str(
+            importlib.resources.files(__package__).joinpath(
+                "test_data/",
+            )
+        )
+    )
 except ImportError:
     data_path = Path(__file__).parent
 
