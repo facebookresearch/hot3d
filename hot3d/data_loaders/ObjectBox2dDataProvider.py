@@ -200,6 +200,7 @@ def load_box2d_trajectory_from_csv(filename: str) -> Optional[ObjectBox2dProvide
     Keyword arguments:
     filename -- the csv file i.e. sequence_folder + "/box2d_objects.csv"
     """
+
     if not os.path.exists(filename):
         logger.warn(f"filename: {filename} does not exist.")
         return None

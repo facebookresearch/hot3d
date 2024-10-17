@@ -18,7 +18,7 @@ import os
 import tarfile
 from typing import Any, Dict, List, Optional
 
-import clip_util
+import clip_util  # pyre-ignore
 import imageio
 import numpy as np
 import trimesh
@@ -30,7 +30,7 @@ from hand_tracking_toolkit.hand_models.mano_hand_model import MANOHandModel
 from tqdm import tqdm
 
 
-def vis_clip(
+def vis_clip(  # noqa: C901
     clip_path: str,
     object_models: Dict[int, trimesh.Trimesh],
     hand_type: str,
