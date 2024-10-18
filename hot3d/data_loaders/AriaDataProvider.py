@@ -164,6 +164,9 @@ class AriaDataProvider:
         stream_label = self._vrs_data_provider.get_label_from_stream_id(stream_id)
         camera_calibration = device_calibration.get_camera_calib(stream_label)
 
+        # Store the relative transform from device to camera
+        T_device_camera = camera_calibration.get_transform_device_camera()
+
         # If a corresponding pinhole camera is requested, we build one on the fly
         if camera_model == LINEAR:
             focal_lengths = camera_calibration.get_focal_lengths()
@@ -173,7 +176,6 @@ class AriaDataProvider:
             )
         # else return the native FISHEYE624 camera model
 
-        T_device_camera = camera_calibration.get_transform_device_camera()
         return [T_device_camera, camera_calibration]
 
     def get_online_camera_calibration(
