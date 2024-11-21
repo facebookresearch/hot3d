@@ -15,6 +15,8 @@
 import bisect
 from typing import Any, Dict, List, Optional, Tuple
 
+# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
+#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeQueryOptions  # @manual
 
 
@@ -47,6 +49,7 @@ def lookup_timestamp(
     time_indexed_dict: Dict[int, Any],
     sorted_timestamp_list: Optional[List[int]],
     query_timestamp: int,
+    # pyre-fixme[11]: Annotation `TimeQueryOptions` is not defined as a type.
     time_query_options: TimeQueryOptions,
 ) -> Tuple[Any, int]:
     """
@@ -71,16 +74,19 @@ def lookup_timestamp(
             ordered_timestamps=sorted_timestamp_list,
             query_timestamp=query_timestamp,
         )
+        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
         if time_query_options == TimeQueryOptions.BEFORE:
             if left_frame_tsns is not None:
                 obj = time_indexed_dict[left_frame_tsns]
                 time_delta_ns = query_timestamp - left_frame_tsns
 
+        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
         elif time_query_options == TimeQueryOptions.AFTER:
             if right_frame_tsns is not None:
                 obj = time_indexed_dict[right_frame_tsns]
                 time_delta_ns = query_timestamp - right_frame_tsns
 
+        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
         elif time_query_options == TimeQueryOptions.CLOSEST:
             if left_frame_tsns is not None and right_frame_tsns is not None:
                 if abs(query_timestamp - left_frame_tsns) > abs(
@@ -98,4 +104,5 @@ def lookup_timestamp(
                 obj = time_indexed_dict[right_frame_tsns]
                 time_delta_ns = query_timestamp - right_frame_tsns
 
+    # pyre-fixme[7]: Expected `Tuple[Any, int]` but got `Tuple[Any, Optional[int]]`.
     return obj, time_delta_ns

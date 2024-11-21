@@ -204,6 +204,8 @@ def get_hand_meshes(
         _, hand_verts, hand_faces = visualization.get_keypoints_and_mesh(
             hand_pose=hand_pose,
             hand_shape=hand_shape,
+            # pyre-fixme[6]: For 3rd argument expected `MANOHandModel` but got
+            #  `Optional[MANOHandModel]`.
             mano_model=mano_model,
             pose_type=hand_type,
         )
@@ -237,6 +239,8 @@ def load_mesh(
     )
 
     # Represent the scene by a single mesh.
+    # pyre-fixme[16]: Item `List` of `List[Geometry] | Geometry` has no attribute
+    #  `dump`.
     mesh = scene.dump(concatenate=True)
 
     # Make sure there are no large triangles (the rasterizer
@@ -408,6 +412,7 @@ def decode_binary_mask_rle(data: Dict[str, Any]) -> np.ndarray:
 
     starts = np.asarray(data["rle"][0:][::2]) - 1
     ends = starts + np.asarray(data["rle"][1:][::2])
+    # pyre-fixme[16]: Module `numpy` has no attribute `bool`.
     mask = np.zeros(data["height"] * data["width"], dtype=np.bool)
     for lo, hi in zip(starts, ends):
         mask[lo:hi] = True

@@ -18,7 +18,13 @@ import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set
 
+# pyre-fixme[21]: Could not find name `TimeDomain` in
+#  `projectaria_tools.core.sensor_data`.
+# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
+#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
+
+# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 from .AlignedBox2d import AlignedBox2d
@@ -84,11 +90,13 @@ class ObjectBox2dProvider:
             for x in v.object_uid_list
         }
 
+    # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
     def get_timestamp_ns_list(self, stream_id: StreamId) -> Optional[List[int]]:
         return self._sorted_timestamp_ns_list.get(str(stream_id), None)
 
     @property
     def stream_ids(self) -> List[StreamId]:
+        # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
         return [StreamId(x) for x in self._box2d_trajectory_collection.keys()]
 
     @property
@@ -112,13 +120,16 @@ class ObjectBox2dProvider:
         self,
         stream_id: StreamId,
         timestamp_ns: int,
+        # pyre-fixme[11]: Annotation `TimeQueryOptions` is not defined as a type.
         time_query_options: TimeQueryOptions,
+        # pyre-fixme[11]: Annotation `TimeDomain` is not defined as a type.
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
     ) -> Optional[ObjectBox2dCollectionWithDt]:
         """
         Return the list of boxes at the given timestamp
         """
+        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
@@ -158,6 +169,7 @@ def parse_box2ds_from_csv_reader(csv_reader) -> ObjectBox2dTrajectoryCollection:
 
     # Read the rest of the rows in the CSV file
     for row in csv_reader:
+        # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
         stream_id = str(StreamId(row[header.index("stream_id")]))
         timestamp_ns = int(row[header.index("timestamp[ns]")])
         object_uid = str(row[header.index("object_uid")])
@@ -177,6 +189,8 @@ def parse_box2ds_from_csv_reader(csv_reader) -> ObjectBox2dTrajectoryCollection:
 
         object_box2d = ObjectBox2d(
             box2d=box2d,
+            # pyre-fixme[6]: For 2nd argument expected `float` but got
+            #  `Optional[float]`.
             visibility_ratio=visibility_ratio,
         )
 

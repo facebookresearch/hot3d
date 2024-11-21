@@ -25,6 +25,11 @@ from data_loaders.loader_hand_poses import (
     HandPose3dCollection,
     load_hand_poses,
 )
+
+# pyre-fixme[21]: Could not find name `TimeDomain` in
+#  `projectaria_tools.core.sensor_data`.
+# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
+#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
 
 from .pose_utils import lookup_timestamp
@@ -41,6 +46,7 @@ class HandDataProviderBase:
         self,
     ) -> None:
         self._hand_poses = None
+        # pyre-fixme[13]: Attribute `_sorted_timestamp_ns_list` is never initialized.
         self._sorted_timestamp_ns_list: List[int]
 
     def _init_hand_poses(self, hand_pose_trajectory_filepath: str) -> None:
@@ -78,13 +84,16 @@ class HandDataProviderBase:
     def get_pose_at_timestamp(
         self,
         timestamp_ns: int,
+        # pyre-fixme[11]: Annotation `TimeQueryOptions` is not defined as a type.
         time_query_options: TimeQueryOptions,
+        # pyre-fixme[11]: Annotation `TimeDomain` is not defined as a type.
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
     ) -> Optional[HandPose3dCollectionWithDt]:
         """
         Return the list of hands available at a given timestamp
         """
+        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 

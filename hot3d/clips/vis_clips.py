@@ -156,13 +156,15 @@ def vis_clip(  # noqa: C901
                                 mask = clip_util.decode_binary_mask_rle(
                                     instance[mask_key][stream_key]
                                 )
+                                # pyre-fixme[16]: `Optional` has no attribute
+                                #  `__setitem__`.
                                 masks_vis[mask] = 255
 
                 # Potentially visualize object masks.
                 if masks_vis is not None:
                     image_weight = 0.5
                     masks_vis = masks_vis.astype(np.float32)
-                    image = (  # pyre-ignore
+                    image = (
                         image_weight * image.astype(np.float32)
                         + (1.0 - image_weight) * masks_vis
                     )

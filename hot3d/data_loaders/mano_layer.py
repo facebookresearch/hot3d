@@ -282,6 +282,7 @@ def loadManoHandModel(
     mano_model_files_dir: Optional[str],
 ) -> MANOHandModel:
     if not SMPLX_IMPORT_SUCCEEDED or mano_model_files_dir is None:
+        # pyre-fixme[7]: Expected `MANOHandModel` but got `None`.
         return None
 
     return MANOHandModel(mano_model_files_dir)

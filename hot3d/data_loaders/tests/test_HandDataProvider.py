@@ -24,6 +24,11 @@ from data_loaders.loader_hand_poses import Handedness
 from data_loaders.mano_layer import MANOHandModel
 from data_loaders.ManoHandDataProvider import MANOHandDataProvider
 from data_loaders.UmeTrackHandDataProvider import UmeTrackHandDataProvider
+
+# pyre-fixme[21]: Could not find name `TimeDomain` in
+#  `projectaria_tools.core.sensor_data`.
+# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
+#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
 
 
@@ -61,6 +66,7 @@ class TestHandDataProvider(unittest.TestCase):
     def test_provider_mano_hands(self) -> None:
         hand_data_provider = MANOHandDataProvider(
             mano_hand_pose_trajectory_filepath,
+            # pyre-fixme[6]: For 2nd argument expected `MANOHandModel` but got `None`.
             None,
             # Using this with no mano_layer=None provide the ability to recover wrist pose, but no FK (hand vertices, landmarks)
         )
@@ -92,7 +98,10 @@ class TestHandDataProvider(unittest.TestCase):
         for timestamp_it in timestamps:
             hand_poses_with_dt = hand_data_provider.get_pose_at_timestamp(
                 timestamp_ns=timestamp_it,
+                # pyre-fixme[16]: Module `sensor_data` has no attribute
+                #  `TimeQueryOptions`.
                 time_query_options=TimeQueryOptions.CLOSEST,
+                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
                 time_domain=TimeDomain.TIME_CODE,
             )
             self.assertIsNotNone(hand_poses_with_dt)

@@ -18,12 +18,21 @@ import unittest
 from pathlib import Path
 
 from data_loaders.HandBox2dDataProvider import load_box2d_trajectory_from_csv
+
+# pyre-fixme[21]: Could not find name `TimeDomain` in
+#  `projectaria_tools.core.sensor_data`.
+# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
+#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
+
+# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 
 try:
     data_path = Path(
+        # pyre-fixme[6]: For 1st argument expected `Union[PathLike[str], str]` but
+        #  got `Traversable`.
         importlib.resources.files(__package__).joinpath(
             "test_data/",
         )
@@ -44,6 +53,7 @@ class TestHandBox2dDataProvider(unittest.TestCase):
         self.assertTrue(os.path.exists(box2d_hands_filepath))
         provider = load_box2d_trajectory_from_csv(filename=box2d_hands_filepath)
 
+        # pyre-fixme[16]: Optional type has no attribute `stream_ids`.
         stream_ids = provider.stream_ids
         self.assertEqual(len(stream_ids), 3)
 
@@ -52,22 +62,28 @@ class TestHandBox2dDataProvider(unittest.TestCase):
         self.assertTrue(StreamId("1201-2") in stream_ids)
 
         for stream_id in stream_ids:
+            # pyre-fixme[16]: Optional type has no attribute `get_timestamp_ns_list`.
             timestamp_ns_list = provider.get_timestamp_ns_list(stream_id=stream_id)
             self.assertIsNotNone(timestamp_ns_list)
             self.assertGreater(len(timestamp_ns_list), 0)
 
             query_timestamp_ns = timestamp_ns_list[len(timestamp_ns_list) // 2]
 
+            # pyre-fixme[16]: Optional type has no attribute `get_bbox_at_timestamp`.
             box2d_collection_with_dt = provider.get_bbox_at_timestamp(
                 stream_id=stream_id,
                 timestamp_ns=query_timestamp_ns,
+                # pyre-fixme[16]: Module `sensor_data` has no attribute
+                #  `TimeQueryOptions`.
                 time_query_options=TimeQueryOptions.CLOSEST,
+                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
                 time_domain=TimeDomain.TIME_CODE,
             )
 
             self.assertIsNotNone(box2d_collection_with_dt)
             self.assertIsNotNone(box2d_collection_with_dt.box2d_collection)
 
+            # pyre-fixme[16]: Optional type has no attribute `get_data_statistics`.
             data_statistics = provider.get_data_statistics()
             print(f"data_statistics: {data_statistics}")
             self.assertEqual(len(data_statistics["num_frames"]), 3)

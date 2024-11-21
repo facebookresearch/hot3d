@@ -18,7 +18,13 @@ import unittest
 from pathlib import Path
 
 from data_loaders.QuestDataProvider import QuestDataProvider
+
+# pyre-fixme[21]: Could not find name `FISHEYE624` in
+#  `projectaria_tools.core.calibration`.
+# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import FISHEYE624, LINEAR
+
+# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId
 
 try:
@@ -68,16 +74,21 @@ class TestQuestDataProvider(unittest.TestCase):
 
             # Retrieve camera calibration
             self.assertIsNotNone(provider.get_camera_calibration(stream_id))
+            # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
             self.assertIsNotNone(provider.get_camera_calibration(stream_id, FISHEYE624))
+            # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
             self.assertIsNotNone(provider.get_camera_calibration(stream_id, LINEAR))
 
             # Assert we have the right camera type
             self.assertEqual(
                 provider.get_camera_calibration(stream_id)[1].model_name(),
+                # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
                 FISHEYE624,
             )
             self.assertEqual(
+                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
                 provider.get_camera_calibration(stream_id, LINEAR)[1].model_name(),
+                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
                 LINEAR,
             )
 
@@ -89,6 +100,7 @@ class TestQuestDataProvider(unittest.TestCase):
             for tsns in [ref_tsns, ref_tsns + 100, ref_tsns - 200]:
                 out_frameset_a = provider.get_frameset_from_timestamp(
                     timestamp_ns=tsns,
+                    # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
                     frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
                 )
                 self.assertIsNotNone(out_frameset_a)
@@ -100,11 +112,15 @@ class TestQuestDataProvider(unittest.TestCase):
                 ## check the timestamps are within the acceptable time difference
                 for _, frameset_tsns in out_frameset_a.items():
                     self.assertTrue(
+                        # pyre-fixme[58]: `-` is not supported for operand types
+                        #  `Optional[int]` and `int`.
                         abs(frameset_tsns - tsns) < frameset_acceptable_time_diff_ns,
                     )
         # sanity check that an out of bounds timestamp returns None values inside the frameset
         outofbounds_frameset = provider.get_frameset_from_timestamp(
+            # pyre-fixme[6]: For 1st argument expected `int` but got `float`.
             timestamp_ns=-2 * 1e9,
+            # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
             frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
         )
         self.assertIsNotNone(outofbounds_frameset)

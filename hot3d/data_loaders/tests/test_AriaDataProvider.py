@@ -19,7 +19,13 @@ from pathlib import Path
 
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.PathProvider import Hot3dDataPathProvider
+
+# pyre-fixme[21]: Could not find name `FISHEYE624` in
+#  `projectaria_tools.core.calibration`.
+# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import FISHEYE624, LINEAR
+
+# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId
 
 
@@ -42,6 +48,7 @@ class TestAriaDataProvider(unittest.TestCase):
             recording_instance_folderpath=sequence_path
         )
         self.assertTrue(os.path.exists(path_provider.vrs_filepath))
+        # pyre-fixme[16]: `SequenceDatasetPathsBase` has no attribute `mps_folderpath`.
         self.assertTrue(os.path.exists(path_provider.mps_folderpath))
         provider = AriaDataProvider(
             path_provider.vrs_filepath,
@@ -94,16 +101,21 @@ class TestAriaDataProvider(unittest.TestCase):
 
             # Retrieve camera calibration
             self.assertIsNotNone(provider.get_camera_calibration(stream_id))
+            # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
             self.assertIsNotNone(provider.get_camera_calibration(stream_id, FISHEYE624))
+            # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
             self.assertIsNotNone(provider.get_camera_calibration(stream_id, LINEAR))
 
             # Assert we have the right camera type
             self.assertEqual(
                 provider.get_camera_calibration(stream_id)[1].model_name(),
+                # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
                 FISHEYE624,
             )
             self.assertEqual(
+                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
                 provider.get_camera_calibration(stream_id, LINEAR)[1].model_name(),
+                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
                 LINEAR,
             )
 
@@ -112,6 +124,7 @@ class TestAriaDataProvider(unittest.TestCase):
 
         # check the frameset grouping logic
         frameset_acceptable_time_diff_ns = 1e6
+        # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
         reference_timestamps = provider.get_sequence_timestamps(StreamId("214-1"))
         expected_stream_id_strs = sorted(
             str(x) for x in provider.get_image_stream_ids()
@@ -120,6 +133,7 @@ class TestAriaDataProvider(unittest.TestCase):
             for tsns in [ref_tsns, ref_tsns + 100, ref_tsns - 200]:
                 out_frameset = provider.get_frameset_from_timestamp(
                     timestamp_ns=tsns,
+                    # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
                     frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
                 )
                 self.assertIsNotNone(out_frameset)
@@ -128,12 +142,15 @@ class TestAriaDataProvider(unittest.TestCase):
                 ## check the timestamps are within the acceptable time difference
                 for _, frameset_tsns in out_frameset.items():
                     self.assertTrue(
+                        # pyre-fixme[58]: `-` is not supported for operand types
+                        #  `Optional[int]` and `int`.
                         abs(frameset_tsns - tsns) < frameset_acceptable_time_diff_ns,
                     )
 
         # sanity check that an out of bounds timestamp returns None values inside the frameset
         out_of_bounds_frameset = provider.get_frameset_from_timestamp(
             timestamp_ns=-2000,
+            # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
             frameset_acceptable_time_diff_ns=frameset_acceptable_time_diff_ns,
         )
         self.assertIsNotNone(out_of_bounds_frameset)
