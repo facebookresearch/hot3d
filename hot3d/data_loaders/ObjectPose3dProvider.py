@@ -18,14 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set
 
 import numpy as np
-
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
-# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3  # @manual
 
 from .constants import POSE_DATA_CSV_COLUMNS
@@ -39,7 +32,6 @@ class ObjectPose3d:
     Class to store pose of a single entity (object/headset/hand)
     """
 
-    # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
     T_world_object: Optional[SE3] = None
 
 
@@ -97,16 +89,13 @@ class ObjectPose3dProvider(object):
     def get_pose_at_timestamp(
         self,
         timestamp_ns: int,
-        # pyre-fixme[11]: Annotation `TimeQueryOptions` is not defined as a type.
         time_query_options: TimeQueryOptions,
-        # pyre-fixme[11]: Annotation `TimeDomain` is not defined as a type.
         time_domain: TimeDomain,
         acceptable_time_delta: Optional[int] = None,
     ) -> Optional[ObjectPose3dCollectionWithDt]:
         """
         Return the list of poses available at the given timestamp
         """
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError("Value other than TimeDomain.TIME_CODE not yet supported.")
 
@@ -166,14 +155,12 @@ def load_object_pose_trajectory_from_csv(filename: str) -> ObjectPose3dTrajector
             timestamp_ns = int(row[header.index("timestamp[ns]")])
             object_uid = str(row[header.index("object_uid")])
 
-            # pyre-fixme[16]: Module `sophus` has no attribute `SE3`.
             T_world_object = SE3.from_quat_and_translation(
                 float(quaternion_w),
                 np.array([float(o) for o in quaternion_xyz]),
                 np.array([float(o) for o in translation]),
             )[0]
 
-            # pyre-fixme[28]: Unexpected keyword argument `T_world_object`.
             pose3d = ObjectPose3d(T_world_object=T_world_object)
 
             if timestamp_ns not in pose3d_trajectory:

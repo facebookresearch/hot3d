@@ -18,8 +18,6 @@ from enum import auto, Enum
 from typing import Dict, List, Optional
 
 import numpy as np
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3  # @manual
 
 LEFT_HAND_INDEX = 0
@@ -41,7 +39,6 @@ class HandPose:
     """Define a Hand pose as wrist_pose (SE3), and joint_angles."""
 
     handedness: Handedness
-    # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
     wrist_pose: Optional[SE3]
     joint_angles: List[float]
 
@@ -74,7 +71,6 @@ def _get_hand_pose(handedness: str, hand_poses_json: Dict) -> Optional[SE3]:
         quaternion_w = wrist["q_wxyz"][0]
         quaternion_xyz = wrist["q_wxyz"][1:4]
         translation = wrist["t_xyz"]
-        # pyre-fixme[16]: Module `sophus` has no attribute `SE3`.
         hand_pose = SE3.from_quat_and_translation(
             float(quaternion_w),
             np.array([float(o) for o in quaternion_xyz]),

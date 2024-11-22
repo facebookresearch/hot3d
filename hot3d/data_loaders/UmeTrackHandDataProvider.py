@@ -178,7 +178,6 @@ def skin_vertices(
     vertices = skin_points(
         hand_model.joint_rest_positions.double(),
         hand_model.joint_rotation_axes.double(),
-        # pyre-fixme[16]: `Optional` has no attribute `double`.
         hand_model.dense_bone_weights.double(),
         joint_angles.double(),
         hand_model.mesh_vertices.double(),

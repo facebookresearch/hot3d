@@ -17,8 +17,6 @@ from collections import Counter
 from typing import Dict, List, Optional
 
 import numpy as np
-
-# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 from .constants import MASK_DATA_CSV_COLUMNS
@@ -40,7 +38,6 @@ class MaskData(object):
     def stream_ids(self):
         return [StreamId(x) for x in self._mask.keys()]
 
-    # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
     def stream_mask(self, stream_id: StreamId) -> Optional[TimestampedMask]:
         return self._mask.get(str(stream_id), None)
 
@@ -113,7 +110,6 @@ def combine_mask_data(
     """
 
     stream_id_strs = {str(y) for x in mask_list for y in x.stream_ids}
-    # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
     stream_ids = [StreamId(x) for x in stream_id_strs]
 
     out_mask_dict = {}
@@ -122,10 +118,7 @@ def combine_mask_data(
         if any(x is None for x in timestamped_mask_list):
             raise ValueError("mask data must be present for all streams")
         out_mask_dict[str(stream_id)] = combine_timestamped_mask_data(
-            # pyre-fixme[6]: For 1st argument expected `List[Dict[int, bool]]` but
-            #  got `List[Optional[Dict[int, bool]]]`.
-            mask_list=timestamped_mask_list,
-            operator=operator,
+            mask_list=timestamped_mask_list, operator=operator
         )
     return MaskData(out_mask_dict)
 

@@ -19,18 +19,6 @@ import numpy as np
 from data_loaders.frameset import compute_frameset_for_timestamp
 
 from projectaria_tools.core import data_provider  # @manual
-
-# pyre-fixme[21]: Could not find name `CameraCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `DeviceCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `FISHEYE624` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `distort_by_calibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `get_linear_camera_calibration` in
-#  `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
     DeviceCalibration,
@@ -39,30 +27,14 @@ from projectaria_tools.core.calibration import (  # @manual
     get_linear_camera_calibration,
     LINEAR,
 )
-
-# pyre-fixme[21]: Could not find name `EyeGaze` in `projectaria_tools.core.mps`.
-# pyre-fixme[21]: Could not find name `MpsDataPathsProvider` in
-#  `projectaria_tools.core.mps`.
-# pyre-fixme[21]: Could not find name `MpsDataProvider` in `projectaria_tools.core.mps`.
-# pyre-fixme[21]: Could not find name `get_eyegaze_point_at_depth` in
-#  `projectaria_tools.core.mps`.
 from projectaria_tools.core.mps import (  # @manual
     EyeGaze,
     get_eyegaze_point_at_depth,
     MpsDataPathsProvider,
     MpsDataProvider,
 )
-
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
-# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3  # @manual
-
-# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 
@@ -70,16 +42,12 @@ class AriaDataProvider:
     def __init__(
         self, vrs_filepath: str, mps_folder_path: Optional[str] = None
     ) -> None:
-        # pyre-fixme[16]: Module `data_provider` has no attribute
-        #  `create_vrs_data_provider`.
         self._vrs_data_provider = data_provider.create_vrs_data_provider(vrs_filepath)
 
         # MPS data provider
         if mps_folder_path is not None and os.path.exists(mps_folder_path):
-            # pyre-fixme[16]: Module `mps` has no attribute `MpsDataPathsProvider`.
             mps_data_paths_provider = MpsDataPathsProvider(mps_folder_path)
             mps_data_paths = mps_data_paths_provider.get_data_paths()
-            # pyre-fixme[16]: Module `mps` has no attribute `MpsDataProvider`.
             self._mps_data_provider = MpsDataProvider(mps_data_paths)
             print(mps_data_paths)
         else:
@@ -89,11 +57,9 @@ class AriaDataProvider:
         self._stream_timestamps_sorted: Dict[str, List[int]] = {}
         for stream_id in self.get_image_stream_ids():
             self._stream_timestamps_sorted[str(stream_id)] = sorted(
-                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
                 self.get_sequence_timestamps(stream_id, TimeDomain.TIME_CODE)
             )
 
-    # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
     def get_image_stream_ids(self) -> List[StreamId]:
         # retrieve all streams ids and filter the one that are image based
         stream_ids = self._vrs_data_provider.get_all_streams()
@@ -106,10 +72,7 @@ class AriaDataProvider:
 
     def get_sequence_timestamps(
         self,
-        # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
         stream_id: StreamId = StreamId("214-1"),
-        # pyre-fixme[11]: Annotation `TimeDomain` is not defined as a type.
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
     ) -> List[int]:
         """
@@ -121,7 +84,6 @@ class AriaDataProvider:
         self,
         timestamp_ns: int,
         frameset_acceptable_time_diff_ns: int,
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
     ) -> Dict[str, Optional[int]]:
         """
@@ -130,7 +92,6 @@ class AriaDataProvider:
         For Aria, the recommended acceptable time difference is 1e6 ns (or 1ms).
         Returns a dictionary mapping each str(StreamId) to its closest timestamp.
         """
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError(
                 f"{time_domain} is not supported. Only TIME_CODE is supported"
@@ -149,9 +110,7 @@ class AriaDataProvider:
         image = self._vrs_data_provider.get_image_data_by_time_ns(
             stream_id,
             timestamp_ns,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             TimeDomain.TIME_CODE,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
             TimeQueryOptions.CLOSEST,
         )
         return image[0].to_numpy_array()
@@ -163,31 +122,22 @@ class AriaDataProvider:
 
         [T_device_camera, native_camera_online_calibration] = (
             self.get_online_camera_calibration(
-                stream_id,
-                timestamp_ns=timestamp_ns,
-                # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-                camera_model=FISHEYE624,
+                stream_id, timestamp_ns=timestamp_ns, camera_model=FISHEYE624
             )
         )
         [T_device_camera, pinhole_camera_online_calibration] = (
             self.get_online_camera_calibration(
-                stream_id,
-                timestamp_ns=timestamp_ns,
-                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
-                camera_model=LINEAR,
+                stream_id, timestamp_ns=timestamp_ns, camera_model=LINEAR
             )
         )
 
         # Compute the actual undistorted image
-        # pyre-fixme[16]: Module `calibration` has no attribute
-        #  `distort_by_calibration`.
         undistorted_image = distort_by_calibration(
             image, pinhole_camera_online_calibration, native_camera_online_calibration
         )
 
         return undistorted_image
 
-    # pyre-fixme[11]: Annotation `DeviceCalibration` is not defined as a type.
     def get_device_calibration(self) -> DeviceCalibration:
         """
         Return the device calibration (factory calibration of all sensors)
@@ -197,10 +147,7 @@ class AriaDataProvider:
     def get_camera_calibration(
         self,
         stream_id: StreamId,
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
         camera_model=FISHEYE624,
-        # pyre-fixme[11]: Annotation `CameraCalibration` is not defined as a type.
-        # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
     ) -> tuple[SE3, CameraCalibration]:
         """
         Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
@@ -208,8 +155,6 @@ class AriaDataProvider:
          - A corresponding pinhole camera can be requested by using camera_model = LINEAR.
          - This is the camera model used to generate the 'get_undistorted_image'.
         """
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if not (camera_model is FISHEYE624 or camera_model is LINEAR):
             raise ValueError(
                 "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
@@ -223,12 +168,9 @@ class AriaDataProvider:
         T_device_camera = camera_calibration.get_transform_device_camera()
 
         # If a corresponding pinhole camera is requested, we build one on the fly
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if camera_model == LINEAR:
             focal_lengths = camera_calibration.get_focal_lengths()
             image_size = camera_calibration.get_image_size()
-            # pyre-fixme[16]: Module `calibration` has no attribute
-            #  `get_linear_camera_calibration`.
             camera_calibration = get_linear_camera_calibration(
                 image_size[0], image_size[1], focal_lengths[0]
             )
@@ -240,9 +182,7 @@ class AriaDataProvider:
         self,
         stream_id: StreamId,
         timestamp_ns: Optional[int],
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
         camera_model=FISHEYE624,
     ) -> tuple[SE3, CameraCalibration]:
         """
@@ -251,13 +191,10 @@ class AriaDataProvider:
          - A corresponding pinhole camera can be requested by using camera_model = LINEAR.
          - This is the camera model used to generate the 'get_undistorted_image'.
         """
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if not (camera_model is FISHEYE624 or camera_model is LINEAR):
             raise ValueError(
                 "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
             )
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError(
                 f"{time_domain} is not supported. Only TIME_CODE is supported"
@@ -270,7 +207,6 @@ class AriaDataProvider:
         )
         online_calibration = self._mps_data_provider.get_online_calibration(
             device_timestamp_ns=device_timestamp_ns,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
             time_query_options=TimeQueryOptions.CLOSEST,
         )
         camera_calibs = online_calibration.camera_calibs
@@ -288,7 +224,6 @@ class AriaDataProvider:
         [_, native_camera_calibration] = self.get_camera_calibration(
             stream_id, camera_model=camera_model
         )
-        # pyre-fixme[16]: Module `calibration` has no attribute `CameraCalibration`.
         camera_calibration = CameraCalibration(
             camera_calibration.get_label(),
             camera_model,
@@ -304,12 +239,9 @@ class AriaDataProvider:
         T_device_camera = camera_calibration.get_transform_device_camera()
 
         # If a corresponding pinhole camera is requested, we build one on the fly
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if camera_model == LINEAR:
             focal_lengths = camera_calibration.get_focal_lengths()
             image_size = camera_calibration.get_image_size()
-            # pyre-fixme[16]: Module `calibration` has no attribute
-            #  `get_linear_camera_calibration`.
             camera_calibration = get_linear_camera_calibration(
                 image_size[0], image_size[1], focal_lengths[0]
             )
@@ -326,9 +258,7 @@ class AriaDataProvider:
         """
         if (
             self._vrs_data_provider
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             and time_domain_in == TimeDomain.TIME_CODE
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             and time_domain_out == TimeDomain.DEVICE_TIME
         ):
             # Map to corresponding timestamp
@@ -338,7 +268,6 @@ class AriaDataProvider:
                 )
             )
             return device_timestamp_ns
-        # pyre-fixme[7]: Expected `int` but got `None`.
         return None
 
     ###
@@ -360,7 +289,6 @@ class AriaDataProvider:
 
     def _get_gaze_vector_reprojection(
         self,
-        # pyre-fixme[11]: Annotation `EyeGaze` is not defined as a type.
         eye_gaze: EyeGaze,
         stream_id_label: str,
         device_calibration: DeviceCalibration,
@@ -369,7 +297,6 @@ class AriaDataProvider:
         """
         Helper function to project a eye gaze output onto a given image and its calibration, assuming specified fixed depth
         """
-        # pyre-fixme[16]: Module `mps` has no attribute `get_eyegaze_point_at_depth`.
         gaze_center_in_cpf = get_eyegaze_point_at_depth(
             eye_gaze.yaw, eye_gaze.pitch, depth_m=eye_gaze.depth or 1.0
         )
@@ -388,16 +315,12 @@ class AriaDataProvider:
         self,
         stream_id: StreamId,
         timestamp_ns: int,
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
         camera_model=FISHEYE624,
     ):
         """
         Return the eye_gaze at the given timestamp projected in the given stream for the given time_domain
         """
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if not (camera_model is FISHEYE624 or camera_model is LINEAR):
             raise ValueError(
                 "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
@@ -421,23 +344,16 @@ class AriaDataProvider:
     def get_eye_gaze(
         self,
         timestamp_ns: int,
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
     ) -> Optional[EyeGaze]:
         """
         Return the eye_gaze data at the given timestamp
         """
         # Map to corresponding timestamp
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain == TimeDomain.TIME_CODE:
             device_timestamp_ns = self._timestamp_convert(
-                timestamp_ns,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
-                TimeDomain.TIME_CODE,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
-                TimeDomain.DEVICE_TIME,
+                timestamp_ns, TimeDomain.TIME_CODE, TimeDomain.DEVICE_TIME
             )
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         elif time_domain == TimeDomain.DEVICE_TIME:
             device_timestamp_ns = timestamp_ns
         else:

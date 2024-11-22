@@ -28,10 +28,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 try:
-    # pyre-fixme[21]: Could not find module `trimesh`.
     import trimesh
-
-    # pyre-fixme[21]: Could not find module `pyrender`.
     from pyrender import (
         IntrinsicsCamera,
         Mesh,
@@ -46,35 +43,16 @@ except ImportError:
 from data_loaders.HandDataProviderBase import HandDataProviderBase
 from data_loaders.headsets import Headset
 from data_loaders.loader_object_library import load_object_library, ObjectLibrary
-
-# pyre-fixme[21]: Could not find module `dataset_api`.
 from dataset_api import Hot3dDataProvider
 from PIL import Image
-
-# pyre-fixme[21]: Could not find name `CameraCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `FISHEYE624` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `distort_by_calibration` in
-#  `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import (
     CameraCalibration,
     distort_by_calibration,
     FISHEYE624,
     LINEAR,
 )
-
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
-# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3
-
-# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId
 
 from tqdm import tqdm
@@ -82,7 +60,6 @@ from tqdm import tqdm
 # Matrix transform to change Aria camera pose to PyRender coordinate system
 # PyRender: +Z = back, +Y = up, +X = right
 # Aria: +Z = forward, +Y = down, +X = right
-# pyre-fixme[16]: Module `sophus` has no attribute `SE3`.
 T_ARIA_OPENGL = SE3.from_matrix(
     np.array(
         [
@@ -98,9 +75,7 @@ ACCEPTABLE_TIME_DELTA = 0  # To retrieve exact GT
 
 
 def load_meshes_scene(
-    # pyre-fixme[11]: Annotation `Hot3dDataProvider` is not defined as a type.
     hot3d_data_provider: Hot3dDataProvider,
-    # pyre-fixme[11]: Annotation `Mesh` is not defined as a type.
 ) -> Dict[str, Mesh]:
     """
     Load all meshes in the scene and hash them by object_uid
@@ -137,12 +112,10 @@ def load_meshes_scene(
 
 
 def setup_objects_at_timestamp(
-    # pyre-fixme[11]: Annotation `Scene` is not defined as a type.
     scene: Scene,
     meshes: Dict[str, Mesh],
     hot3d_data_provider: Hot3dDataProvider,
     timestamp_ns: int,
-    # pyre-fixme[11]: Annotation `Node` is not defined as a type.
 ) -> Dict[str, Node]:
     """
     Setup object meshes in the scene for the specified timestamp
@@ -155,9 +128,7 @@ def setup_objects_at_timestamp(
     if object_pose_data_provider is not None:
         object_poses_with_dt = object_pose_data_provider.get_pose_at_timestamp(
             timestamp_ns=timestamp_ns,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
             time_query_options=TimeQueryOptions.CLOSEST,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             time_domain=TimeDomain.TIME_CODE,
             acceptable_time_delta=ACCEPTABLE_TIME_DELTA,
         )
@@ -178,12 +149,8 @@ def setup_objects_at_timestamp(
 def get_camera_calibration(
     hot3d_data_provider: Hot3dDataProvider,
     timestamp_ns: int,
-    # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
     stream_id: StreamId,
-    # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
     camera_model=LINEAR,
-    # pyre-fixme[11]: Annotation `CameraCalibration` is not defined as a type.
-    # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
 ) -> Optional[Tuple[SE3, CameraCalibration]]:
     """
     Return the camera calibration
@@ -221,7 +188,6 @@ def setup_camera_at_timestamp(
         hot3d_data_provider=hot3d_data_provider,
         stream_id=stream_id,
         timestamp_ns=timestamp_ns,
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         camera_model=LINEAR,
     )
 
@@ -229,9 +195,7 @@ def setup_camera_at_timestamp(
     if device_data_provider is not None:
         headset_pose3d_with_dt = device_pose_provider.get_pose_at_timestamp(
             timestamp_ns=timestamp_ns,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
             time_query_options=TimeQueryOptions.CLOSEST,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             time_domain=TimeDomain.TIME_CODE,
             acceptable_time_delta=ACCEPTABLE_TIME_DELTA,
         )
@@ -254,7 +218,6 @@ def setup_camera_at_timestamp(
             ).to_matrix()
 
             camera_node = scene.add(camera, pose=camera_pose)
-    # pyre-fixme[61]: `camera_node` is undefined, or not always defined.
     return [camera_node, intrinsics.get_image_size().tolist()]
 
 
@@ -275,9 +238,7 @@ def setup_hand_at_timestamp(
 
     hand_poses_with_dt = hand_data_provider.get_pose_at_timestamp(
         timestamp_ns=timestamp_ns,
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
         time_query_options=TimeQueryOptions.CLOSEST,
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain=TimeDomain.TIME_CODE,
         acceptable_time_delta=ACCEPTABLE_TIME_DELTA,
     )
@@ -291,8 +252,6 @@ def setup_hand_at_timestamp(
                 hand_pose_data
             )
 
-            # pyre-fixme[23]: Unable to unpack `list[ndarray[Any, Any]] | None` into
-            #  2 values.
             [hand_triangles, hand_vertex_normals] = (
                 hand_data_provider.get_hand_mesh_faces_and_normals(hand_pose_data)
             )
@@ -325,8 +284,6 @@ def offscreen_render(
     seg = renderer.render(scene, RenderFlags.SEG, nm)[0]
 
     renderer.delete()
-    # pyre-fixme[7]: Expected `Tuple[ndarray[Any, Any], ndarray[Any, Any]]` but got
-    #  `List[Any]`.
     return [color, depth, seg]
 
 
@@ -346,7 +303,6 @@ def distort_rendering(
         hot3d_data_provider=hot3d_data_provider,
         stream_id=stream_id,
         timestamp_ns=timestamp_ns,
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
         camera_model=FISHEYE624,
     )
 
@@ -355,11 +311,9 @@ def distort_rendering(
         hot3d_data_provider=hot3d_data_provider,
         stream_id=stream_id,
         timestamp_ns=timestamp_ns,
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         camera_model=LINEAR,
     )
 
-    # pyre-fixme[16]: Module `calibration` has no attribute `distort_by_calibration`.
     re_distorted_image = distort_by_calibration(
         image,
         intrinsics_raw,
@@ -395,10 +349,8 @@ scene_meshes = load_meshes_scene(hot3d_data_provider)
 timestamps = hot3d_data_provider.device_data_provider.get_sequence_timestamps()
 timestamp_list = [timestamps[len(timestamps) // 2]]
 stream_id_list = (
-    # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
     [StreamId("1201-1"), StreamId("1201-2"), StreamId("214-1")]
     if hot3d_data_provider.get_device_type() is Headset.Aria
-    # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
     else [StreamId("1201-1"), StreamId("1201-2")]
 )
 
@@ -435,7 +387,6 @@ for stream_id in stream_id_list:
 
         print(camera_node_and_resolution)
         # Setup off screen rendering (to save rendering buffer to disk as image)
-        # pyre-fixme[23]: Unable to unpack 2 values, 3 were expected.
         [color, depth, seg] = offscreen_render(scene, camera_node_and_resolution[1])
 
         im = Image.fromarray(color)

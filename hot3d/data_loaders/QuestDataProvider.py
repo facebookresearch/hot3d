@@ -18,20 +18,6 @@ import numpy as np
 from data_loaders.frameset import compute_frameset_for_timestamp
 from data_loaders.io_utils import load_json
 from PIL import Image
-
-# pyre-fixme[21]: Could not find name `CameraCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `DeviceCadExtrinsics` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `DeviceCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `FISHEYE624` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `distort_by_calibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `get_linear_camera_calibration` in
-#  `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import (  # @manual
     CameraCalibration,
     DeviceCadExtrinsics,
@@ -41,19 +27,11 @@ from projectaria_tools.core.calibration import (  # @manual
     get_linear_camera_calibration,
     LINEAR,
 )
-
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain  # @manual
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3  # @manual
-
-# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 try:
-    # pyre-fixme[21]: Could not find module `pyvrs`.
     from pyvrs import ImageConversion, SyncVRSReader  # @manual
 except ImportError:
     from pyvrs2 import SyncVRSReader  # @manual
@@ -96,7 +74,6 @@ class QuestDataProvider:
             projection_params = it["projectionParams"]
             serial_number = it["serialNumber"]
 
-            # pyre-fixme[16]: Module `sophus` has no attribute `SE3`.
             T_world_device = SE3.from_quat_and_translation(
                 quaternion[0],
                 quaternion[1:4],
@@ -106,10 +83,8 @@ class QuestDataProvider:
             projection_params = projection_params[:1] + projection_params[2:]
 
             # Build the corresponding camera calibration object
-            # pyre-fixme[16]: Module `calibration` has no attribute `CameraCalibration`.
             camera_calibration[label] = CameraCalibration(
                 label,
-                # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
                 FISHEYE624,
                 projection_params,
                 T_world_device,
@@ -120,18 +95,8 @@ class QuestDataProvider:
                 serial_number,
             )
 
-        # pyre-fixme[16]: Module `calibration` has no attribute `DeviceCalibration`.
         self._device_calibration = DeviceCalibration(
-            camera_calibration,
-            {},
-            {},
-            {},
-            {},
-            # pyre-fixme[16]: Module `calibration` has no attribute
-            #  `DeviceCadExtrinsics`.
-            DeviceCadExtrinsics(),
-            "",
-            "",
+            camera_calibration, {}, {}, {}, {}, DeviceCadExtrinsics(), "", ""
         )
 
         # Pre-compute the sorted timestamps for each image stream
@@ -141,7 +106,6 @@ class QuestDataProvider:
                 self.get_sequence_timestamps()
             )
 
-    # pyre-fixme[11]: Annotation `DeviceCalibration` is not defined as a type.
     def get_device_calibration(self) -> DeviceCalibration:
         """
         Return the device calibration (factory calibration of all sensors)
@@ -150,12 +114,8 @@ class QuestDataProvider:
 
     def get_camera_calibration(
         self,
-        # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
         stream_id: StreamId,
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
         camera_model=FISHEYE624,
-        # pyre-fixme[11]: Annotation `CameraCalibration` is not defined as a type.
-        # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
     ) -> tuple[SE3, CameraCalibration]:
         """
         Return the camera calibration of the device of the sequence as [Extrinsics, Intrinsics]
@@ -163,8 +123,6 @@ class QuestDataProvider:
          - A corresponding pinhole camera can be requested by using camera_model = LINEAR.
          - This is the camera model used to generate the 'get_undistorted_image'.
         """
-        # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if not (camera_model is FISHEYE624 or camera_model is LINEAR):
             raise ValueError(
                 "Invalid camera_model type, only FISHEYE624 and LINEAR are supported"
@@ -188,12 +146,9 @@ class QuestDataProvider:
         T_device_camera = camera_calibration.get_transform_device_camera()
 
         # If a corresponding pinhole camera is requested, we build one on the fly
-        # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
         if camera_model == LINEAR:
             focal_lengths = camera_calibration.get_focal_lengths()
             image_size = camera_calibration.get_image_size()
-            # pyre-fixme[16]: Module `calibration` has no attribute
-            #  `get_linear_camera_calibration`.
             camera_calibration = get_linear_camera_calibration(
                 image_size[0], image_size[1], focal_lengths[0]
             )
@@ -208,7 +163,6 @@ class QuestDataProvider:
             if self._vrs_reader.might_contain_images(stream_id):
                 image_stream_ids.append(stream_id)
         image_stream_ids = sorted(image_stream_ids)
-        # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
         return [StreamId(x) for x in image_stream_ids]
 
     def get_sequence_timestamps(self) -> List[int]:
@@ -223,8 +177,6 @@ class QuestDataProvider:
         self,
         timestamp_ns: int,
         frameset_acceptable_time_diff_ns: int,
-        # pyre-fixme[11]: Annotation `TimeDomain` is not defined as a type.
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         time_domain: TimeDomain = TimeDomain.TIME_CODE,
     ) -> Dict[str, Optional[int]]:
         """
@@ -233,7 +185,6 @@ class QuestDataProvider:
         For Quest3, the recommended acceptable time difference is 1e6 ns (or 1ms).
         Returns a dictionary mapping each str(StreamId) to its closest timestamp.
         """
-        # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
         if time_domain is not TimeDomain.TIME_CODE:
             raise ValueError(
                 f"{time_domain} is not supported. Only TIME_CODE is supported"
@@ -275,19 +226,13 @@ class QuestDataProvider:
             return None
 
         [T_device_camera, native_camera_calibration] = self.get_camera_calibration(
-            stream_id,
-            # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-            camera_model=FISHEYE624,
+            stream_id, camera_model=FISHEYE624
         )
         [T_device_camera, pinhole_camera_calibration] = self.get_camera_calibration(
-            stream_id,
-            # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
-            camera_model=LINEAR,
+            stream_id, camera_model=LINEAR
         )
 
         # Compute the actual undistorted image
-        # pyre-fixme[16]: Module `calibration` has no attribute
-        #  `distort_by_calibration`.
         undistorted_image = distort_by_calibration(
             image, pinhole_camera_calibration, native_camera_calibration
         )

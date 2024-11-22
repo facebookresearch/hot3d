@@ -23,12 +23,9 @@ from data_loaders.hand_common import LANDMARK_CONNECTIVITY
 from data_loaders.headsets import Headset
 from data_loaders.loader_hand_poses import HandType
 from data_loaders.loader_object_library import ObjectLibrary
-
-# pyre-fixme[21]: Could not find name `StreamId` in `projectaria_tools.core.stream_id`.
 from projectaria_tools.core.stream_id import StreamId  # @manual
 
 try:
-    # pyre-fixme[21]: Could not find module `dataset_api`.
     from dataset_api import Hot3dDataProvider  # @manual
 except ImportError:
     from hot3d.dataset_api import Hot3dDataProvider
@@ -47,22 +44,12 @@ from data_loaders.ObjectPose3dProvider import (  # @manual
     ObjectPose3dProvider,
 )
 
-# pyre-fixme[21]: Could not find name `CameraCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `DeviceCalibration` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `FISHEYE624` in
-#  `projectaria_tools.core.calibration`.
-# pyre-fixme[21]: Could not find name `LINEAR` in `projectaria_tools.core.calibration`.
 from projectaria_tools.core.calibration import (
     CameraCalibration,
     DeviceCalibration,
     FISHEYE624,
     LINEAR,
 )
-
-# pyre-fixme[21]: Could not find name `get_eyegaze_point_at_depth` in
-#  `projectaria_tools.core.mps`.
 from projectaria_tools.core.mps import get_eyegaze_point_at_depth  # @manual
 
 from projectaria_tools.core.mps.utils import (  # @manual
@@ -70,13 +57,7 @@ from projectaria_tools.core.mps.utils import (  # @manual
     filter_points_from_count,
 )
 
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
-# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions  # @manual
-
-# pyre-fixme[21]: Could not find name `SE3` in `projectaria_tools.core.sophus`.
 from projectaria_tools.core.sophus import SE3  # @manual
 from projectaria_tools.utils.rerun_helpers import (  # @manual
     AriaGlassesOutline,
@@ -129,7 +110,6 @@ class Hot3DVisualizer:
 
     def log_static_assets(
         self,
-        # pyre-fixme[11]: Annotation `StreamId` is not defined as a type.
         image_stream_ids: List[StreamId],
     ) -> None:
         """
@@ -234,10 +214,7 @@ class Hot3DVisualizer:
         if self._device_data_provider is not None:
             headset_pose3d_with_dt = self._device_pose_provider.get_pose_at_timestamp(
                 timestamp_ns=timestamp_ns,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute
-                #  `TimeQueryOptions`.
                 time_query_options=TimeQueryOptions.CLOSEST,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
                 time_domain=TimeDomain.TIME_CODE,
                 acceptable_time_delta=acceptable_time_delta,
             )
@@ -246,10 +223,7 @@ class Hot3DVisualizer:
         if self._hand_data_provider is not None:
             hand_poses_with_dt = self._hand_data_provider.get_pose_at_timestamp(
                 timestamp_ns=timestamp_ns,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute
-                #  `TimeQueryOptions`.
                 time_query_options=TimeQueryOptions.CLOSEST,
-                # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
                 time_domain=TimeDomain.TIME_CODE,
                 acceptable_time_delta=acceptable_time_delta,
             )
@@ -259,11 +233,7 @@ class Hot3DVisualizer:
             object_poses_with_dt = (
                 self._object_pose_data_provider.get_pose_at_timestamp(
                     timestamp_ns=timestamp_ns,
-                    # pyre-fixme[16]: Module `sensor_data` has no attribute
-                    #  `TimeQueryOptions`.
                     time_query_options=TimeQueryOptions.CLOSEST,
-                    # pyre-fixme[16]: Module `sensor_data` has no attribute
-                    #  `TimeDomain`.
                     time_domain=TimeDomain.TIME_CODE,
                     acceptable_time_delta=acceptable_time_delta,
                 )
@@ -341,11 +311,7 @@ class Hot3DVisualizer:
                     self._object_box2d_data_provider.get_bbox_at_timestamp(
                         stream_id=stream_id,
                         timestamp_ns=timestamp_ns,
-                        # pyre-fixme[16]: Module `sensor_data` has no attribute
-                        #  `TimeQueryOptions`.
                         time_query_options=TimeQueryOptions.CLOSEST,
-                        # pyre-fixme[16]: Module `sensor_data` has no attribute
-                        #  `TimeDomain`.
                         time_domain=TimeDomain.TIME_CODE,
                     )
                 )
@@ -362,13 +328,10 @@ class Hot3DVisualizer:
             #
             if self._hot3d_data_provider.get_device_type() is Headset.Aria:
                 # We are showing EyeGaze reprojection only on the RGB image stream
-                # pyre-fixme[16]: Module `stream_id` has no attribute `StreamId`.
                 if stream_id != StreamId("214-1"):
                     continue
 
                 # Reproject EyeGaze for raw and pinhole images
-                # pyre-fixme[16]: Module `calibration` has no attribute `FISHEYE624`.
-                # pyre-fixme[16]: Module `calibration` has no attribute `LINEAR`.
                 camera_configurations = [FISHEYE624, LINEAR]
                 for camera_model in camera_configurations:
                     eye_gaze_reprojection_data = (
@@ -384,8 +347,6 @@ class Hot3DVisualizer:
 
                     label = (
                         f"world/device/{stream_id}/eye-gaze_projection"
-                        # pyre-fixme[16]: Module `calibration` has no attribute
-                        #  `LINEAR`.
                         if camera_model == LINEAR
                         else f"world/device/{stream_id}_raw/eye-gaze_projection_raw"
                     )
@@ -402,8 +363,6 @@ class Hot3DVisualizer:
         if aria_eye_gaze_data is not None:
             T_device_CPF = self._device_data_provider.get_device_calibration().get_transform_device_cpf()
             # Compute eye_gaze vector at depth_m (30cm for a proxy 3D vector to display)
-            # pyre-fixme[16]: Module `mps` has no attribute
-            #  `get_eyegaze_point_at_depth`.
             gaze_vector_in_cpf = get_eyegaze_point_at_depth(
                 aria_eye_gaze_data.yaw, aria_eye_gaze_data.pitch, depth_m=0.3
             )
@@ -419,7 +378,6 @@ class Hot3DVisualizer:
     @staticmethod
     def log_aria_glasses(
         label: str,
-        # pyre-fixme[11]: Annotation `DeviceCalibration` is not defined as a type.
         device_calibration: DeviceCalibration,
         use_cad_calibration: bool = True,
     ) -> None:
@@ -432,7 +390,6 @@ class Hot3DVisualizer:
     @staticmethod
     def log_calibration(
         label: str,
-        # pyre-fixme[11]: Annotation `CameraCalibration` is not defined as a type.
         camera_calibration: CameraCalibration,
     ) -> None:
         rr.log(
@@ -448,7 +405,6 @@ class Hot3DVisualizer:
         )
 
     @staticmethod
-    # pyre-fixme[11]: Annotation `SE3` is not defined as a type.
     def log_pose(label: str, pose: SE3, static=False) -> None:
         rr.log(label, ToTransform3D(pose, False), static=static)
 
@@ -485,7 +441,6 @@ class Hot3DVisualizer:
                     connections
                     for connectivity in LANDMARK_CONNECTIVITY
                     for connections in [
-                        # pyre-fixme[16]: `Optional` has no attribute `__getitem__`.
                         [hand_landmarks[it].numpy().tolist() for it in connectivity]
                     ]
                 ]
@@ -510,8 +465,6 @@ class Hot3DVisualizer:
 
             # Triangular Mesh representation
             if show_hand_mesh:
-                # pyre-fixme[23]: Unable to unpack `list[ndarray[Any, Any]] | None`
-                #  into 2 values.
                 [hand_triangles, hand_vertex_normals] = (
                     hand_data_provider.get_hand_mesh_faces_and_normals(hand_pose_data)
                 )
@@ -567,7 +520,6 @@ class Hot3DVisualizer:
 
             # Link the corresponding 3D object
             if object_uid not in object_cache_status.keys():
-                # pyre-fixme[6]: For 1st argument expected `int` but got `str`.
                 object_cache_status[object_uid] = True
                 rr.log(
                     f"world/objects/{object_name}",
@@ -586,7 +538,6 @@ class Hot3DVisualizer:
                     rr.Clear.recursive(),
                 )
                 if object_uid in object_cache_status.keys():
-                    # pyre-fixme[6]: For 1st argument expected `int` but got `str`.
                     del object_cache_status[object_uid]  # We will log the mesh again
 
     @staticmethod

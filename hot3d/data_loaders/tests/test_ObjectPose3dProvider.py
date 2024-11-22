@@ -19,11 +19,6 @@ from pathlib import Path
 
 from data_loaders.ObjectPose3dProvider import load_pose_provider_from_csv
 from data_loaders.PathProvider import Hot3dDataPathProvider
-
-# pyre-fixme[21]: Could not find name `TimeDomain` in
-#  `projectaria_tools.core.sensor_data`.
-# pyre-fixme[21]: Could not find name `TimeQueryOptions` in
-#  `projectaria_tools.core.sensor_data`.
 from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
 
 try:
@@ -77,9 +72,7 @@ class TestObjectPoseDataProvider(unittest.TestCase):
         #
         object_poses_with_dt = object_pose_provider.get_pose_at_timestamp(
             timestamp_ns=timestamps[0],
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeQueryOptions`.
             time_query_options=TimeQueryOptions.CLOSEST,
-            # pyre-fixme[16]: Module `sensor_data` has no attribute `TimeDomain`.
             time_domain=TimeDomain.TIME_CODE,
             acceptable_time_delta=0,  # Retrieve perfect match
         )

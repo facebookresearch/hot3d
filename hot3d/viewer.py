@@ -22,13 +22,11 @@ from data_loaders.loader_object_library import load_object_library
 from data_loaders.mano_layer import loadManoHandModel
 
 try:
-    # pyre-fixme[21]: Could not find module `dataset_api`.
     from dataset_api import Hot3dDataProvider  # @manual
 except ImportError:
     from hot3d.dataset_api import Hot3dDataProvider
 
 try:
-    # pyre-fixme[21]: Could not find module `Hot3DVisualizer`.
     from Hot3DVisualizer import Hot3DVisualizer
 except ImportError:
     from hot3d.Hot3DVisualizer import Hot3DVisualizer
