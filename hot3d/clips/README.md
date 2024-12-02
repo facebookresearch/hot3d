@@ -6,7 +6,7 @@ There are 3832 clips in total, 2804 clips extracted from the training split and 
 
 HOT3D-Clips are hosted on [Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation). The full HOT3D dataset is provided in a [VRS](https://github.com/facebookresearch/vrs)-based format on [projectaria.com](https://www.projectaria.com/datasets/hot3D/) (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
 
-More details can be found in the [HOT3D whitepaper](https://arxiv.org/pdf/2406.09598).
+More details can be found in the [HOT3D paper](https://arxiv.org/pdf/2411.19167).
 
 ## Data format
 

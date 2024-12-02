@@ -11,7 +11,7 @@ Resources:
 - [HOT3D homepage](https://facebookresearch.github.io/hot3d/)
 - [Download full HOT3D dataset from projectaria.com](https://www.projectaria.com/datasets/hot3D/)
 - [Download HOT3D-Clips from Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d)
-- [Read HOT3D whitepaper](https://arxiv.org/pdf/2406.09598)
+- [Read HOT3D paper](https://arxiv.org/pdf/2411.19167)
 
 The following instructions are relevant if you want to use the full HOT3D dataset in the VRS-based format. For HOT3D-Clips, please refer to the [dedicated page](https://github.com/facebookresearch/hot3d/tree/main/hot3d/clips).
 
