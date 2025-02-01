@@ -256,18 +256,27 @@ class AriaDataProvider:
         """
         Returns the converted timestamp between two domains (TimeCode <-> Aria DeviceTime)
         """
-        if (
-            self._vrs_data_provider
-            and time_domain_in == TimeDomain.TIME_CODE
-            and time_domain_out == TimeDomain.DEVICE_TIME
-        ):
+        if self._vrs_data_provider:
             # Map to corresponding timestamp
-            device_timestamp_ns = (
-                self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
-                    timestamp
+            if (
+                time_domain_in == TimeDomain.TIME_CODE
+                and time_domain_out == TimeDomain.DEVICE_TIME
+            ):
+                out_timestamp = (
+                    self._vrs_data_provider.convert_from_timecode_to_device_time_ns(
+                        timestamp
+                    )
                 )
-            )
-            return device_timestamp_ns
+            if (
+                time_domain_in == TimeDomain.DEVICE_TIME
+                and time_domain_out == TimeDomain.TIME_CODE
+            ):
+                out_timestamp = (
+                    self._vrs_data_provider.convert_from_device_time_to_timecode_ns(
+                        timestamp
+                    )
+                )
+            return out_timestamp
         return None
 
     ###
