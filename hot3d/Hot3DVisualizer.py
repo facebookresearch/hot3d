@@ -371,7 +371,9 @@ class Hot3DVisualizer:
                 "world/device/eye-gaze",
                 rr.Arrows3D(
                     origins=[T_device_CPF @ [0, 0, 0]],
-                    vectors=[T_device_CPF @ gaze_vector_in_cpf],
+                    vectors=[
+                        T_device_CPF @ gaze_vector_in_cpf - T_device_CPF @ [0, 0, 0]
+                    ],
                 ),
             )
 
