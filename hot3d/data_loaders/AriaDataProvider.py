@@ -113,7 +113,7 @@ class AriaDataProvider:
             TimeDomain.TIME_CODE,
             TimeQueryOptions.CLOSEST,
         )
-        return image[0].to_numpy_array()
+        return image[0].to_numpy_array() if image is not None else None
 
     def get_undistorted_image(
         self, timestamp_ns: int, stream_id: StreamId
