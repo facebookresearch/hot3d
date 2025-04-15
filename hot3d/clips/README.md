@@ -4,13 +4,13 @@ HOT3D-Clips is a set of curated sub-sequences of the [HOT3D dataset](https://fac
 Each clip has 150 frames (5 seconds) which are all annotated with ground-truth poses of all modeled objects and hands and which passed our visual inspection.
 There are 3832 clips in total, 2804 clips extracted from the training split and 1028 from the test split of HOT3D.
 
-HOT3D-Clips are hosted on [Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation). The full HOT3D dataset is provided in a [VRS](https://github.com/facebookresearch/vrs)-based format on [projectaria.com](https://www.projectaria.com/datasets/hot3D/) (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
+HOT3D-Clips are hosted on [Hugging Face](https://huggingface.co/datasets/bop-benchmark/hot3d) and used in [BOP Challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024) and [Multiview Egocentric Hand Tracking Challenge](https://github.com/facebookresearch/hand_tracking_toolkit?tab=readme-ov-file#evaluation). The full HOT3D dataset is provided in a [VRS](https://github.com/facebookresearch/vrs)-based format on [projectaria.com](https://www.projectaria.com/datasets/hot3D/) (see [tutorial](https://github.com/facebookresearch/hot3d/blob/main/hot3d/HOT3D_Tutorial.ipynb)).
 
 More details can be found in the [HOT3D paper](https://arxiv.org/pdf/2411.19167).
 
 ## Data format
 
-HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d) which includes:
+HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.co/datasets/bop-benchmark/hot3d) which includes:
 
 - `object_models` - 3D object models in GLB format with PBR materials.
 - `object_models_eval` - Simplified 3D object models in GLB format without PBR materials (used for [BOP evaluation](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/)).
@@ -142,8 +142,8 @@ python vis_clips.py --clips_dir <clips_dir> --object_models_dir <object_models_d
 
 Required arguments:
 
-- `--clips_dir` is a folder with clips saved as tar files (can be, e.g., your local copy of [`test_aria`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/test_aria), [`test_quest3`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/test_quest3), [`train_aria`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/train_aria) or [`train_quest3`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/train_quest3)).
-- `--object_models_dir` is a folder with 3D object models (can be a local copy of [`object_models_eval`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/object_models_eval) or [`object_models`](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d/object_models); the first is recommended for speed).
+- `--clips_dir` is a folder with clips saved as tar files (can be, e.g., your local copy of [`test_aria`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/test_aria), [`test_quest3`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/test_quest3), [`train_aria`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/train_aria) or [`train_quest3`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/train_quest3)).
+- `--object_models_dir` is a folder with 3D object models (can be a local copy of [`object_models_eval`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/object_models_eval) or [`object_models`](https://huggingface.co/datasets/bop-benchmark/hot3d/tree/main/object_models); the first is recommended for speed).
 - `--output_dir` is an output folder for visualizations.
 
 Optional arguments:
@@ -155,7 +155,7 @@ Optional arguments:
 - `--vis_amodal_masks` is a binary flag indicating whether to visualize amodal object masks.
 - `--vis_modal_masks` is a binary flag indicating whether to visualize modal object masks.
 
-An example command to visualize Quest3 training clips (`$HOT3DC` is assumed to be a path to [HOT3D-Clips](https://huggingface.co/datasets/bop-benchmark/datasets/tree/main/hot3d)):
+An example command to visualize Quest3 training clips (`$HOT3DC` is assumed to be a path to [HOT3D-Clips](https://huggingface.co/datasets/bop-benchmark/hot3d)):
 
 ```bash
 python vis_clips.py --clips_dir $HOT3DC/train_quest3 --object_models_dir $HOT3DC/object_models_eval --output_dir $HOT3DC/output
