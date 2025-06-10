@@ -46,6 +46,8 @@ def main():
     parser.add_argument("--split", required=True, type=str)
     # number of threads
     parser.add_argument("--num-threads", type=int, default=4)
+    # if test sets annotations are available
+    parser.add_argument("--test-annotations_available", type=bool, default=False)
 
     args = parser.parse_args()
 
@@ -115,29 +117,32 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
         stream_image_dir = os.path.join(scene_output_dir, stream_name)
         os.makedirs(stream_image_dir, exist_ok=True)
         clip_stream_paths[stream_name] = stream_image_dir
-        stream_mask_dir = os.path.join(scene_output_dir, f"mask_{stream_name}")
-        os.makedirs(stream_mask_dir, exist_ok=True)
-        clip_stream_paths[f"mask_{stream_name}"] = stream_mask_dir
-        stream_mask_visib_dir = os.path.join(
-            scene_output_dir, f"mask_visib_{stream_name}"
-        )
-        os.makedirs(stream_mask_visib_dir, exist_ok=True)
-        clip_stream_paths[f"mask_visib_{stream_name}"] = stream_mask_visib_dir
-        # json files
+
         stream_scene_camera_json_path = os.path.join(
             scene_output_dir, f"scene_camera_{stream_name}.json"
         )
         clip_stream_paths[f"scene_camera_{stream_name}"] = stream_scene_camera_json_path
-        stream_scene_gt_json_path = os.path.join(
-            scene_output_dir, f"scene_gt_{stream_name}.json"
-        )
-        clip_stream_paths[f"scene_gt_{stream_name}"] = stream_scene_gt_json_path
-        stream_scene_gt_info_json_path = os.path.join(
-            scene_output_dir, f"scene_gt_info_{stream_name}.json"
-        )
-        clip_stream_paths[f"scene_gt_info_{stream_name}"] = (
-            stream_scene_gt_info_json_path
-        )
+
+        # if test split and annotations are available, make mask directories and annotations json files
+        if args.split.startswith("test") and args.test_annotations_available:
+            stream_mask_dir = os.path.join(scene_output_dir, f"mask_{stream_name}")
+            os.makedirs(stream_mask_dir, exist_ok=True)
+            clip_stream_paths[f"mask_{stream_name}"] = stream_mask_dir
+            stream_mask_visib_dir = os.path.join(
+                scene_output_dir, f"mask_visib_{stream_name}"
+            )
+            os.makedirs(stream_mask_visib_dir, exist_ok=True)
+            clip_stream_paths[f"mask_visib_{stream_name}"] = stream_mask_visib_dir
+            stream_scene_gt_json_path = os.path.join(
+                scene_output_dir, f"scene_gt_{stream_name}.json"
+            )
+            clip_stream_paths[f"scene_gt_{stream_name}"] = stream_scene_gt_json_path
+            stream_scene_gt_info_json_path = os.path.join(
+                scene_output_dir, f"scene_gt_info_{stream_name}.json"
+            )
+            clip_stream_paths[f"scene_gt_info_{stream_name}"] = (
+                stream_scene_gt_info_json_path
+            )
 
     # make a dict of dicts with stream name as keys
     scene_camera_data = {}
@@ -187,7 +192,7 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
             # filling scene_camera.json
 
             # get T_world_from_camera
-            T_world_from_camera = frame_camera[stream_id].T_world_from_eye
+            T_world_from_camera = frame_camera[1][stream_id]
 
             T_world_to_camera = np.linalg.inv(T_world_from_camera)
 
@@ -210,6 +215,10 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
 
             # Camera parameters of the current image.
             # camera_model = frame_camera[stream_id]
+
+            # if test split and annotations are not available, skip the rest
+            if args.split.startswith("test") and not args.test_annotations_available:
+                continue
 
             frame_scene_gt_data = []
             frame_scene_gt_info_data = []
@@ -359,6 +368,9 @@ def process_clip(clip, clips_input_dir, scenes_output_dir, args):
     for stream_name in args.camera_streams_names:
         with open(clip_stream_paths[f"scene_camera_{stream_name}"], "w") as f:
             json.dump(scene_camera_data[stream_name], f, indent=4)
+        # if test split and annotations are not available, skip the rest
+        if args.split.startswith("test") and not args.test_annotations_available:
+            continue
         with open(clip_stream_paths[f"scene_gt_{stream_name}"], "w") as f:
             json.dump(scene_gt_data[stream_name], f, indent=4)
         with open(clip_stream_paths[f"scene_gt_info_{stream_name}"], "w") as f:
