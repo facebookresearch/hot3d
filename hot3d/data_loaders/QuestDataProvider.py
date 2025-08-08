@@ -96,7 +96,14 @@ class QuestDataProvider:
             )
 
         self._device_calibration = DeviceCalibration(
-            camera_calibration, {}, {}, {}, {}, DeviceCadExtrinsics(), "", ""
+            camera_calibration,
+            {},
+            {},
+            {},
+            {},
+            DeviceCadExtrinsics(),
+            "",
+            "",
         )
 
         # Pre-compute the sorted timestamps for each image stream
