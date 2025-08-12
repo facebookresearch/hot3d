@@ -68,12 +68,12 @@ Files `<FRAME-ID>.cameras.json` provide camera parameters for each image stream:
   - `projection_model_type`: Projection model type (e.g. `CameraModelType.FISHEYE624`).
   - `projection_params`: Projection parameters.
   - `T_device_from_camera`:
-    - `translation_xyz`: Translation from device to the camera.
-    - `quaternion_wxyz`: Rotation from device to the camera.
+    - `translation_xyz`: Translation from camera to device.
+    - `quaternion_wxyz`: Rotation from camera to device.
   - `max_solid_angle`: Max solid angle of the camera.
 - `T_world_from_camera`:
-  - `translation_xyz`: Translation from world to the camera.
-  - `quaternion_wxyz`: Rotation from world to the camera.
+  - `translation_xyz`: Translation from camera to world.
+  - `quaternion_wxyz`: Rotation from camera to world.
 
 Files `<FRAME-ID>.objects.json` provide for each annotated object the following:
 
