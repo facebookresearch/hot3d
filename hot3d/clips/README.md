@@ -14,6 +14,10 @@ HOT3D-Clips are distributed via a [folder on Hugging Face](https://huggingface.c
 
 - `object_models` - 3D object models in GLB format with PBR materials.
 - `object_models_eval` - Simplified 3D object models in GLB format without PBR materials (used for [BOP evaluation](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/)).
+- `object_ref_aria_dynamic` - Dynamic object onboarding sequences from Aria. GT object pose is available only in the first frame.
+- `object_ref_aria_dynamic_vis` - Visualizations of dynamic onboarding sequences from Aria.
+- `object_ref_aria_static` - Static object onboarding sequences from Aria. GT object poses are available in all frames.
+- `object_ref_aria_static_vis` - Visualizations of static onboarding sequences from Aria.
 - `object_ref_quest3_dynamic` - Dynamic object onboarding sequences from Quest 3. GT object pose is available only in the first frame.
 - `object_ref_quest3_dynamic_vis` - Visualizations of dynamic onboarding sequences from Quest 3.
 - `object_ref_quest3_static` - Static object onboarding sequences from Quest 3. GT object poses are available in all frames.
