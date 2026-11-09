@@ -19,7 +19,10 @@ from pathlib import Path
 
 from data_loaders.ObjectPose3dProvider import load_pose_provider_from_csv
 from data_loaders.PathProvider import Hot3dDataPathProvider
-from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
+from projectaria_tools.core.sensor_data import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
+    TimeDomain,
+    TimeQueryOptions,
+)
 
 try:
     data_path = Path(

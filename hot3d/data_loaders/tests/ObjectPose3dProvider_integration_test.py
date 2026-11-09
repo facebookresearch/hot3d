@@ -24,7 +24,10 @@ from data_loaders.ObjectPose3dProvider import (
     load_pose_provider_from_csv,
     ObjectPose3dProvider,
 )
-from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
+from projectaria_tools.core.sensor_data import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
+    TimeDomain,
+    TimeQueryOptions,
+)
 
 
 def _make_csv_file(tmp_dir: str, rows: list) -> str:

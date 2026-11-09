@@ -19,8 +19,13 @@ from pathlib import Path
 
 from data_loaders.AriaDataProvider import AriaDataProvider
 from data_loaders.PathProvider import Hot3dDataPathProvider
-from projectaria_tools.core.calibration import FISHEYE624, LINEAR
-from projectaria_tools.core.stream_id import StreamId
+from projectaria_tools.core.calibration import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
+    FISHEYE624,
+    LINEAR,
+)
+from projectaria_tools.core.stream_id import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
+    StreamId,
+)
 
 
 try:

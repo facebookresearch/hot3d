@@ -21,7 +21,10 @@ from data_loaders.HandDataProviderBase import HandDataProviderBase
 from data_loaders.loader_hand_poses import Handedness
 from data_loaders.ManoHandDataProvider import MANOHandDataProvider
 from data_loaders.UmeTrackHandDataProvider import UmeTrackHandDataProvider
-from projectaria_tools.core.sensor_data import TimeDomain, TimeQueryOptions
+from projectaria_tools.core.sensor_data import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
+    TimeDomain,
+    TimeQueryOptions,
+)
 
 
 try:
