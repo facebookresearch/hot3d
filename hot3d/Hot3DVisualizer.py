@@ -40,7 +40,7 @@ from data_loaders.ObjectPose3dProvider import (  # @manual
     ObjectPose3dCollectionWithDt,
     ObjectPose3dProvider,
 )
-from projectaria_tools.core.calibration import (
+from projectaria_tools.core.calibration import (  # @manual=fbsource//arvr/projects/ariane/aria_research_kit/projectaria_tools/projectaria_tools:projectaria_tools_package
     CameraCalibration,
     DeviceCalibration,
     FISHEYE624,

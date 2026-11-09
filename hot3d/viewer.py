@@ -28,7 +28,9 @@ except ImportError:
     from hot3d.dataset_api import Hot3dDataProvider
 
 try:
-    from Hot3DVisualizer import Hot3DVisualizer
+    from Hot3DVisualizer import (  # @manual=fbcode//surreal/hot3d/hot3d_oss/hot3d:hot3d_oss_lib
+        Hot3DVisualizer,
+    )
 except ImportError:
     from hot3d.Hot3DVisualizer import Hot3DVisualizer
 
