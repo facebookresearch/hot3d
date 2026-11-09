@@ -20,7 +20,10 @@ import numpy as np
 import torch
 from data_loaders.HandDataProviderBase import HandDataProviderBase
 from data_loaders.loader_hand_poses import Handedness, HandPose
-from data_loaders.umetrack_layer import get_skinning_weights, skin_points
+from data_loaders.umetrack_layer import (  # @manual=fbcode//surreal/hot3d/hot3d_oss/hot3d/data_loaders:data_loaders_lib
+    get_skinning_weights,
+    skin_points,
+)
 
 
 @dataclass
